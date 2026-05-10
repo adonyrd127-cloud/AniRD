@@ -113,7 +113,7 @@ async function searchAnime(query, domainCandidate) {
 
 async function getAnimeInfo(urlCandidate) {
   return withServiceCache("info", { urlCandidate }, async () => {
-    const provider = findProviderForUrl(urlCandidate) || PROVIDERS[0];
+    const provider = findProviderForUrl(urlCandidate);
     if (!provider) throw new ApiError(400, "Proveedor no soportado");
     const result = await provider.service.getAnimeInfo(urlCandidate);
     return { ...result, source: result?.source || provider.id };
@@ -122,7 +122,7 @@ async function getAnimeInfo(urlCandidate) {
 
 async function getEpisodeLinks(urlCandidate, includeMega, excludeServers) {
   return withServiceCache("episode", { urlCandidate, includeMega, excludeServers }, async () => {
-    const provider = findProviderForUrl(urlCandidate) || PROVIDERS[0];
+    const provider = findProviderForUrl(urlCandidate);
     if (!provider) throw new ApiError(400, "Proveedor no soportado");
     const result = await provider.service.getEpisodeLinks(urlCandidate, includeMega, excludeServers);
     return { ...result, source: result?.source || provider.id };
