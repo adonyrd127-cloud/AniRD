@@ -1,7 +1,7 @@
 {
-  "name": "anime1v-api",
-  "version": "1.0.0",
-  "description": "Backend reconstruido para Anime1v API",
+  "name": "anird-api",
+  "version": "2.0.0",
+  "description": "Backend AniRD - API de anime personal",
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {
@@ -9,13 +9,8 @@
     "dev": "nodemon src/server.js",
     "check": "node --check src/server.js"
   },
-  "keywords": [
-    "anime",
-    "api",
-    "scraper",
-    "animeav1"
-  ],
-  "author": "FxxMorgan",
+  "keywords": ["anime", "api", "scraper", "personal"],
+  "author": "AniRD",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.9.0",

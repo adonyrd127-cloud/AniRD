@@ -27,6 +27,19 @@
             --gradient-card: linear-gradient(180deg,transparent 60%,rgba(8,8,16,0.97) 100%);
         }
 
+        body.light-theme {
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-hover: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border: #dee2e6;
+            --border-light: #e9ecef;
+            --gradient-card: linear-gradient(180deg,transparent 60%,rgba(255,255,255,0.97) 100%);
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
@@ -1128,11 +1141,12 @@
                 <li><a onclick="filterByCategory('movies')">Películas</a></li>
                 <li><a onclick="filterByCategory('latest')">Últimos Episodios</a></li>
                 <li><a onclick="filterByCategory('dub')">Latino</a></li>
-                <li><a onclick="showHistory()">Historial</a></li>
+                <li><a onclick="router('favorites')" id="nav-favorites">⭐ Favoritos</a></li>
                 <li><a onclick="showCalendar()" id="nav-calendar">📅 Calendario</a></li>
+                <li><a onclick="toggleTheme()" id="btnTheme" title="Cambiar tema" style="font-size:16px">🌓</a></li>
             </ul>
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Buscar anime..." onkeypress="if(event.key==='Enter') performSearch()">
+                <input type="text" id="searchInput" placeholder="Buscar anime..." autocomplete="off">
                 <button onclick="performSearch()">🔍</button>
             </div>
         </nav>
@@ -1153,6 +1167,13 @@
                         <button class="btn btn-secondary" onclick="openAnime(1)">+ Mi Lista</button>
                     </div>
                 </div>
+            </div>
+
+            <div class="section" id="continue-section" style="display:none;">
+                <div class="section-header">
+                    <h2 class="section-title">▶️ Continuar viendo</h2>
+                </div>
+                <div class="anime-grid" id="continue-grid" style="display: flex; gap: 16px; overflow-x: auto; padding-bottom: 8px;"></div>
             </div>
 
             <div class="section">
@@ -1220,7 +1241,7 @@
                         <div class="genre-tags" id="detail-genres"></div>
                         <div class="hero-buttons">
                             <button class="btn btn-primary" onclick="playEpisode(1)">▶ Ver Episodio 1</button>
-                            <button class="btn btn-secondary">+ Agregar a Favoritos</button>
+                            <button class="btn btn-secondary" id="btn-favorite" onclick="toggleFavoriteCurrent()">+ Agregar a Favoritos</button>
                         </div>
                     </div>
                 </div>
@@ -1292,6 +1313,15 @@
                 <button class="btn btn-secondary" onclick="prevEpisode()" id="btn-prev">← Episodio Anterior</button>
                 <button class="btn btn-secondary" onclick="nextEpisode()" id="btn-next">Episodio Siguiente →</button>
             </div>
+        </div>
+
+        <!-- FAVORITES -->
+        <div id="page-favorites" class="page search-results">
+            <div class="search-header">
+                <h1>⭐ Mis Favoritos</h1>
+                <p>Animes que has guardado para ver después.</p>
+            </div>
+            <div class="anime-grid" id="favorites-grid"></div>
         </div>
 
         <!-- SEARCH -->
@@ -1672,6 +1702,7 @@
                     format
                     episodes
                     status
+                    coverImage { large }
                     nextAiringEpisode { episode }
                     relations {
                         edges {
@@ -1682,6 +1713,7 @@
                                 seasonYear
                                 format
                                 status
+                                coverImage { large }
                             }
                         }
                     }
@@ -1755,54 +1787,7 @@
 
         async function renderSeasonsTabs(title) {
             const container = document.getElementById('seasons-container');
-            if (!container) return;
-            container.innerHTML = '';
-            
-            const media = await fetchAnilistMetadata(title);
-            if (!media || !media.relations || !media.relations.edges) return;
-            
-            let seasonNodes = [];
-            seasonNodes.push({
-                title: media.title.romaji || media.title.english || title,
-                year: media.seasonYear || 0,
-                format: media.format,
-                isCurrent: true
-            });
-            
-            media.relations.edges.forEach(edge => {
-                if ((edge.relationType === "SEQUEL" || edge.relationType === "PREQUEL") && edge.node.format === "TV") {
-                    seasonNodes.push({
-                        title: edge.node.title.romaji || edge.node.title.english,
-                        year: edge.node.seasonYear || 0,
-                        format: edge.node.format,
-                        isCurrent: false
-                    });
-                }
-            });
-            
-            const uniqueTitles = new Set();
-            seasonNodes = seasonNodes.filter(node => {
-                const t = node.title.toLowerCase();
-                if (uniqueTitles.has(t)) return false;
-                uniqueTitles.add(t);
-                return true;
-            });
-            
-            if (seasonNodes.length <= 1) return;
-            
-            seasonNodes.sort((a, b) => a.year - b.year);
-            
-            const tabsHtml = seasonNodes.map((node, index) => {
-                const seasonNum = index + 1;
-                const yearLabel = node.year ? `(${node.year})` : '';
-                const activeClass = node.isCurrent ? 'active' : '';
-                return `<button class="season-btn ${activeClass}" onclick="searchAndOpenAnime('${node.title.replace(/'/g, "\\'")}')">Temporada ${seasonNum} ${yearLabel}</button>`;
-            }).join('');
-            
-            container.innerHTML = `
-                <h3 style="font-size:14px;color:var(--text-secondary);margin-bottom:10px;">Franquicia:</h3>
-                <div class="seasons-selector">${tabsHtml}</div>
-            `;
+            if (container) container.innerHTML = '';
         }
 
         // ============================================================
@@ -2199,30 +2184,140 @@
 
         async function loadRelatedAnimes(title, currentId) {
             const relatedSection = document.getElementById('related-section');
-            const relatedGrid = document.getElementById('related-grid');
-            if (!relatedSection || !relatedGrid) return;
+            if (!relatedSection) return;
             
             relatedSection.style.display = 'none';
-            relatedGrid.innerHTML = '';
 
-            if (!apiOnline) return;
-
-            let query = title;
-            if (title.includes(':')) {
-                query = title.split(':')[0];
-            } else {
-                const words = title.split(' ');
-                query = words.slice(0, Math.min(3, words.length)).join(' ');
+            async function doFallback() {
+                if (!apiOnline) return;
+                let query = title;
+                if (title.includes(':')) {
+                    query = title.split(':')[0];
+                } else {
+                    const words = title.split(' ');
+                    query = words.slice(0, Math.min(3, words.length)).join(' ');
+                }
+                const results = await apiSearch(query);
+                if (results && results.length > 0) {
+                    let filtered = results.filter(a => String(a.id) !== String(currentId) && a.title !== title);
+                    if (filtered.length > 0) {
+                        filtered.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+                        relatedSection.innerHTML = `
+                            <h2 style="margin-bottom: 25px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">🔗 Resultados Relacionados</h2>
+                            <div class="anime-grid" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:15px; margin-bottom: 30px;">
+                                ${filtered.slice(0, 10).map(mapApiToCard).map(createCard).join('')}
+                            </div>
+                        `;
+                        relatedSection.style.display = 'block';
+                    }
+                }
             }
 
-            const results = await apiSearch(query);
-            if (results && results.length > 0) {
-                let filtered = results.filter(a => String(a.id) !== String(currentId) && a.title !== title);
-                if (filtered.length > 0) {
-                    filtered.sort((a, b) => parseInt(a.id) - parseInt(b.id));
-                    relatedGrid.innerHTML = filtered.slice(0, 10).map(mapApiToCard).map(createCard).join('');
-                    relatedSection.style.display = 'block';
+            try {
+                const media = await fetchAnilistMetadata(title);
+                if (!media || !media.relations || !media.relations.edges) return doFallback();
+                
+                let seasonNodes = [];
+                seasonNodes.push({
+                    title: media.title.romaji || media.title.english || title,
+                    year: media.seasonYear || 0,
+                    format: media.format,
+                    episodes: media.episodes || '?',
+                    relationType: 'CURRENT',
+                    image: media.coverImage?.large,
+                    isCurrent: true
+                });
+                
+                media.relations.edges.forEach(edge => {
+                    const node = edge.node;
+                    if (!node) return;
+                    const format = node.format;
+                    if (["TV", "TV_SHORT", "MOVIE", "SPECIAL", "OVA", "ONA"].includes(format)) {
+                        seasonNodes.push({
+                            title: node.title?.romaji || node.title?.english || 'Desconocido',
+                            year: node.seasonYear || 0,
+                            format: format,
+                            episodes: node.episodes || '?',
+                            relationType: edge.relationType,
+                            image: node.coverImage?.large,
+                            isCurrent: false
+                        });
+                    }
+                });
+                
+                const uniqueTitles = new Set();
+                seasonNodes = seasonNodes.filter(node => {
+                    const t = node.title.toLowerCase();
+                    if (uniqueTitles.has(t)) return false;
+                    uniqueTitles.add(t);
+                    return true;
+                });
+                
+                if (seasonNodes.length <= 1) return doFallback();
+                
+                const mainStory = [];
+                const summaries = [];
+                const others = [];
+
+                seasonNodes.forEach(node => {
+                    if (node.relationType === "SUMMARY") {
+                        summaries.push(node);
+                    } else if (node.relationType === "SIDE_STORY" || node.relationType === "SPIN_OFF" || node.relationType === "ALTERNATIVE" || node.relationType === "CHARACTER") {
+                        others.push(node);
+                    } else {
+                        mainStory.push(node);
+                    }
+                });
+
+                mainStory.sort((a, b) => a.year - b.year);
+                summaries.sort((a, b) => a.year - b.year);
+                others.sort((a, b) => a.year - b.year);
+
+                function renderCards(nodes) {
+                    if (nodes.length === 0) return '';
+                    return '<div class="anime-grid" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:15px; margin-bottom: 30px;">' + 
+                    nodes.map(node => {
+                        const yearLabel = node.year ? ` • ${node.year}` : '';
+                        let formatLabel = "Temporada";
+                        if (node.format === "MOVIE") formatLabel = "Película";
+                        else if (node.format === "OVA" || node.format === "SPECIAL" || node.format === "ONA") formatLabel = "Especial / OVA";
+                        
+                        const badgeStyle = node.isCurrent ? 'background: var(--accent);' : 'background: rgba(0,0,0,0.7);';
+                        const currentLabel = node.isCurrent ? '<div style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:var(--accent); color:white; font-size:10px; padding:3px 10px; border-radius:10px; font-weight:bold; z-index:10; white-space:nowrap; box-shadow:0 2px 10px rgba(124,58,237,0.5);">ESTAS VIENDO</div>' : '';
+
+                        return `
+                        <div class="anime-card" style="position:relative; ${node.isCurrent ? 'border: 2px solid var(--accent); transform: scale(1.02);' : ''}" onclick="searchAndOpenAnime('${node.title.replace(/'/g, "\\'")}')">
+                            ${currentLabel}
+                            <img class="anime-image" src="${node.image || 'https://via.placeholder.com/300x400/1a1a1a/666?text=AniRD'}" alt="${node.title}">
+                            <span class="anime-badge badge-year" style="top:10px; right:10px; left:auto; backdrop-filter:blur(4px); ${badgeStyle}">${formatLabel}</span>
+                            <div class="anime-info">
+                                <div class="anime-title" style="font-size: 13px; white-space: normal; line-height: 1.3;">${node.title}</div>
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">${node.episodes !== '?' ? node.episodes + ' eps' : '? eps'}${yearLabel}</div>
+                            </div>
+                        </div>`;
+                    }).join('') + '</div>';
                 }
+
+                let finalHtml = `<h2 style="margin-bottom: 25px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">📖 Cronología y Franquicia</h2>`;
+                if (mainStory.length > 0) {
+                    finalHtml += `<div style="margin-bottom:8px;"><h3 style="font-size:16px; color:var(--text-primary); border-left: 4px solid var(--accent); padding-left: 10px;">Historia Principal (Orden de visualización)</h3><p style="font-size:12px; color:var(--text-secondary); margin-left:14px; margin-bottom:15px;">El recorrido principal que debes seguir para entender la historia completa.</p></div>`;
+                    finalHtml += renderCards(mainStory);
+                }
+                if (summaries.length > 0) {
+                    finalHtml += `<div style="margin-bottom:8px;"><h3 style="font-size:16px; color:var(--text-primary); border-left: 4px solid var(--warning); padding-left: 10px;">Películas Recopilatorias (Opcionales)</h3><p style="font-size:12px; color:var(--text-secondary); margin-left:14px; margin-bottom:15px;">Resúmenes de la historia principal. No es obligatorio verlas.</p></div>`;
+                    finalHtml += renderCards(summaries);
+                }
+                if (others.length > 0) {
+                    finalHtml += `<div style="margin-bottom:8px;"><h3 style="font-size:16px; color:var(--text-primary); border-left: 4px solid var(--text-secondary); padding-left: 10px;">Historias Alternativas y Spin-offs</h3><p style="font-size:12px; color:var(--text-secondary); margin-left:14px; margin-bottom:15px;">Contenido extra expandiendo el universo de la serie.</p></div>`;
+                    finalHtml += renderCards(others);
+                }
+
+                relatedSection.innerHTML = finalHtml;
+                relatedSection.style.display = 'block';
+
+            } catch (err) {
+                console.error("Error loading related animes via AniList", err);
+                return doFallback();
             }
         }
 
@@ -2608,8 +2703,156 @@
         }
 
         // ============================================================
+        // FEATURES (Favorites, Continue Watching, Search Debounce, Shortcuts, Theme)
+        // ============================================================
+
+        // Theme
+        function toggleTheme() {
+            const isLight = document.body.classList.toggle('light-theme');
+            localStorage.setItem('anird_theme', isLight ? 'light' : 'dark');
+            showToast(isLight ? 'Modo Claro activado' : 'Modo Oscuro activado');
+        }
+
+        // Favorites
+        function toggleFavoriteCurrent() {
+            if (!currentAnime) return;
+            let favs = JSON.parse(localStorage.getItem('anird_favorites')) || [];
+            const index = favs.findIndex(f => String(f.id) === String(currentAnime.id));
+            if (index > -1) {
+                favs.splice(index, 1);
+                showToast('❌ Eliminado de favoritos');
+            } else {
+                favs.push({
+                    id: currentAnime.id,
+                    title: currentAnime.title,
+                    image: currentAnime.image || currentAnime.cover,
+                    type: currentAnime.type,
+                    score: currentAnime.score,
+                    url: currentAnime.url || ''
+                });
+                showToast('⭐ Agregado a favoritos');
+            }
+            localStorage.setItem('anird_favorites', JSON.stringify(favs));
+            updateFavoriteButton();
+        }
+
+        function updateFavoriteButton() {
+            if (!currentAnime) return;
+            const btn = document.getElementById('btn-favorite');
+            if (!btn) return;
+            let favs = JSON.parse(localStorage.getItem('anird_favorites')) || [];
+            const isFav = favs.some(f => String(f.id) === String(currentAnime.id));
+            if (isFav) {
+                btn.textContent = '★ En Favoritos';
+                btn.style.color = 'white';
+                btn.style.background = 'var(--accent)';
+            } else {
+                btn.textContent = '+ Agregar a Favoritos';
+                btn.style.color = '';
+                btn.style.background = '';
+            }
+        }
+
+        function renderFavorites() {
+            const favs = JSON.parse(localStorage.getItem('anird_favorites')) || [];
+            const grid = document.getElementById('favorites-grid');
+            if (favs.length === 0) {
+                grid.innerHTML = '<p style="color:var(--text-secondary);grid-column:1/-1;text-align:center;padding:40px;">No tienes animes en favoritos aún.</p>';
+            } else {
+                grid.innerHTML = favs.map(createCard).join('');
+            }
+        }
+
+        // Continue Watching
+        function loadContinueWatching() {
+            const hist = JSON.parse(localStorage.getItem('anird_history')) || {};
+            const items = Object.values(hist).sort((a, b) => b.time - a.time).slice(0, 6);
+            if (items.length > 0) {
+                document.getElementById('continue-section').style.display = 'block';
+                document.getElementById('continue-grid').innerHTML = items.map(item => `
+                    <div class="anime-card" onclick="openAnime('${item.id}', '${item.url}')" style="min-width: 200px">
+                        <img class="anime-image" src="${item.image}" alt="${item.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400/1a1a1a/666?text=AniRD'">
+                        <span class="anime-badge badge-dub" style="background:var(--accent);">EP ${item.episode}</span>
+                        <div class="anime-info">
+                            <div class="anime-title">${item.title}</div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('continue-section').style.display = 'none';
+            }
+        }
+
+        // Debounce Search
+        let searchDebounce;
+        document.getElementById('searchInput').addEventListener("input", (e) => {
+            clearTimeout(searchDebounce);
+            const q = e.target.value.trim();
+            if (!q) return;
+            searchDebounce = setTimeout(() => performSearch(), 500);
+        });
+
+        // Keyboard Shortcuts
+        document.addEventListener("keydown", (e) => {
+            if (!document.getElementById('page-player').classList.contains('active')) return;
+            const video = document.getElementById('video-player');
+            const iframe = document.getElementById('iframe-player');
+            
+            if (e.key.toLowerCase() === 'f') {
+                e.preventDefault();
+                const container = document.querySelector('.player-container');
+                if (document.fullscreenElement) document.exitFullscreen();
+                else container.requestFullscreen?.();
+                return;
+            }
+            
+            if (iframe && iframe.style.display !== 'none') return;
+            if (!video || video.style.display === 'none') return;
+
+            switch (e.key) {
+                case " ":
+                    e.preventDefault();
+                    video.paused ? video.play() : video.pause();
+                    break;
+                case "ArrowLeft":
+                    e.preventDefault();
+                    video.currentTime = Math.max(0, video.currentTime - 10);
+                    break;
+                case "ArrowRight":
+                    e.preventDefault();
+                    video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 10);
+                    break;
+                case "Escape":
+                    if (!document.fullscreenElement) goBack();
+                    break;
+            }
+        });
+
+        // Overrides
+        const oldRouter = router;
+        router = function(page, pushState = true) {
+            oldRouter(page, pushState);
+            if (page === 'home') loadContinueWatching();
+            if (page === 'favorites') {
+                document.getElementById('page-favorites').classList.add('active');
+                renderFavorites();
+            } else {
+                document.getElementById('page-favorites').classList.remove('active');
+            }
+        };
+
+        const oldRenderDetail = renderAnimeDetail;
+        renderAnimeDetail = function(data) {
+            oldRenderDetail(data);
+            updateFavoriteButton();
+        };
+
+        // ============================================================
         // INIT
         // ============================================================
+        if (localStorage.getItem('anird_theme') === 'light' || (!localStorage.getItem('anird_theme') && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+            document.body.classList.add('light-theme');
+        }
         init();
     </script>
 </body>

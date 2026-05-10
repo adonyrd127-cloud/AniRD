@@ -1,6 +1,7 @@
 const express = require("express");
 const { requireApiKey } = require("../middlewares/auth");
 const { dailyRateLimit } = require("../middlewares/rate-limit");
+const { cacheMiddleware } = require("../middlewares/cache");
 const animeService = require("../services/anime.service");
 const downloadService = require("../services/download.service");
 const { ApiError } = require("../utils/api-error");
@@ -21,6 +22,7 @@ router.use(requireApiKey, dailyRateLimit);
 
 router.get(
   "/search",
+  cacheMiddleware(),
   asyncHandler(async (req, res) => {
     const response = await animeService.searchAnime(req.query.q, req.query.domain);
     res.status(200).json(response);
@@ -29,11 +31,11 @@ router.get(
 
 router.get(
   "/info",
+  cacheMiddleware(),
   asyncHandler(async (req, res) => {
     if (!req.query.url) {
       throw new ApiError(400, "Se requiere el parametro url");
     }
-
     const response = await animeService.getAnimeInfo(req.query.url);
     res.status(200).json(response);
   })
@@ -41,11 +43,11 @@ router.get(
 
 router.get(
   "/episode",
+  cacheMiddleware(),
   asyncHandler(async (req, res) => {
     if (!req.query.url) {
       throw new ApiError(400, "Se requiere el parametro url");
     }
-
     const response = await animeService.getEpisodeLinks(req.query.url, req.query.includeMega, req.query.excludeServers);
     res.status(200).json(response);
   })
@@ -56,11 +58,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const baseUrl = `${req.protocol}://${req.get("host")}`;
     const data = downloadService.createDownload(req.body || {}, baseUrl);
-
-    res.status(200).json({
-      success: true,
-      data,
-    });
+    res.status(200).json({ success: true, data });
   })
 );
 
@@ -68,11 +66,7 @@ router.get(
   "/download/:id",
   asyncHandler(async (req, res) => {
     const data = downloadService.getDownload(req.params.id);
-
-    res.status(200).json({
-      success: true,
-      data,
-    });
+    res.status(200).json({ success: true, data });
   })
 );
 
@@ -81,11 +75,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const baseUrl = `${req.protocol}://${req.get("host")}`;
     const data = downloadService.createBatch(req.body || {}, baseUrl);
-
-    res.status(200).json({
-      success: true,
-      data,
-    });
+    res.status(200).json({ success: true, data });
   })
 );
 
@@ -93,11 +83,7 @@ router.get(
   "/batch/:id",
   asyncHandler(async (req, res) => {
     const data = downloadService.getBatch(req.params.id);
-
-    res.status(200).json({
-      success: true,
-      data,
-    });
+    res.status(200).json({ success: true, data });
   })
 );
 

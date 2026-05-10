@@ -14,12 +14,11 @@ function requireApiKey(req, _res, next) {
     return next();
   }
 
-  const apiKeyFromHeader = req.header("x-api-key");
-  const apiKeyFromQuery = typeof req.query.apiKey === "string" ? req.query.apiKey : "";
-  const apiKey = (apiKeyFromHeader || apiKeyFromQuery || "").trim();
+  // SOLO header X-API-Key (mas seguro que query param)
+  const apiKey = (req.header("x-api-key") || "").trim();
 
   if (!apiKey) {
-    return next(new ApiError(401, "API Key requerida. Usa el header X-API-Key o parametro apiKey"));
+    return next(new ApiError(401, "API Key requerida. Usa el header X-API-Key"));
   }
 
   const configuredKeys = getConfiguredApiKeys();
