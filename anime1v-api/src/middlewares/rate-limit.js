@@ -1,4 +1,4 @@
-const fs = require("node:fs");
+const fs = require("node:fs/promises");
 const path = require("node:path");
 const { ApiError } = require("../utils/api-error");
 
@@ -8,48 +8,47 @@ const USAGE_FILE = path.join(DATA_DIR, "rate-limit.json");
 // Carga en memoria
 let usageByDayAndKey = new Map();
 
-function loadUsage() {
+async function loadUsage() {
   try {
-    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-    if (fs.existsSync(USAGE_FILE)) {
-      const raw = fs.readFileSync(USAGE_FILE, "utf-8");
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    try {
+      const raw = await fs.readFile(USAGE_FILE, "utf-8");
       const obj = JSON.parse(raw);
       usageByDayAndKey = new Map(Object.entries(obj));
+    } catch (e) {
+      if (e.code !== "ENOENT") throw e;
+      usageByDayAndKey = new Map();
     }
   } catch (_e) {
     usageByDayAndKey = new Map();
   }
 }
 
-function saveUsage() {
+async function saveUsage() {
   try {
-    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    await fs.mkdir(DATA_DIR, { recursive: true });
     const obj = Object.fromEntries(usageByDayAndKey);
-    fs.writeFile(USAGE_FILE, JSON.stringify(obj, null, 2), "utf-8", (err) => {
-      // Silencioso
-    });
-  } catch (_e) {
-    // Silencioso
-  }
-}
-
-function saveUsageSync() {
-  try {
-    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-    const obj = Object.fromEntries(usageByDayAndKey);
-    fs.writeFileSync(USAGE_FILE, JSON.stringify(obj, null, 2), "utf-8");
+    await fs.writeFile(USAGE_FILE, JSON.stringify(obj, null, 2), "utf-8");
   } catch (_e) {
     // Silencioso
   }
 }
 
 // Guardar cada 30 segundos
-setInterval(saveUsage, 30000);
+const saveInterval = setInterval(() => {
+  saveUsage().catch(() => { /* Silencioso */ });
+}, 30000);
 // Guardar al cerrar
-process.on("SIGINT", () => { saveUsageSync(); process.exit(0); });
-process.on("SIGTERM", () => { saveUsageSync(); process.exit(0); });
+const handleExit = async () => {
+  clearInterval(saveInterval);
+  await saveUsage();
+  process.exit(0);
+};
 
-loadUsage();
+process.on("SIGINT", handleExit);
+process.on("SIGTERM", handleExit);
+
+const initialLoadPromise = loadUsage();
 
 function getUtcDayStamp(date) {
   return date.toISOString().slice(0, 10);
@@ -69,7 +68,9 @@ function cleanupOldEntries(currentDayStamp) {
   }
 }
 
-function dailyRateLimit(req, res, next) {
+async function dailyRateLimit(req, res, next) {
+  await initialLoadPromise;
+
   if (String(process.env.DISABLE_RATE_LIMIT).toLowerCase() === "true") {
     return next();
   }
