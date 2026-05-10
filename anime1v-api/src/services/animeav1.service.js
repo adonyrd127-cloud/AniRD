@@ -1,4 +1,4 @@
-const axios = require("axios");
+let axios = require("axios");
 const cheerio = require("cheerio");
 const vm = require("node:vm");
 const { URL } = require("node:url");
