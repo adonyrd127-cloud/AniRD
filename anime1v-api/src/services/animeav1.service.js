@@ -254,6 +254,34 @@ function pushDeduped(target, link) {
   if (!exists) target.push(link);
 }
 
+function processVariantArray(array, variant, kindHint, domain, collector) {
+  for (const entry of array) {
+    const normalized = normalizeLinkObject(entry, domain);
+    if (!normalized) continue;
+    const kind = inferLinkKind(normalized.url, kindHint);
+    pushDeduped(collector[kind][variant], normalized);
+  }
+}
+
+function processVariantObject(object, variant, kindHint, domain, collector) {
+  for (const [childKey, childValue] of Object.entries(object)) {
+    if (!Array.isArray(childValue)) {
+      const normalized = normalizeLinkObject(childValue, domain);
+      if (!normalized) continue;
+      const childKind = /download/i.test(childKey) ? "download" : /stream|embed|server/i.test(childKey) ? "stream" : inferLinkKind(normalized.url, kindHint);
+      pushDeduped(collector[childKind][variant], normalized);
+      continue;
+    }
+    const childKind = /download/i.test(childKey) ? "download" : /stream|embed|server/i.test(childKey) ? "stream" : kindHint || "stream";
+    for (const entry of childValue) {
+      const normalized = normalizeLinkObject(entry, domain);
+      if (!normalized) continue;
+      const inferredKind = inferLinkKind(normalized.url, childKind);
+      pushDeduped(collector[inferredKind][variant], normalized);
+    }
+  }
+}
+
 function parseVariantContainer(container, kindHint, domain, collector) {
   if (!isObject(container)) return;
   const variantPairs = [
@@ -263,31 +291,11 @@ function parseVariantContainer(container, kindHint, domain, collector) {
   for (const [variant, value] of variantPairs) {
     if (!value) continue;
     if (Array.isArray(value)) {
-      for (const entry of value) {
-        const normalized = normalizeLinkObject(entry, domain);
-        if (!normalized) continue;
-        const kind = inferLinkKind(normalized.url, kindHint);
-        pushDeduped(collector[kind][variant], normalized);
-      }
+      processVariantArray(value, variant, kindHint, domain, collector);
       continue;
     }
     if (isObject(value)) {
-      for (const [childKey, childValue] of Object.entries(value)) {
-        if (!Array.isArray(childValue)) {
-          const normalized = normalizeLinkObject(childValue, domain);
-          if (!normalized) continue;
-          const childKind = /download/i.test(childKey) ? "download" : /stream|embed|server/i.test(childKey) ? "stream" : inferLinkKind(normalized.url, kindHint);
-          pushDeduped(collector[childKind][variant], normalized);
-          continue;
-        }
-        const childKind = /download/i.test(childKey) ? "download" : /stream|embed|server/i.test(childKey) ? "stream" : kindHint || "stream";
-        for (const entry of childValue) {
-          const normalized = normalizeLinkObject(entry, domain);
-          if (!normalized) continue;
-          const inferredKind = inferLinkKind(normalized.url, childKind);
-          pushDeduped(collector[inferredKind][variant], normalized);
-        }
-      }
+      processVariantObject(value, variant, kindHint, domain, collector);
     }
   }
 }
