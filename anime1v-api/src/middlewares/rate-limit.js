@@ -25,6 +25,18 @@ function saveUsage() {
   try {
     if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
     const obj = Object.fromEntries(usageByDayAndKey);
+    fs.writeFile(USAGE_FILE, JSON.stringify(obj, null, 2), "utf-8", (err) => {
+      // Silencioso
+    });
+  } catch (_e) {
+    // Silencioso
+  }
+}
+
+function saveUsageSync() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    const obj = Object.fromEntries(usageByDayAndKey);
     fs.writeFileSync(USAGE_FILE, JSON.stringify(obj, null, 2), "utf-8");
   } catch (_e) {
     // Silencioso
@@ -34,8 +46,8 @@ function saveUsage() {
 // Guardar cada 30 segundos
 setInterval(saveUsage, 30000);
 // Guardar al cerrar
-process.on("SIGINT", () => { saveUsage(); process.exit(0); });
-process.on("SIGTERM", () => { saveUsage(); process.exit(0); });
+process.on("SIGINT", () => { saveUsageSync(); process.exit(0); });
+process.on("SIGTERM", () => { saveUsageSync(); process.exit(0); });
 
 loadUsage();
 
