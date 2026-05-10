@@ -494,7 +494,8 @@ async function searchAnime(query, domainCandidate) {
   let bestResults = [];
   let bestSource = "html";
   const candidates = [{ key: "search", value: cleanQuery }, { key: "q", value: cleanQuery }];
-  for (const candidate of candidates) {
+
+  const searchPromises = candidates.map(async (candidate) => {
     const searchUrl = `https://${domain}/catalogo?${candidate.key}=${encodeURIComponent(candidate.value)}`;
     const html = await fetchHtml(searchUrl);
     let results = [];
@@ -504,10 +505,22 @@ async function searchAnime(query, domainCandidate) {
       if (bestArray) results = mapSearchResults(bestArray, domain);
     }
     if (results.length === 0) results = parseSearchResultsFromHtml(html, domain);
-    results = filterSearchResultsByQuery(results, cleanQuery);
-    if (results.length > bestResults.length) { bestResults = results; bestSource = svelteData ? "json" : "html"; }
+    return {
+      results: filterSearchResultsByQuery(results, cleanQuery),
+      source: svelteData ? "json" : "html"
+    };
+  });
+
+  const candidateResults = await Promise.all(searchPromises);
+
+  for (const res of candidateResults) {
+    if (res.results.length > bestResults.length) {
+      bestResults = res.results;
+      bestSource = res.source;
+    }
     if (bestResults.length >= 5) break;
   }
+
   return { success: true, data: { query: cleanQuery, results: bestResults, count: bestResults.length }, source: bestSource };
 }
 
