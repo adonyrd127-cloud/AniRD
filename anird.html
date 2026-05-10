@@ -1143,11 +1143,11 @@
                 <li><a onclick="filterByCategory('dub')">Latino</a></li>
                 <li><a onclick="router('favorites')" id="nav-favorites">⭐ Favoritos</a></li>
                 <li><a onclick="showCalendar()" id="nav-calendar">📅 Calendario</a></li>
-                <li><a onclick="toggleTheme()" id="btnTheme" title="Cambiar tema" style="font-size:16px">🌓</a></li>
+                <li><a onclick="toggleTheme()" id="btnTheme" title="Cambiar tema" aria-label="Cambiar tema" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); toggleTheme(); }" style="font-size:16px">🌓</a></li>
             </ul>
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Buscar anime..." autocomplete="off">
-                <button onclick="performSearch()">🔍</button>
+                <input type="text" id="searchInput" aria-label="Buscar anime" placeholder="Buscar anime..." autocomplete="off">
+                <button aria-label="Buscar" onclick="performSearch()">🔍</button>
             </div>
         </nav>
     </header>
@@ -1281,7 +1281,7 @@
             <a class="back-btn" onclick="goBack()">← Volver al anime</a>
             <div class="player-container">
                 <div class="player-placeholder" id="player-area">
-                    <div class="play-button-large" onclick="startPlayback()">▶</div>
+                    <div class="play-button-large" aria-label="Reproducir" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); startPlayback(); }" onclick="startPlayback()">▶</div>
                     <p style="color:var(--text-secondary);">Haz clic para reproducir</p>
                     <p style="color:var(--text-muted);font-size:12px;margin-top:5px;">Servidor: YourUpload | Calidad: 1080p</p>
                 </div>

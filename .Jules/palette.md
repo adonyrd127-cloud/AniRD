@@ -1,0 +1,3 @@
+## 2024-05-24 - Accessibility on Custom Controls
+**Learning:** In AniRD, custom icon buttons (like `<a>` used as a button for theme toggle, or `<div>` for the play button) completely lack keyboard accessibility by default. Using arbitrary tags for interaction means they're unreachable via `Tab` and invisible to screen readers without specific interventions.
+**Action:** Always verify if custom interactive elements use semantically meaningful tags like `<button>`. If `<button>` cannot be used, ensure `role="button"`, `tabindex="0"`, `aria-label`, and `onkeydown` (listening to Enter and Space keys) are present to replicate native button behavior for accessibility and keyboard navigation.
