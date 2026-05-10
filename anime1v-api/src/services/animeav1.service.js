@@ -1,6 +1,6 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
-const vm = require("node:vm");
+const acorn = require("acorn");
 const { URL } = require("node:url");
 const { ApiError } = require("../utils/api-error");
 
@@ -93,10 +93,49 @@ function extractBalancedSection(text, startIndex, openChar, closeChar) {
   return null;
 }
 
+function evaluateAst(node) {
+  if (!node) return null;
+  switch (node.type) {
+    case "Program":
+      return node.body.length > 0 ? evaluateAst(node.body[0]) : null;
+    case "ExpressionStatement":
+      return evaluateAst(node.expression);
+    case "Literal":
+      return node.value;
+    case "Identifier":
+      if (node.name === "undefined") return undefined;
+      if (node.name === "NaN") return NaN;
+      if (node.name === "Infinity") return Infinity;
+      return null;
+    case "ArrayExpression":
+      return node.elements.map(evaluateAst);
+    case "ObjectExpression": {
+      const obj = {};
+      for (const prop of node.properties) {
+        if (prop.type === "Property") {
+          const key = prop.key.type === "Identifier" ? prop.key.name : evaluateAst(prop.key);
+          obj[key] = evaluateAst(prop.value);
+        }
+      }
+      return obj;
+    }
+    case "UnaryExpression": {
+      const arg = evaluateAst(node.argument);
+      if (node.operator === "-") return -arg;
+      if (node.operator === "+") return +arg;
+      if (node.operator === "!") return !arg;
+      if (node.operator === "void") return undefined;
+      return null;
+    }
+    default:
+      return null;
+  }
+}
+
 function safeEvaluate(expression) {
   try {
-    const context = Object.create(null);
-    return vm.runInNewContext(expression, context, { timeout: 1000, displayErrors: false });
+    const ast = acorn.parse(expression, { ecmaVersion: 2020 });
+    return evaluateAst(ast);
   } catch (_error) { return null; }
 }
 
