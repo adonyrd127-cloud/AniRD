@@ -129,4 +129,4 @@ async function getEpisodeLinks(urlCandidate, includeMega, excludeServers) {
   });
 }
 
-module.exports = { searchAnime, getAnimeInfo, getEpisodeLinks };
+module.exports = { searchAnime, getAnimeInfo, getEpisodeLinks, normalizeDomain };
