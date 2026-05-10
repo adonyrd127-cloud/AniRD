@@ -7,9 +7,15 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "check": "node --check src/server.js"
+    "check": "node --check src/server.js",
+    "test": "jest"
   },
-  "keywords": ["anime", "api", "scraper", "personal"],
+  "keywords": [
+    "anime",
+    "api",
+    "scraper",
+    "personal"
+  ],
   "author": "AniRD",
   "license": "MIT",
   "dependencies": {
@@ -27,6 +33,7 @@
     "puppeteer": "^24.42.0"
   },
   "devDependencies": {
+    "jest": "^29.7.0",
     "nodemon": "^3.1.4"
   }
 }
