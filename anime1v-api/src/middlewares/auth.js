@@ -22,7 +22,10 @@ function requireApiKey(req, _res, next) {
   }
 
   const configuredKeys = getConfiguredApiKeys();
-  if (configuredKeys.length > 0 && !configuredKeys.includes(apiKey)) {
+  if (configuredKeys.length === 0) {
+    return next(new ApiError(500, "Servidor mal configurado: API_KEYS no definidas"));
+  }
+  if (!configuredKeys.includes(apiKey)) {
     return next(new ApiError(401, "API Key invalida o expirada"));
   }
 
