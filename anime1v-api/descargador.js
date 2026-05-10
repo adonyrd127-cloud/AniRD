@@ -23,12 +23,20 @@ const PROVIDER_DOMAINS = {
   "monoschinos2.com": "MonosChinos",
 };
 
+const DEFAULT_PROVIDER = "animeav1";
+
 function detectProvider(input) {
+  if (!input || typeof input !== "string") return DEFAULT_PROVIDER;
   const lower = input.toLowerCase();
-  for (const [domain, label] of Object.entries(PROVIDER_DOMAINS)) {
-    if (lower.includes(domain)) return label;
-  }
-  return null;
+
+  if (lower.includes("animeav1.com") || lower.includes("animeav1") || lower.includes("https://animeav1.com")) return "animeav1";
+  if (lower.includes("jkanime.net") || lower.includes("jkanime")) return "jkanime";
+  if (lower.includes("animeflv.net") || lower.includes("animeflv")) return "animeflv";
+  if (lower.includes("hentaila.com") || lower.includes("hentaila")) return "hentaila";
+  if (lower.includes("tioanime.com") || lower.includes("tioanime")) return "tioanime";
+  if (lower.includes("monoschinos2.com") || lower.includes("monoschinos")) return "monoschinos";
+
+  return DEFAULT_PROVIDER; // Fallback
 }
 
 async function main() {
@@ -331,7 +339,11 @@ async function main() {
   }, 1000);
 }
 
-main().catch((err) => {
-  console.error("\nError inesperado:", err.message);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    console.error("\nError inesperado:", err.message);
+    process.exit(1);
+  });
+}
+
+module.exports = { detectProvider, DEFAULT_PROVIDER };
