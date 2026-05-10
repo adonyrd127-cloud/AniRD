@@ -24,7 +24,10 @@ router.get(
   "/search",
   cacheMiddleware(),
   asyncHandler(async (req, res) => {
-    const response = await animeService.searchAnime(req.query.q, req.query.domain);
+    const { q, domain } = req.query;
+    if (!q) throw new ApiError(400, "El parametro 'q' (query) es requerido");
+
+    const response = await animeService.searchAnime(q, domain);
     res.status(200).json(response);
   })
 );
