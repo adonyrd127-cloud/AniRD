@@ -1,6 +1,6 @@
-const axios = require("axios");
+let axios = require("axios");
 const cheerio = require("cheerio");
-const vm = require("node:vm");
+const acorn = require("acorn");
 const { URL } = require("node:url");
 const { ApiError } = require("../utils/api-error");
 
@@ -93,10 +93,49 @@ function extractBalancedSection(text, startIndex, openChar, closeChar) {
   return null;
 }
 
+function evaluateAst(node) {
+  if (!node) return null;
+  switch (node.type) {
+    case "Program":
+      return node.body.length > 0 ? evaluateAst(node.body[0]) : null;
+    case "ExpressionStatement":
+      return evaluateAst(node.expression);
+    case "Literal":
+      return node.value;
+    case "Identifier":
+      if (node.name === "undefined") return undefined;
+      if (node.name === "NaN") return NaN;
+      if (node.name === "Infinity") return Infinity;
+      return null;
+    case "ArrayExpression":
+      return node.elements.map(evaluateAst);
+    case "ObjectExpression": {
+      const obj = {};
+      for (const prop of node.properties) {
+        if (prop.type === "Property") {
+          const key = prop.key.type === "Identifier" ? prop.key.name : evaluateAst(prop.key);
+          obj[key] = evaluateAst(prop.value);
+        }
+      }
+      return obj;
+    }
+    case "UnaryExpression": {
+      const arg = evaluateAst(node.argument);
+      if (node.operator === "-") return -arg;
+      if (node.operator === "+") return +arg;
+      if (node.operator === "!") return !arg;
+      if (node.operator === "void") return undefined;
+      return null;
+    }
+    default:
+      return null;
+  }
+}
+
 function safeEvaluate(expression) {
   try {
-    const context = Object.create(null);
-    return vm.runInNewContext(expression, context, { timeout: 1000, displayErrors: false });
+    const ast = acorn.parse(expression, { ecmaVersion: 2020 });
+    return evaluateAst(ast);
   } catch (_error) { return null; }
 }
 
@@ -215,6 +254,34 @@ function pushDeduped(target, link) {
   if (!exists) target.push(link);
 }
 
+function processVariantArray(array, variant, kindHint, domain, collector) {
+  for (const entry of array) {
+    const normalized = normalizeLinkObject(entry, domain);
+    if (!normalized) continue;
+    const kind = inferLinkKind(normalized.url, kindHint);
+    pushDeduped(collector[kind][variant], normalized);
+  }
+}
+
+function processVariantObject(object, variant, kindHint, domain, collector) {
+  for (const [childKey, childValue] of Object.entries(object)) {
+    if (!Array.isArray(childValue)) {
+      const normalized = normalizeLinkObject(childValue, domain);
+      if (!normalized) continue;
+      const childKind = /download/i.test(childKey) ? "download" : /stream|embed|server/i.test(childKey) ? "stream" : inferLinkKind(normalized.url, kindHint);
+      pushDeduped(collector[childKind][variant], normalized);
+      continue;
+    }
+    const childKind = /download/i.test(childKey) ? "download" : /stream|embed|server/i.test(childKey) ? "stream" : kindHint || "stream";
+    for (const entry of childValue) {
+      const normalized = normalizeLinkObject(entry, domain);
+      if (!normalized) continue;
+      const inferredKind = inferLinkKind(normalized.url, childKind);
+      pushDeduped(collector[inferredKind][variant], normalized);
+    }
+  }
+}
+
 function parseVariantContainer(container, kindHint, domain, collector) {
   if (!isObject(container)) return;
   const variantPairs = [
@@ -224,31 +291,11 @@ function parseVariantContainer(container, kindHint, domain, collector) {
   for (const [variant, value] of variantPairs) {
     if (!value) continue;
     if (Array.isArray(value)) {
-      for (const entry of value) {
-        const normalized = normalizeLinkObject(entry, domain);
-        if (!normalized) continue;
-        const kind = inferLinkKind(normalized.url, kindHint);
-        pushDeduped(collector[kind][variant], normalized);
-      }
+      processVariantArray(value, variant, kindHint, domain, collector);
       continue;
     }
     if (isObject(value)) {
-      for (const [childKey, childValue] of Object.entries(value)) {
-        if (!Array.isArray(childValue)) {
-          const normalized = normalizeLinkObject(childValue, domain);
-          if (!normalized) continue;
-          const childKind = /download/i.test(childKey) ? "download" : /stream|embed|server/i.test(childKey) ? "stream" : inferLinkKind(normalized.url, kindHint);
-          pushDeduped(collector[childKind][variant], normalized);
-          continue;
-        }
-        const childKind = /download/i.test(childKey) ? "download" : /stream|embed|server/i.test(childKey) ? "stream" : kindHint || "stream";
-        for (const entry of childValue) {
-          const normalized = normalizeLinkObject(entry, domain);
-          if (!normalized) continue;
-          const inferredKind = inferLinkKind(normalized.url, childKind);
-          pushDeduped(collector[inferredKind][variant], normalized);
-        }
-      }
+      processVariantObject(value, variant, kindHint, domain, collector);
     }
   }
 }
@@ -494,7 +541,8 @@ async function searchAnime(query, domainCandidate) {
   let bestResults = [];
   let bestSource = "html";
   const candidates = [{ key: "search", value: cleanQuery }, { key: "q", value: cleanQuery }];
-  for (const candidate of candidates) {
+
+  const searchPromises = candidates.map(async (candidate) => {
     const searchUrl = `https://${domain}/catalogo?${candidate.key}=${encodeURIComponent(candidate.value)}`;
     const html = await fetchHtml(searchUrl);
     let results = [];
@@ -504,10 +552,22 @@ async function searchAnime(query, domainCandidate) {
       if (bestArray) results = mapSearchResults(bestArray, domain);
     }
     if (results.length === 0) results = parseSearchResultsFromHtml(html, domain);
-    results = filterSearchResultsByQuery(results, cleanQuery);
-    if (results.length > bestResults.length) { bestResults = results; bestSource = svelteData ? "json" : "html"; }
+    return {
+      results: filterSearchResultsByQuery(results, cleanQuery),
+      source: svelteData ? "json" : "html"
+    };
+  });
+
+  const candidateResults = await Promise.all(searchPromises);
+
+  for (const res of candidateResults) {
+    if (res.results.length > bestResults.length) {
+      bestResults = res.results;
+      bestSource = res.source;
+    }
     if (bestResults.length >= 5) break;
   }
+
   return { success: true, data: { query: cleanQuery, results: bestResults, count: bestResults.length }, source: bestSource };
 }
 

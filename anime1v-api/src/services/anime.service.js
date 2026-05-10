@@ -76,40 +76,44 @@ function findProviderForUrl(urlCandidate) {
   }
 }
 
+async function executeProviderSearch(providersToTry, query, isForced) {
+  let lastEmpty = null;
+  const errors = [];
+
+  for (const provider of providersToTry) {
+    try {
+      const result = await provider.service.searchAnime(query, provider.domains[0]);
+      const count = result?.data?.count ?? 0;
+      if (count > 0 || isForced) {
+        return { ...result, source: result?.source || provider.id };
+      }
+      if (!lastEmpty) {
+        lastEmpty = { ...result, source: result?.source || provider.id };
+      }
+    } catch (error) {
+      errors.push({ provider: provider.id, error: error.message });
+    }
+  }
+
+  if (lastEmpty) return lastEmpty;
+  if (errors.length === providersToTry.length && errors[0]?.error) {
+    throw new ApiError(502, `No se pudo completar la busqueda. Errores: ${errors.map(e => e.provider).join(", ")}`);
+  }
+  throw new ApiError(502, "No se pudo completar la busqueda en proveedores");
+}
+
 async function searchAnime(query, domainCandidate) {
   return withServiceCache("search", { query, domainCandidate }, async () => {
     const forcedProvider = findProviderByDomain(domainCandidate) || findProviderById(domainCandidate);
     const providersToTry = forcedProvider ? [forcedProvider] : PROVIDERS;
 
-    let lastEmpty = null;
-    const errors = [];
-
-    for (const provider of providersToTry) {
-      try {
-        const result = await provider.service.searchAnime(query, provider.domains[0]);
-        const count = result?.data?.count ?? 0;
-        if (count > 0 || forcedProvider) {
-          return { ...result, source: result?.source || provider.id };
-        }
-        if (!lastEmpty) {
-          lastEmpty = { ...result, source: result?.source || provider.id };
-        }
-      } catch (error) {
-        errors.push({ provider: provider.id, error: error.message });
-      }
-    }
-
-    if (lastEmpty) return lastEmpty;
-    if (errors.length === providersToTry.length && errors[0]?.error) {
-      throw new ApiError(502, `No se pudo completar la busqueda. Errores: ${errors.map(e => e.provider).join(", ")}`);
-    }
-    throw new ApiError(502, "No se pudo completar la busqueda en proveedores");
+    return executeProviderSearch(providersToTry, query, !!forcedProvider);
   });
 }
 
 async function getAnimeInfo(urlCandidate) {
   return withServiceCache("info", { urlCandidate }, async () => {
-    const provider = findProviderForUrl(urlCandidate) || PROVIDERS[0];
+    const provider = findProviderForUrl(urlCandidate);
     if (!provider) throw new ApiError(400, "Proveedor no soportado");
     const result = await provider.service.getAnimeInfo(urlCandidate);
     return { ...result, source: result?.source || provider.id };
@@ -118,11 +122,11 @@ async function getAnimeInfo(urlCandidate) {
 
 async function getEpisodeLinks(urlCandidate, includeMega, excludeServers) {
   return withServiceCache("episode", { urlCandidate, includeMega, excludeServers }, async () => {
-    const provider = findProviderForUrl(urlCandidate) || PROVIDERS[0];
+    const provider = findProviderForUrl(urlCandidate);
     if (!provider) throw new ApiError(400, "Proveedor no soportado");
     const result = await provider.service.getEpisodeLinks(urlCandidate, includeMega, excludeServers);
     return { ...result, source: result?.source || provider.id };
   });
 }
 
-module.exports = { searchAnime, getAnimeInfo, getEpisodeLinks };
+module.exports = { searchAnime, getAnimeInfo, getEpisodeLinks, normalizeDomain };
