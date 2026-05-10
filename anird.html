@@ -2119,7 +2119,14 @@
             document.getElementById('detail-aired').textContent = anime.aired;
             document.getElementById('detail-rating').textContent = anime.rating;
 
-            document.getElementById('detail-genres').innerHTML = anime.genres.map(g => `<span class="genre-tag">${g}</span>`).join('');
+            const genresContainer = document.getElementById('detail-genres');
+            genresContainer.textContent = '';
+            anime.genres.forEach(g => {
+                const span = document.createElement('span');
+                span.className = 'genre-tag';
+                span.textContent = g;
+                genresContainer.appendChild(span);
+            });
 
             renderEpisodes();
             renderSeasonsTabs(anime.title);
@@ -2175,7 +2182,15 @@
             document.getElementById('detail-episodes').textContent = currentAnime.episodes;
             document.getElementById('detail-aired').textContent = currentAnime.aired;
             document.getElementById('detail-rating').textContent = currentAnime.rating;
-            document.getElementById('detail-genres').innerHTML = (data.genres || []).map(g => `<span class="genre-tag">${g.name || g}</span>`).join('');
+
+            const detailGenresContainer = document.getElementById('detail-genres');
+            detailGenresContainer.textContent = '';
+            (data.genres || []).forEach(g => {
+                const span = document.createElement('span');
+                span.className = 'genre-tag';
+                span.textContent = g.name || g;
+                detailGenresContainer.appendChild(span);
+            });
 
             renderEpisodes();
             renderSeasonsTabs(currentAnime.title);

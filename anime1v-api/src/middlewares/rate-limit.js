@@ -38,7 +38,6 @@ async function saveUsage() {
 const saveInterval = setInterval(() => {
   saveUsage().catch(() => { /* Silencioso */ });
 }, 30000);
-
 // Guardar al cerrar
 const handleExit = async () => {
   clearInterval(saveInterval);
