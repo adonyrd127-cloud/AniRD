@@ -18,6 +18,7 @@ for (const svc of services) {
 }
 
 const animeService = require('../src/services/anime.service');
+const { normalizeDomain } = animeService;
 
 test('searchAnime tests', async (t) => {
   await t.test('uses forced provider if domain matches', async (t) => {
@@ -161,22 +162,6 @@ test('caching tests', async (t) => {
   });
 });
 
-test('normalizeDomain invalid cases', async (t) => {
-  await t.test('domain without string returns null and falls back to all providers', async (t) => {
-    const animeav1Mock = t.mock.method(animeav1Service, 'searchAnime', async () => ({ data: { count: 1 } }));
-    const jkanimeMock = t.mock.method(jkanimeService, 'searchAnime', async () => ({ data: { count: 1 } }));
-    const animeflvMock = t.mock.method(animeflvService, 'searchAnime', async () => ({ data: { count: 1 } }));
-    const hentailaMock = t.mock.method(hentailaService, 'searchAnime', async () => ({ data: { count: 1 } }));
-    const tioanimeMock = t.mock.method(tioanimeService, 'searchAnime', async () => ({ data: { count: 1 } }));
-    const monoschinosMock = t.mock.method(monoschinosService, 'searchAnime', async () => ({ data: { count: 1 } }));
-
-    const res = await animeService.searchAnime('test', 123);
-
-    assert.strictEqual(res.source, 'animeav1');
-    assert.strictEqual(animeav1Mock.mock.callCount(), 1);
-  });
-});
-
 test('domain Matches test cases', async (t) => {
   await t.test('urlCandidate throws on URL constructor in findProviderForUrl', async (t) => {
     const animeav1Mock = t.mock.method(animeav1Service, 'getAnimeInfo', async () => ({ data: { title: 'Default Info' } }));
@@ -184,5 +169,32 @@ test('domain Matches test cases', async (t) => {
 
     assert.strictEqual(res.source, 'animeav1');
     assert.strictEqual(animeav1Mock.mock.callCount(), 1);
+  });
+});
+
+test('normalizeDomain function', async (t) => {
+  await t.test('should return null for empty or non-string inputs', () => {
+    assert.strictEqual(normalizeDomain(null), null);
+    assert.strictEqual(normalizeDomain(undefined), null);
+    assert.strictEqual(normalizeDomain(123), null);
+    assert.strictEqual(normalizeDomain('   '), null);
+  });
+
+  await t.test('should normalize valid domains', () => {
+    assert.strictEqual(normalizeDomain('animeflv.net'), 'animeflv.net');
+    assert.strictEqual(normalizeDomain('  JkAnime.net  '), 'jkanime.net');
+    assert.strictEqual(normalizeDomain('www.tioanime.com'), 'www.tioanime.com');
+  });
+
+  await t.test('should normalize full URLs', () => {
+    assert.strictEqual(normalizeDomain('https://animeflv.net/anime/test'), 'animeflv.net');
+    assert.strictEqual(normalizeDomain('http://jkanime.net/'), 'jkanime.net');
+    assert.strictEqual(normalizeDomain('  https://www.tioanime.com/ver/test  '), 'www.tioanime.com');
+  });
+
+  await t.test('should handle invalid URLs (error path)', () => {
+    assert.strictEqual(normalizeDomain('invalid url format'), 'invalid url format');
+    assert.strictEqual(normalizeDomain('invalid url/with slash'), 'invalid url');
+    assert.strictEqual(normalizeDomain('domain.com /path'), 'domain.com ');
   });
 });
