@@ -33,17 +33,19 @@ app.use(
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-  : [];
+  : ["http://localhost:5173", "http://127.0.0.1:5173"];
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl requests)
-    if (!origin) return callback(null, true);
+    // Permite peticiones locales sin origin o desde localhost/127.0.0.1
+    if (!origin || origin.includes("localhost") || origin.includes("127.0.0.1")) {
+      return callback(null, true);
+    }
 
     if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
       callback(null, true);
     } else {
-      callback(new ApiError(403, "Not allowed by CORS"));
+      callback(new Error("Not allowed by CORS"));
     }
   },
 };

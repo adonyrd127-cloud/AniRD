@@ -23,9 +23,21 @@ export const dbService = {
   },
 
   async getContinueWatching() {
-    // Ultimos 20 items no completados (>90% = completado)
+    // Obtener todo el historial ordenado por la fecha de actualización más reciente
     const history = await db.history.orderBy('updatedAt').reverse().toArray();
-    return history.filter(item => {
+    
+    // Usar un Map para quedarnos solo con la entrada más reciente de cada animeId
+    const uniqueAnimes = new Map();
+    history.forEach(item => {
+      if (!uniqueAnimes.has(item.animeId)) {
+        uniqueAnimes.set(item.animeId, item);
+      }
+    });
+
+    const deduped = Array.from(uniqueAnimes.values());
+
+    // Filtrar los que no han sido terminados (>90%) y limitar a 20
+    return deduped.filter(item => {
       if (!item.duration || item.duration === 0) return true;
       const percentage = (item.progress / item.duration) * 100;
       return percentage < 90;
@@ -33,15 +45,20 @@ export const dbService = {
   },
 
   async toggleFavorite(anime) {
-    const existing = await db.favorites.get(anime.id);
+    const id = anime.mal_id || anime.id || anime.animeId;
+    const existing = await db.favorites.get(id);
+    
     if (existing) {
-      await db.favorites.delete(anime.id);
+      await db.favorites.delete(id);
       return false; // Removed
     } else {
       await db.favorites.add({
-        animeId: anime.id,
+        animeId: id,
         title: anime.title,
-        cover: anime.cover,
+        cover: anime.images?.jpg?.large_image_url || anime.cover || '',
+        type: anime.type || '',
+        score: anime.score || '',
+        episodes: anime.episodes || null,
         addedAt: Date.now()
       });
       return true; // Added
@@ -49,7 +66,12 @@ export const dbService = {
   },
 
   async isFavorite(animeId) {
-    const existing = await db.favorites.get(animeId);
+    if (!animeId) return false;
+    const existing = await db.favorites.get(Number(animeId));
     return !!existing;
+  },
+
+  async getFavorites() {
+    return await db.favorites.orderBy('addedAt').reverse().toArray();
   }
 };

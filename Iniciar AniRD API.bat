@@ -1,20 +1,21 @@
 @echo off
-title AniRD - API de Anime
-color 0A
+title AniRD v3.0 - Full Suite
+color 0B
 echo.
-echo  ============================================
-echo    AniRD - Servidor de API iniciando...
-echo  ============================================
+echo  =======================================================
+echo    AniRD v3.0 - Iniciando Sistema de Streaming
+echo  =======================================================
 echo.
-echo  La API estara disponible en:
-echo  http://localhost:3000
+echo  [1/2] Iniciando API Backend en ventana separada...
+start "AniRD API" cmd /c "cd anime1v-api && title AniRD API && npm run start"
+echo  [OK] API lanzada en puerto 3000.
 echo.
-echo  Puedes abrir tu pagina anird.html ahora.
-echo  NO cierres esta ventana mientras usas la pagina.
+echo  [2/2] Iniciando Frontend Vite...
 echo.
-echo  ============================================
+echo  =======================================================
+echo    LA WEB ESTARA DISPONIBLE EN: http://localhost:5173
+echo  =======================================================
 echo.
-node "C:\Users\adony\.gemini\antigravity\brain\ebdba232-85e7-4c0c-849d-9c47a959fa7f\scratch\anime1v-api\src\server.js"
-echo.
-echo  El servidor se detuvo. Presiona cualquier tecla para cerrar.
-pause > nul
+cd frontend
+npm run dev
+pause

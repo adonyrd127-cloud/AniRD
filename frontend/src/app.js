@@ -6,6 +6,8 @@ const routes = {
   '/watch': () => import('./pages/WatchPage.js'),
   '/history': () => import('./pages/HistoryPage.js'),
   '/favorites': () => import('./pages/FavoritesPage.js'),
+  '/search': () => import('./pages/SearchPage.js'),
+  '/category': () => import('./pages/CategoryPage.js'),
   '/calendar': () => import('./pages/CalendarPage.js'),
 };
 
@@ -33,7 +35,8 @@ export class AppRouter {
   }
 
   async handleRoute() {
-    const path = window.location.pathname;
+    const url = new URL(window.location.href);
+    const path = url.pathname;
 
     // Rutas dinámicas simples
     let routeKey = '/';
@@ -47,6 +50,12 @@ export class AppRouter {
        const parts = path.split('/');
        params.animeId = parts[2];
        params.episodeId = parts[3];
+    } else if (path.startsWith('/category/')) {
+       routeKey = '/category';
+       params.name = path.split('/')[2];
+    } else if (path === '/search') {
+       routeKey = '/search';
+       params.q = url.searchParams.get('q');
     } else if (routes[path]) {
        routeKey = path;
     }
@@ -71,3 +80,12 @@ export class AppRouter {
     }
   }
 }
+
+// Singleton router
+let routerInstance = null;
+export const getRouter = (root) => {
+  if (!routerInstance && root) {
+    routerInstance = new AppRouter(root);
+  }
+  return routerInstance;
+};

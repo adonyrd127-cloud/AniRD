@@ -115,44 +115,45 @@ export class AnimeCard extends HTMLElement {
   render() {
     if(!this._anime) return;
 
-    const { title, images, score, year, episodes, type } = this._anime;
-    const imgUrl = images?.jpg?.large_image_url || images?.jpg?.image_url || '';
+    const { title, images, score, year, episodes, type, mal_id, id, currentEpisode } = this._anime;
+    const imgUrl = images?.jpg?.large_image_url || images?.jpg?.image_url || this._anime.image || '';
+    const finalId = mal_id || id;
 
-    const epText = episodes ? `${episodes} EPS` : '? EPS';
+    let epText = episodes ? `${episodes} EPS` : '? EPS';
+    if (currentEpisode && episodes) {
+        epText = `${currentEpisode} / ${episodes} EPS`;
+    } else if (currentEpisode) {
+        epText = `EP ${currentEpisode}`;
+    }
+
     const scoreText = score ? `★ ${score}` : '';
 
     this.shadowRoot.innerHTML = `
       ${this.renderStyles()}
-      <article class="anime-card" aria-label="${title}" role="button" tabindex="0">
-        <div class="card-media">
-          <img src="${imgUrl}" alt="${title}" class="card-image lazyload" loading="lazy" />
-          <div class="card-gradient"></div>
-          <div class="card-badges">
-            ${scoreText ? `<span class="badge score">${scoreText}</span>` : ''}
-            ${year ? `<span class="badge year">${year}</span>` : ''}
+      <a href="/anime/${finalId}" data-link style="text-decoration:none; color:inherit; display:block; height:100%;">
+        <article class="anime-card" aria-label="${title}" role="button" tabindex="0">
+          <div class="card-media" style="background: #1a1a2e;">
+            <img 
+              src="${imgUrl}" 
+              alt="${title}" 
+              class="card-image" 
+              loading="lazy" 
+              referrerpolicy="no-referrer"
+              onerror="if(!this.src.includes('placehold.co')) this.src='https://placehold.co/400x600/12121a/white?text=No+Image'"
+            />
+            <div class="card-gradient"></div>
+            <div class="card-badges">
+              ${scoreText ? `<span class="badge score">${scoreText}</span>` : ''}
+              ${year ? `<span class="badge year">${year}</span>` : ''}
+            </div>
           </div>
-        </div>
-        <div class="card-content">
-          <h3 class="card-title">${title}</h3>
-          <p class="card-meta">${type || 'TV'} • ${epText}</p>
-        </div>
-      </article>
+          <div class="card-content">
+            <h3 class="card-title">${title}</h3>
+            <p class="card-meta">${type || 'TV'} • ${epText}</p>
+          </div>
+        </article>
+      </a>
     `;
-
-    const article = this.shadowRoot.querySelector('.anime-card');
-    article.addEventListener('click', () => {
-      this.dispatchEvent(new CustomEvent('anime-click', {
-        detail: this._anime,
-        bubbles: true,
-        composed: true
-      }));
-    });
-    article.addEventListener('keydown', (e) => {
-      if(e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        article.click();
-      }
-    });
   }
 }
 
