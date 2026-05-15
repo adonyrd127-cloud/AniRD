@@ -127,13 +127,15 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
 .auth-card {
   width: 100%;
   max-width: 420px;
+  background: var(--bg-secondary);
   background: var(--glass);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: 40px;
   box-shadow: var(--shadow-elevated);
-  animation: fadeIn 500ms ease-out;
+  z-index: 10;
 }
 
 .auth-header {

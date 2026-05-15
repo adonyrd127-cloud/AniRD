@@ -9,12 +9,12 @@ export default class AuthPage {
 
   async render() {
     const container = document.createElement('div');
-    container.className = 'auth-container page-enter';
+    container.className = 'auth-container';
     
     container.innerHTML = `
-      <div class="auth-card">
+      <div class="auth-card page-enter">
         <div class="auth-header">
-          <img src="/assets/favicon.png" alt="AniRD Logo" class="auth-logo" onerror="this.src='/favicon.ico'">
+          <img src="/favicon.ico" alt="AniRD Logo" class="auth-logo">
           <h1>AniRD Cloud</h1>
           <p>Sincroniza tus animes en todos tus dispositivos</p>
         </div>
