@@ -1,5 +1,5 @@
 import { authService } from '../services/auth.service.js';
-import { dbService } from './db.js';
+import { dbService } from '../services/db.js';
 
 export default class AuthPage {
   constructor(params) {
