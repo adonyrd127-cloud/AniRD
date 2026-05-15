@@ -48,7 +48,7 @@ class LocalApiClient {
   constructor() {
     // Backend anime1v-api - Usar el mismo host que el frontend pero puerto 3000
     const host = window.location.hostname || 'localhost';
-    this.baseUrl = `http://${host}:3000/api/v1`;
+    this.baseUrl = `http://${host}:3005/api/v1`;
     this.apiKey = 'dev-anime1v-key';
   }
   async request(endpoint, params = {}) {

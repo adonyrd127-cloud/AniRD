@@ -5,7 +5,7 @@ services:
     build: ./anime1v-api
     container_name: anird-api
     ports:
-      - "3000:3000"
+      - "3005:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -19,7 +19,7 @@ services:
     build: ./frontend
     container_name: anird-web
     ports:
-      - "8080:80"
+      - "8090:80"
     depends_on:
       - backend
     restart: always
