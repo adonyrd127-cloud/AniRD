@@ -18,69 +18,126 @@ export default class AnimeDetailPage {
       const anime = res.data;
       
       const isFav = await dbService.isFavorite(this.id);
+      const isFollowing = await dbService.isFollowing(this.id);
 
       this.container.innerHTML = `
         <style>
           .detail-hero {
             position: relative;
-            height: 400px;
+            min-height: 50vh;
             display: flex;
             align-items: flex-end;
-            padding: 4%;
+            padding: 40px 4%;
+            overflow: hidden;
           }
           .hero-bg {
             position: absolute;
             inset: 0;
             background-size: cover;
-            background-position: center;
-            filter: blur(10px) brightness(0.3);
+            background-position: center 20%;
             z-index: -1;
+          }
+          .hero-bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, var(--bg-primary) 0%, rgba(10,10,15,0.4) 100%);
           }
           .detail-content {
             display: flex;
-            gap: 30px;
+            gap: 24px;
             max-width: 1400px;
             margin: 0 auto;
             width: 100%;
+            z-index: 1;
           }
           .poster {
-            width: 200px;
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-card);
+            width: 150px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+          }
+          .info {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
           }
           .info h1 {
             font-size: 2.5rem;
-            margin-bottom: 10px;
+            line-height: 1.1;
+            margin-bottom: 12px;
           }
-          .meta {
+          .badge-row {
             display: flex;
-            gap: 15px;
-            color: var(--text-secondary);
-            margin-bottom: 20px;
+            gap: 8px;
+            margin-bottom: 15px;
           }
+          .badge-item {
+            background: #1abc9c;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+          }
+          .badge-item.type { background: #3498db; }
+          .badge-item.status { background: #e67e22; }
+
           .synopsis {
-            line-height: 1.6;
+            font-size: 0.95rem;
             color: var(--text-secondary);
-            max-width: 800px;
+            line-height: 1.5;
+            max-width: 600px;
             display: -webkit-box;
-            -webkit-line-clamp: 4;
+            -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            margin-bottom: 20px;
+          }
+          .actions {
+            display: flex;
+            gap: 12px;
+            width: 100%;
           }
           .btn-play {
-             background: var(--accent);
-             color: white;
-             padding: 10px 24px;
-             border-radius: var(--radius-sm);
-             font-weight: 600;
-             margin-top: 20px;
-             display: inline-block;
-             border: none;
-             cursor: pointer;
+             background: white;
+             color: black;
+             padding: 12px 24px;
+             border-radius: 8px;
+             font-weight: 800;
+             display: flex;
+             align-items: center;
+             gap: 10px;
+             flex-grow: 1;
+             justify-content: center;
+             text-transform: uppercase;
+             font-size: 0.9rem;
           }
-          .btn-fav.active {
-             background: #ff4757 !important;
-             color: white !important;
+          .btn-icon {
+             width: 48px;
+             height: 48px;
+             background: rgba(255,255,255,0.1);
+             border-radius: 8px;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             color: white;
+             font-size: 1.2rem;
+          }
+
+          @media (max-width: 768px) {
+            .detail-hero {
+                padding-bottom: 20px;
+            }
+            .info h1 {
+                font-size: 1.8rem;
+            }
+            .synopsis {
+                display: none; /* Como en la captura de ANIMEX */
+            }
+            .poster {
+                width: 120px;
+            }
           }
         </style>
         <div class="detail-hero">
@@ -88,19 +145,22 @@ export default class AnimeDetailPage {
           <div class="detail-content">
             <img src="${anime.images?.jpg?.large_image_url}" class="poster" alt="${anime.title}" />
             <div class="info">
-              <h1>${anime.title}</h1>
-              <div class="meta">
-                <span>⭐ ${anime.score || 'N/A'}</span>
-                <span>${anime.type}</span>
-                <span>${anime.year || '-'}</span>
-                <span>${anime.episodes || '?'} EPS</span>
+              <div class="badge-row">
+                <span class="badge-item">${anime.episodes || '?'} EP</span>
+                <span class="badge-item type">${anime.type}</span>
+                <span class="badge-item status">${anime.status === 'Currently Airing' ? 'RELEASING' : 'FINISHED'}</span>
               </div>
+              <h1>${anime.title}</h1>
               <p class="synopsis">${anime.synopsis}</p>
-              <div style="display:flex; gap:10px; margin-top:20px;">
-                <a href="/watch/${this.id}/1" data-link class="btn-play">▶ Ver Episodio 1</a>
-                <button id="add-fav" class="btn-play btn-fav ${isFav ? 'active' : ''}" style="background:var(--surface); color:white;">
-                  ${isFav ? '❤️ En Favoritos' : '⭐ Añadir a Favoritos'}
+              <div class="actions">
+                <a href="/watch/${this.id}/1" data-link class="btn-play">▶ Ver Ahora</a>
+                <button id="toggle-fav" class="btn-icon ${isFav ? 'active' : ''}" title="Favoritos">
+                  ${isFav ? '❤️' : '🤍'}
                 </button>
+                <button id="toggle-follow" class="btn-icon ${isFollowing ? 'active' : ''}" title="Seguir">
+                  ${isFollowing ? '🔔' : '🔕'}
+                </button>
+                <button id="share-btn" class="btn-icon">🔗</button>
               </div>
             </div>
           </div>
@@ -128,7 +188,7 @@ export default class AnimeDetailPage {
         <style>
           .tab-btn {
             background: var(--surface);
-            color: white;
+            color: var(--text-primary);
             border: none;
             padding: 8px 16px;
             border-radius: 6px;
@@ -137,21 +197,31 @@ export default class AnimeDetailPage {
           }
           .tab-btn.active {
             background: var(--accent);
-            color: black;
+            color: white;
           }
         </style>
       `;
 
       // Favorite toggle
-      const favBtn = document.getElementById('add-fav');
+      const favBtn = document.getElementById('toggle-fav');
       favBtn.onclick = async () => {
         const added = await dbService.toggleFavorite(anime);
         favBtn.classList.toggle('active', added);
-        favBtn.innerHTML = added ? '❤️ En Favoritos' : '⭐ Añadir a Favoritos';
+        favBtn.innerHTML = added ? '❤️' : '🤍';
       };
 
-      // Fetch episodes from Local API
-      this.loadEpisodes(anime);
+      // Follow toggle
+      const followBtn = document.getElementById('toggle-follow');
+      followBtn.onclick = async () => {
+        const added = await dbService.toggleFollowing(anime);
+        followBtn.classList.toggle('active', added);
+        followBtn.innerHTML = added ? '🔔' : '🔕';
+      };
+
+      // Fetch episodes from Local API based on user preference
+      const preferredLang = await dbService.getSetting('lang', 'SUB');
+      const initialLang = preferredLang === 'DUB' ? 'latino' : 'sub';
+      this.loadEpisodes(anime, initialLang);
       this.loadRelations(this.id);
 
     } catch(e) {
@@ -187,7 +257,7 @@ export default class AnimeDetailPage {
              <div style="background:var(--surface); border-radius:8px; overflow:hidden;">
                <div style="padding:10px;">
                  <div style="font-size:0.8rem; color:var(--accent); margin-bottom:4px;">${rel.relation}</div>
-                 <div style="font-size:0.9rem; font-weight:600; color:white; display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${entry.name}</div>
+                  <div style="font-size:0.9rem; font-weight:600; color:var(--text-primary); display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${entry.name}</div>
                </div>
              </div>
            `;
@@ -249,14 +319,14 @@ export default class AnimeDetailPage {
 
       grid.innerHTML = episodes.map(ep => `
         <div class="ep-card" style="background:var(--surface); border-radius:10px; overflow:hidden; cursor:pointer; transition:transform 0.2s;">
-          <a href="/watch/${this.id}/${ep.number}" data-link style="text-decoration:none; color:white;">
-            <div style="aspect-ratio:16/9; background:#1a1a2e; display:flex; align-items:center; justify-content:center; position:relative;">
+          <a href="/watch/${this.id}/${ep.number}" data-link style="text-decoration:none; color:var(--text-primary);">
+            <div style="aspect-ratio:16/9; background:var(--bg-tertiary); display:flex; align-items:center; justify-content:center; position:relative;">
                <img src="${posterImg}" style="width:100%; height:100%; object-fit:cover; opacity:0.6;">
-               <span style="position:absolute; background:var(--accent); color:black; padding:4px 10px; border-radius:5px; font-weight:700; bottom:10px; left:10px;">EP ${ep.number}</span>
+               <span style="position:absolute; background:var(--accent); color:white; padding:4px 10px; border-radius:5px; font-weight:700; bottom:10px; left:10px;">EP ${ep.number}</span>
                <div style="position:absolute; font-size:24px; color:white; text-shadow:0 2px 10px rgba(0,0,0,0.5);">▶</div>
             </div>
             <div style="padding:12px;">
-              <div style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${ep.title || `Episodio ${ep.number}`}</div>
+              <div style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-primary);">${ep.title || `Episodio ${ep.number}`}</div>
             </div>
           </a>
         </div>

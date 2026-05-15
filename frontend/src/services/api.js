@@ -46,8 +46,9 @@ class AnilistClient {
 
 class LocalApiClient {
   constructor() {
-    // Backend anime1v-api
-    this.baseUrl = 'http://localhost:3000/api/v1';
+    // Backend anime1v-api - Usar el mismo host que el frontend pero puerto 3000
+    const host = window.location.hostname || 'localhost';
+    this.baseUrl = `http://${host}:3000/api/v1`;
     this.apiKey = 'dev-anime1v-key';
   }
   async request(endpoint, params = {}) {
@@ -81,7 +82,7 @@ export class AnimeAPI {
       return await this.providers.local.request('/anime/search', { q: query });
     } catch (e) {
       console.error("Local search failed", e);
-      return { data: [] };
+      return { success: false, data: { results: [] } };
     }
   }
 
@@ -110,26 +111,41 @@ export class AnimeAPI {
     return await this.providers.local.request('/anime/episode', { url });
   }
 
-  async getTrending() {
-    return await this.providers.jikan.request('/seasons/now', { limit: 20 });
+  async getTrending(page = 1) {
+    return await this.providers.jikan.request('/top/anime', { filter: 'airing', limit: 24, page });
   }
 
-  async getMovies() {
-    return await this.providers.jikan.request('/anime', { type: 'movie', order_by: 'popularity', sort: 'desc', limit: 20 });
+  async getMovies(page = 1) {
+    return await this.providers.jikan.request('/top/anime', { type: 'movie', filter: 'bypopularity', limit: 24, page });
   }
 
-  async getLatest() {
-    return await this.providers.jikan.request('/seasons/upcoming', { limit: 20 });
+  async getLatest(page = 1) {
+    return await this.providers.jikan.request('/seasons/now', { limit: 24, page });
   }
 
-  async getDubbed() {
+  async getDubbed(page = 1) {
     try {
-      // Buscar en Jikan por la palabra "Latino" o "Doblaje"
-      const res = await this.providers.jikan.request('/anime', { q: 'Latino', limit: 24, order_by: 'popularity', sort: 'desc' });
+      const res = await this.providers.jikan.request('/anime', { 
+        q: 'doblaje', 
+        limit: 24, 
+        page,
+        order_by: 'members', 
+        sort: 'desc' 
+      });
       return res;
     } catch (e) {
-      return await this.providers.local.request('/anime/search', { q: 'Latino' });
+      console.error("Error fetching dubbed anime", e);
+      return { data: [] };
     }
+  }
+
+  async getByGenre(genreId, page = 1) {
+    return await this.providers.jikan.request('/anime', { 
+      genres: genreId, 
+      order_by: 'popularity', 
+      limit: 24,
+      page
+    });
   }
 
   async getSchedule() {

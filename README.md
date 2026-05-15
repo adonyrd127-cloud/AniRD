@@ -25,12 +25,18 @@ AniRD es una plataforma moderna y minimalista para ver anime online, diseñada p
 
 ## 📝 Notas de Versión Recientes
 
+### v2.1 - Personalización y Seguimiento (Actual)
+- **Modo Claro (Light Theme):** Soporte completo para tema claro con corrección de contraste en textos, tarjetas y navegación.
+- **Preferencias de Audio:** Selección inteligente entre Latino y Subtitulado que se aplica automáticamente al reproductor y episodios.
+- **Sistema de Seguimiento:** Nueva sección "Siguiendo" en el perfil con **Reloj de Cuenta Regresiva** para próximos estrenos.
+- **Buscador Rediseñado:** Botón de búsqueda tipo "píldora" con atajos de teclado y estética profesional.
+- **Identidad Visual:** Implementación de Favicon personalizado para la marca AniRD.
+- **Optimización:** Limpieza masiva de archivos obsoletos y mejora en la arquitectura de componentes.
+
 ### v2.0 - The Big Revamp
 - Rediseño completo de la UI/UX inspirado en estándares modernos de streaming.
-- Mejora crítica en la legibilidad de las tarjetas de episodios (miniaturas con degradados y texto inferior).
-- Corrección de accesibilidad en botones activos y navegación.
+- Mejora crítica en la legibilidad de las tarjetas de episodios.
 - Restauración completa de la funcionalidad de Historial.
-- Optimización de carga de imágenes y estados de carga (skeletons).
 
 ---
 *Desarrollado con ❤️ por adonyrd127*

@@ -8,76 +8,181 @@ export default class HomePage {
     container.innerHTML = `
       <style>
         .hero {
+          height: 80vh;
           position: relative;
-          height: 500px;
           display: flex;
-          align-items: center;
-          padding: 0 4%;
+          align-items: flex-end; /* Alinear abajo para dar aire arriba */
+          padding: 0 4% 100px;
           overflow: hidden;
-          margin-bottom: 20px;
+          margin-bottom: 40px;
         }
         .hero-backdrop {
           position: absolute;
           inset: 0;
           background-size: cover;
-          background-position: center;
-          filter: brightness(0.4);
+          background-position: center 20%;
           z-index: -1;
         }
+        .hero-backdrop::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, var(--bg-primary) 5%, rgba(0,0,0,0.1) 50%, transparent 100%),
+                      linear-gradient(to right, var(--bg-primary) 5%, transparent 70%);
+        }
         .hero-content {
-          max-width: 800px;
+          max-width: 650px;
+          z-index: 1;
         }
         .hero-title {
           font-family: var(--font-display);
-          font-size: 3rem;
-          margin-bottom: 15px;
-          color: white;
+          font-size: 3.5rem;
+          line-height: 1;
+          margin-bottom: 20px;
+          color: var(--text-primary);
+          font-weight: 900;
+          letter-spacing: -0.04em;
+          text-transform: none;
         }
-        .hero-desc {
+        .hero-subtitle {
           font-size: 1.1rem;
           color: var(--text-secondary);
-          margin-bottom: 25px;
+          margin-bottom: 35px;
+          font-weight: 500;
           line-height: 1.5;
           display: -webkit-box;
           -webkit-line-clamp: 3;
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
-        .page-container {
-          padding: 20px 4%;
-          max-width: 1400px;
-          margin: 0 auto;
+        .hero-actions {
+          display: flex;
+          gap: 15px;
         }
-        .section-title {
-          font-family: var(--font-display);
-          font-size: 1.5rem;
-          margin: 2rem 0 1rem;
+        .btn-crunchy {
+          background: var(--accent);
+          color: white;
+          padding: 12px 30px;
+          border-radius: var(--radius-sm);
+          font-weight: 800;
+          font-size: 0.8rem;
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          transition: all 0.2s;
           display: flex;
           align-items: center;
           gap: 10px;
         }
-        .section-title::before {
-            content: '';
-            width: 4px;
-            height: 24px;
-            background: var(--accent);
-            border-radius: 2px;
+        .btn-crunchy:hover {
+            background: var(--accent-hover);
+            transform: scale(1.02);
         }
-        .anime-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+
+        .page-container {
+          padding: 0 4% 80px;
+          max-width: 1600px;
+          margin: 0 auto;
+        }
+        .section-wrapper {
+            margin-bottom: 60px; /* Más espacio entre filas */
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .section-title {
+          font-family: var(--font-display);
+          font-size: 1.75rem;
+          color: var(--text-primary);
+          font-weight: 800;
+          margin: 0;
+          letter-spacing: -0.02em;
+        }
+        .view-all {
+            color: var(--accent);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: opacity 0.2s;
+        }
+        .view-all:hover { opacity: 0.8; }
+        
+        .horizontal-scroll {
+          display: flex;
           gap: 20px;
+          overflow-x: auto;
+          padding-bottom: 10px;
+          scrollbar-width: none;
+        }
+        .horizontal-scroll::-webkit-scrollbar { display: none; }
+        
+        .horizontal-scroll.thumbnail-grid > * {
+          flex: 0 0 320px;
+        }
+        .horizontal-scroll.poster-grid > * {
+          flex: 0 0 200px;
+        }
+
+        @media (max-width: 768px) {
+          .hero { height: 65vh; padding: 0 20px 60px; }
+          .hero-title { font-size: 2.2rem; }
+          .hero-subtitle { font-size: 0.9rem; }
+          .hero-actions .btn-crunchy { width: 100%; justify-content: center; }
+          .horizontal-scroll.thumbnail-grid > * { flex: 0 0 240px; }
+          .horizontal-scroll.poster-grid > * { flex: 0 0 150px; }
+          .section-title { font-size: 1.4rem; }
+          .section-wrapper { margin-bottom: 40px; }
         }
       </style>
       <div id="hero-container"></div>
       <div class="page-container">
-        <div id="continue-watching-section" style="display:none;">
-          <h2 class="section-title">Continuar Viendo</h2>
-          <div class="anime-grid" id="continue-grid"></div>
+        <div id="continue-watching-section" class="section-wrapper" style="display:none;">
+          <div class="section-header">
+            <h2 class="section-title">Continuar Viendo</h2>
+            <a href="/history" data-link class="view-all">Ver Historial ❯</a>
+          </div>
+          <div class="horizontal-scroll thumbnail-grid" id="continue-grid"></div>
         </div>
 
-        <h2 class="section-title">Animes Populares</h2>
-        <div class="anime-grid" id="trending-grid"></div>
+        <div class="section-wrapper">
+            <div class="section-header">
+                <h2 class="section-title">Populares este Verano</h2>
+                <a href="/category/popular" data-link class="view-all">Ver Todo ❯</a>
+            </div>
+            <div class="horizontal-scroll poster-grid" id="trending-grid"></div>
+        </div>
+
+        <div class="section-wrapper">
+            <div class="section-header">
+                <h2 class="section-title">Películas Recomendadas</h2>
+                <a href="/category/movies" data-link class="view-all">Ver Todo ❯</a>
+            </div>
+            <div class="horizontal-scroll poster-grid" id="movies-grid"></div>
+        </div>
+
+        <section class="section-wrapper">
+          <div class="section-header">
+            <h2 class="section-title">⚔️ Animes de Acción</h2>
+            <a href="/category/action" data-link class="view-all">Ver todo ❯</a>
+          </div>
+          <div class="horizontal-scroll poster-grid" id="action-grid"></div>
+        </section>
+
+        <section class="section-wrapper">
+          <div class="section-header">
+            <h2 class="section-title">😂 Animes de Comedia</h2>
+            <a href="/category/comedy" data-link class="view-all">Ver todo ❯</a>
+          </div>
+          <div class="horizontal-scroll poster-grid" id="comedy-grid"></div>
+        </section>
       </div>
     `;
     return container;
@@ -85,41 +190,33 @@ export default class HomePage {
 
   async afterRender() {
     const grid = document.getElementById('trending-grid');
+    const movieGrid = document.getElementById('movies-grid');
+    const actionGrid = document.getElementById('action-grid');
+    const comedyGrid = document.getElementById('comedy-grid');
     const continueGrid = document.getElementById('continue-grid');
     const continueSection = document.getElementById('continue-watching-section');
 
-    // Load History
+    // 1. Load History (Recently Added)
     const history = await dbService.getContinueWatching();
     if (history.length > 0) {
       continueSection.style.display = 'block';
-      for (const item of history.slice(0, 6)) {
+      for (const item of history.slice(0, 10)) {
         try {
           const animeRes = await apiService.getAnimeInfo(item.animeId);
           const anime = animeRes.data;
           const card = document.createElement('anime-card');
-          card.data = anime;
-          card.addEventListener('anime-click', () => {
-            window.history.pushState(null, null, `/watch/${item.animeId}/${item.episodeId}`);
-            window.dispatchEvent(new Event('popstate'));
-          });
+          card.setAttribute('mode', 'thumbnail');
+          card.data = { ...anime, currentEpisode: item.episodeId };
           continueGrid.appendChild(card);
         } catch (e) { console.error(e); }
       }
     }
 
-    // Skeleton loaders
-    for(let i=0; i<6; i++) {
-        const card = document.createElement('anime-card');
-        grid.appendChild(card);
-    }
-
+    // 2. Load Trending & Hero
     try {
         const res = await apiService.getTrending();
-        grid.innerHTML = ''; // clear skeletons
         if(res && res.data) {
             const trendingAnimes = res.data.slice(0, 5);
-            
-            // Intentar obtener banners horizontales de AniList para el Hero
             const banners = await Promise.all(
               trendingAnimes.map(a => apiService.getAnilistBanner(a.mal_id))
             );
@@ -132,73 +229,75 @@ export default class HomePage {
                 const banner = banners[index] || anime.images?.jpg?.large_image_url;
                 
                 heroContainer.innerHTML = `
-                  <style>
-                    .hero-fade-in { animation: fadeIn 0.8s ease-out; }
-                    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-                    .hero {
-                      position: relative;
-                      height: 550px;
-                      display: flex;
-                      align-items: center;
-                      padding: 0 6%;
-                      overflow: hidden;
-                      background: #0a0a14;
-                    }
-                    .hero-backdrop {
-                      position: absolute;
-                      inset: 0;
-                      background-image: url('${banner}');
-                      background-size: cover;
-                      background-position: center 20%;
-                      filter: brightness(0.4);
-                      z-index: 1;
-                    }
-                    .hero::after {
-                      content: '';
-                      position: absolute;
-                      inset: 0;
-                      background: linear-gradient(90deg, #0a0a14 0%, rgba(10,10,20,0.6) 50%, transparent 100%);
-                      z-index: 2;
-                    }
-                    .hero-content {
-                      position: relative;
-                      z-index: 3;
-                      max-width: 700px;
-                    }
-                  </style>
-                  <div class="hero hero-fade-in">
-                    <div class="hero-backdrop"></div>
+                  <div class="hero">
+                    <div class="hero-backdrop" style="background-image: url('${banner}')"></div>
                     <div class="hero-content">
-                      <h1 class="hero-title" style="text-shadow: 0 2px 10px rgba(0,0,0,0.5)">${anime.title}</h1>
-                      <p class="hero-desc" style="text-shadow: 0 1px 5px rgba(0,0,0,0.5)">${anime.synopsis || 'Disfruta de este increíble anime en AniRD.'}</p>
-                      <a href="/anime/${anime.mal_id}" data-link class="btn-play" style="background:var(--accent); color:black; padding:14px 35px; border-radius:8px; font-weight:700; text-decoration:none; display:inline-block; transition: transform 0.2s;">VER DETALLES</a>
+                      <h1 class="hero-title">${anime.title}</h1>
+                      <p class="hero-subtitle">${anime.synopsis?.slice(0, 200)}...</p>
+                      <div class="hero-actions">
+                        <a href="/anime/${anime.mal_id}" data-link class="btn-crunchy">
+                            <span>▶</span> VER AHORA
+                        </a>
+                      </div>
                     </div>
                   </div>
                 `;
             };
 
             renderHero(0);
-            
-            // Intervalo para cambiar el hero cada 7 segundos
+            if(this.heroInterval) clearInterval(this.heroInterval);
             this.heroInterval = setInterval(() => {
                 currentIndex = (currentIndex + 1) % trendingAnimes.length;
                 renderHero(currentIndex);
-            }, 7000);
+            }, 8000);
 
-            res.data.slice(0,12).forEach(anime => {
+            // Populate Popular This Season
+            grid.innerHTML = '';
+            res.data.forEach(anime => {
                 const card = document.createElement('anime-card');
                 card.data = anime;
-                card.addEventListener('anime-click', (e) => {
-                    const id = e.detail.mal_id;
-                    window.history.pushState(null, null, `/anime/${id}`);
-                    window.dispatchEvent(new Event('popstate'));
-                });
                 grid.appendChild(card);
             });
         }
-    } catch(e) {
-        console.error("Failed to load trending", e);
-        grid.innerHTML = '<p>Error al cargar los animes.</p>';
-    }
+    } catch(e) { console.error(e); }
+
+    // 3. Load Popular Movies
+    try {
+        const movieRes = await apiService.getMovies();
+        if(movieRes && movieRes.data) {
+            movieGrid.innerHTML = '';
+            movieRes.data.forEach(anime => {
+                const card = document.createElement('anime-card');
+                card.data = anime;
+                movieGrid.appendChild(card);
+            });
+        }
+    } catch(e) { console.error(e); }
+
+    // 4. Load Action
+    try {
+        const actionRes = await apiService.getByGenre(1);
+        if(actionRes && actionRes.data) {
+            actionGrid.innerHTML = '';
+            actionRes.data.forEach(anime => {
+                const card = document.createElement('anime-card');
+                card.data = anime;
+                actionGrid.appendChild(card);
+            });
+        }
+    } catch(e) { console.error(e); }
+
+    // 5. Load Comedy
+    try {
+        const comedyRes = await apiService.getByGenre(4);
+        if(comedyRes && comedyRes.data) {
+            comedyGrid.innerHTML = '';
+            comedyRes.data.forEach(anime => {
+                const card = document.createElement('anime-card');
+                card.data = anime;
+                comedyGrid.appendChild(card);
+            });
+        }
+    } catch(e) { console.error(e); }
   }
 }

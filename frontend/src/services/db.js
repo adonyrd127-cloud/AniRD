@@ -2,9 +2,10 @@ import Dexie from 'dexie';
 
 export const db = new Dexie('AniRD_DB');
 
-db.version(1).stores({
+db.version(2).stores({
   history: '++id, animeId, episodeId, progress, duration, timestamp, updatedAt',
   favorites: 'animeId, title, cover, addedAt',
+  following: 'animeId, title, cover, broadcast, addedAt',
   lists: '++id, name, animeIds, createdAt',
   cache: 'key, data, expiresAt',
   settings: 'key, value'
@@ -73,5 +74,43 @@ export const dbService = {
 
   async getFavorites() {
     return await db.favorites.orderBy('addedAt').reverse().toArray();
+  },
+
+  async toggleFollowing(anime) {
+    const id = anime.mal_id || anime.id || anime.animeId;
+    const existing = await db.following.get(id);
+    
+    if (existing) {
+      await db.following.delete(id);
+      return false; // Removed
+    } else {
+      await db.following.add({
+        animeId: id,
+        title: anime.title,
+        cover: anime.images?.jpg?.large_image_url || anime.cover || '',
+        broadcast: anime.broadcast || null,
+        addedAt: Date.now()
+      });
+      return true; // Added
+    }
+  },
+
+  async isFollowing(animeId) {
+    if (!animeId) return false;
+    const existing = await db.following.get(Number(animeId));
+    return !!existing;
+  },
+
+  async getFollowing() {
+    return await db.following.orderBy('addedAt').reverse().toArray();
+  },
+
+  async getSetting(key, defaultValue = null) {
+    const setting = await db.settings.get(key);
+    return setting ? setting.value : defaultValue;
+  },
+
+  async setSetting(key, value) {
+    return await db.settings.put({ key, value });
   }
 };

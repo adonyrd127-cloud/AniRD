@@ -37,7 +37,11 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Permite peticiones locales sin origin o desde localhost/127.0.0.1
+    // En desarrollo, permitir cualquier origen para acceso por red local
+    if (process.env.NODE_ENV !== "production") {
+      return callback(null, true);
+    }
+
     if (!origin || origin.includes("localhost") || origin.includes("127.0.0.1")) {
       return callback(null, true);
     }
@@ -105,7 +109,7 @@ app.use((error, _req, res, _next) => {
   res.status(statusCode).json(response);
 });
 
-app.listen(port, () => {
+app.listen(port, "0.0.0.0", () => {
   // eslint-disable-next-line no-console
-  console.log(`AniRD API v2.0 listening on http://localhost:${port}`);
+  console.log(`AniRD API v2.0 listening on port ${port} (All interfaces)`);
 });

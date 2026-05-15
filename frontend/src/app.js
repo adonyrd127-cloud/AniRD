@@ -9,6 +9,7 @@ const routes = {
   '/search': () => import('./pages/SearchPage.js'),
   '/category': () => import('./pages/CategoryPage.js'),
   '/calendar': () => import('./pages/CalendarPage.js'),
+  '/my-anird': () => import('./pages/HistoryPage.js'),
 };
 
 export class AppRouter {

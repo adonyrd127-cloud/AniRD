@@ -1,12 +1,12 @@
 import './styles/global.css';
 import { AppRouter } from './app.js';
 import { useAppStore } from './stores/appStore.js';
-
-// Init router
-const appContainer = document.getElementById('app');
-
+import { dbService } from './services/db.js';
 import { SearchPalette } from './components/SearchPalette.js';
 import { getRouter } from './app.js';
+
+// Init app container
+const appContainer = document.getElementById('app');
 
 // Init router singleton
 const router = getRouter(appContainer);
@@ -23,18 +23,19 @@ header.innerHTML = `
       top: 0;
       left: 0;
       right: 0;
-      z-index: 1000;
-      height: 68px;
+      z-index: 9999;
+      height: 72px;
       display: flex;
       align-items: center;
       padding: 0 4%;
       background: transparent;
-      transition: background var(--transition-smooth);
+      transition: background 0.3s ease;
     }
 
     .navbar.scrolled {
-      background: var(--bg-primary);
-      box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+      background: var(--bg-navbar, rgba(10, 10, 15, 0.95));
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow);
     }
 
     .navbar::after {
@@ -103,30 +104,40 @@ header.innerHTML = `
     }
 
     .nav-search-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-primary);
+      background: var(--surface);
+      border: 1px solid var(--glass-border);
+      color: var(--text-secondary);
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.9rem;
-      padding: 8px;
-      border-radius: var(--radius-sm);
-      transition: background var(--transition-fast);
+      gap: 12px;
+      font-size: 0.85rem;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      transition: all var(--transition-fast);
+      min-width: 160px;
+      outline: none;
     }
 
     .nav-search-btn:hover {
-      background: rgba(255,255,255,0.1);
+      background: var(--surface-hover);
+      border-color: var(--text-muted);
+      color: var(--text-primary);
+    }
+
+    .nav-search-btn svg {
+      opacity: 0.7;
     }
 
     .nav-search-btn kbd {
+       margin-left: auto;
        padding: 2px 6px;
-       background: rgba(255,255,255,0.1);
-       border: 1px solid var(--glass-border);
-       border-radius: var(--radius-sm);
-       font-size: 0.7rem;
+       background: rgba(0,0,0,0.1);
+       border: 1px solid rgba(255,255,255,0.05);
+       border-radius: 4px;
+       font-size: 0.65rem;
        color: var(--text-muted);
+       font-family: inherit;
     }
 
     /* Mobile Nav */
@@ -165,8 +176,12 @@ header.innerHTML = `
     @media (max-width: 768px) {
       .nav-links { display: none; }
       .mobile-nav { display: flex; }
-      .navbar { padding: 0 16px; }
+      .navbar { padding: 0 16px; height: 60px; }
+      .nav-logo { font-size: 1.2rem; margin-right: 15px; }
+      .nav-search-btn span { display: none; }
+      .nav-search-btn::before { content: '🔍'; font-size: 1.2rem; }
       .nav-search-btn kbd { display: none; }
+      .nav-search-btn { padding: 8px; background: transparent; }
     }
   </style>
   <nav class="navbar" id="main-navbar">
@@ -178,16 +193,21 @@ header.innerHTML = `
           <li><a href="/category/popular" data-link>Populares</a></li>
           <li><a href="/category/movies" data-link>Películas</a></li>
           <li><a href="/category/dub" data-link>Latino</a></li>
+          <li><a href="/category/action" data-link>Acción</a></li>
+          <li><a href="/category/comedy" data-link>Comedia</a></li>
+          <li><a href="/category/romance" data-link>Romance</a></li>
+          <li><a href="/category/supernatural" data-link>Sobrenatural</a></li>
           <li><a href="/calendar" data-link>Calendario</a></li>
         </ul>
       </div>
       <div class="nav-right">
         <button class="nav-search-btn" id="open-search-btn">
-          <span>🔍 Buscar</span>
-          <kbd>Cmd+K</kbd>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <span>Buscar...</span>
+          <kbd>Ctrl+K</kbd>
         </button>
-        <a href="/my-anird" data-link style="width: 32px; height: 32px; border-radius: 4px; background: var(--accent); display: flex; align-items: center; justify-content: center; color: white; text-decoration: none; font-weight: bold; font-size: 0.9rem;">
-          Tú
+        <a href="/my-anird" data-link style="padding: 0 12px; height: 32px; border-radius: 4px; background: var(--accent); display: flex; align-items: center; justify-content: center; color: white; text-decoration: none; font-weight: bold; font-size: 0.8rem; white-space: nowrap;">
+          Mi Perfil
         </a>
       </div>
     </div>
@@ -243,3 +263,11 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+
+// Initialize theme and app
+const initApp = async () => {
+    const theme = await dbService.getSetting('theme', 'dark');
+    if (theme === 'light') document.body.classList.add('light-theme');
+};
+
+initApp();

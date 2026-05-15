@@ -117,7 +117,7 @@ export default class WatchPage {
       const queries = [anime.title, anime.title_english, anime.title_japanese].filter(Boolean);
       let localAnime = null;
       for (const q of queries) {
-        const searchRes = await apiService.getAnimeSearch(q);
+        const searchRes = await apiService.searchLocal(q);
         localAnime = searchRes.data?.results?.[0];
         if (localAnime) break;
       }
@@ -139,7 +139,20 @@ export default class WatchPage {
 
       // 2. Obtener los links del episodio
       const linksRes = await apiService.getEpisode(episode.url);
-      const servers = linksRes.data.servers.sub || linksRes.data.servers.dub || [];
+      const preferredLang = await dbService.getSetting('lang', 'SUB');
+      
+      const serversData = linksRes.data?.servers || {};
+      const dubServers = serversData.dub || [];
+      const subServers = serversData.sub || [];
+
+      let servers = [];
+      if (preferredLang === 'DUB') {
+          // Si prefiere Latino, intentar DUB primero, si no hay usar SUB
+          servers = dubServers.length > 0 ? dubServers : subServers;
+      } else {
+          // Si prefiere SUB, intentar SUB primero, si no hay usar DUB
+          servers = subServers.length > 0 ? subServers : dubServers;
+      }
 
       if (servers.length === 0) {
         throw new Error("No se encontraron servidores para este episodio.");
@@ -151,7 +164,16 @@ export default class WatchPage {
 
     } catch (e) {
       console.error(e);
-      document.getElementById('player-area').innerHTML = `<p style="color:red; padding: 20px;">${e.message}</p>`;
+      document.getElementById('player-area').innerHTML = `
+        <div style="text-align:center; padding: 40px; color:#ff4757;">
+          <h3>⚠️ Error de Conexión</h3>
+          <p>${e.message}</p>
+          <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:10px;">
+            Asegúrate de que la API de AniRD esté ejecutándose y que tu firewall permita conexiones al puerto 3000.
+          </p>
+          <button onclick="window.location.reload()" class="btn-play" style="margin-top:20px; background:var(--surface); color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer;">Reintentar</button>
+        </div>
+      `;
     }
   }
 

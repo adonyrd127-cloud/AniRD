@@ -19,7 +19,7 @@ export class SearchPalette {
           position: fixed;
           inset: 0;
           z-index: 9999;
-          background: rgba(0,0,0,0.8);
+          background: var(--bg-overlay);
           backdrop-filter: blur(8px);
           display: flex;
           align-items: flex-start;
