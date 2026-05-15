@@ -5,8 +5,15 @@ const { URL } = require("node:url");
 const { ApiError } = require("../utils/api-error");
 
 let puppeteerBrowser = null;
+let browserIdleTimer = null;
+const BROWSER_IDLE_TIMEOUT = 120000; // 2 minutos
 
 async function getPuppeteerBrowser() {
+  if (browserIdleTimer) {
+    clearTimeout(browserIdleTimer);
+    browserIdleTimer = null;
+  }
+
   if (!puppeteerBrowser) {
     const puppeteer = require("puppeteer");
     puppeteerBrowser = await puppeteer.launch({
@@ -15,6 +22,16 @@ async function getPuppeteerBrowser() {
     });
   }
   return puppeteerBrowser;
+}
+
+function startBrowserIdleTimer() {
+  if (browserIdleTimer) clearTimeout(browserIdleTimer);
+  browserIdleTimer = setTimeout(async () => {
+    if (puppeteerBrowser) {
+      await puppeteerBrowser.close();
+      puppeteerBrowser = null;
+    }
+  }, BROWSER_IDLE_TIMEOUT);
 }
 
 async function fetchHtmlWithPuppeteer(url) {
@@ -46,6 +63,7 @@ async function fetchHtmlWithPuppeteer(url) {
   const content = await page.content();
   await page.close();
   
+  startBrowserIdleTimer();
   return content;
 }
 
