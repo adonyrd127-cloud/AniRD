@@ -112,5 +112,33 @@ export const dbService = {
 
   async setSetting(key, value) {
     return await db.settings.put({ key, value });
+  },
+
+  async getAllData() {
+    return {
+      favorites: await db.favorites.toArray(),
+      following: await db.following.toArray(),
+      history: await db.history.toArray(),
+    };
+  },
+
+  async syncFromServer(data) {
+    if (!data) return;
+    
+    // Usar transacciones para asegurar consistencia
+    return await db.transaction('rw', [db.favorites, db.following, db.history], async () => {
+      if (data.favorites) {
+        await db.favorites.clear();
+        await db.favorites.bulkAdd(data.favorites);
+      }
+      if (data.following) {
+        await db.following.clear();
+        await db.following.bulkAdd(data.following);
+      }
+      if (data.history) {
+        await db.history.clear();
+        await db.history.bulkAdd(data.history);
+      }
+    });
   }
 };

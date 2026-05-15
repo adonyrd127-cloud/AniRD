@@ -13,6 +13,7 @@ services:
       - ALLOWED_ORIGINS=*
     volumes:
       - ./anime1v-api/downloads:/app/downloads
+      - ./anime1v-api/data:/app/data
     deploy:
       resources:
         limits:

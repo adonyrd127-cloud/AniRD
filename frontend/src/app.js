@@ -10,6 +10,8 @@ const routes = {
   '/category': () => import('./pages/CategoryPage.js'),
   '/calendar': () => import('./pages/CalendarPage.js'),
   '/my-anird': () => import('./pages/HistoryPage.js'),
+  '/auth': () => import('./pages/AuthPage.js'),
+  '/profile': () => import('./pages/ProfilePage.js'),
 };
 
 export class AppRouter {

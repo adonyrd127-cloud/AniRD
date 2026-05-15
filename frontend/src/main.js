@@ -4,6 +4,7 @@ import { useAppStore } from './stores/appStore.js';
 import { dbService } from './services/db.js';
 import { SearchPalette } from './components/SearchPalette.js';
 import { getRouter } from './app.js';
+import { authService } from './services/auth.service.js';
 
 // Init app container
 const appContainer = document.getElementById('app');
@@ -206,8 +207,8 @@ header.innerHTML = `
           <span>Buscar...</span>
           <kbd>Ctrl+K</kbd>
         </button>
-        <a href="/my-anird" data-link style="padding: 0 12px; height: 32px; border-radius: 4px; background: var(--accent); display: flex; align-items: center; justify-content: center; color: white; text-decoration: none; font-weight: bold; font-size: 0.8rem; white-space: nowrap;">
-          Mi Perfil
+        <a id="profile-link" href="/auth" data-link style="padding: 0 12px; height: 32px; border-radius: 4px; background: var(--accent); display: flex; align-items: center; justify-content: center; color: white; text-decoration: none; font-weight: bold; font-size: 0.8rem; white-space: nowrap;">
+          Entrar
         </a>
       </div>
     </div>
@@ -226,13 +227,34 @@ header.innerHTML = `
        <span style="font-size: 1.2rem;">📅</span>
        <span>Emisiones</span>
      </a>
-     <a href="/my-anird" data-link class="mobile-nav-item">
+     <a id="mobile-profile-link" href="/auth" data-link class="mobile-nav-item">
        <span style="font-size: 1.2rem;">👤</span>
-       <span>Mi AniRD</span>
+       <span>Entrar</span>
      </a>
   </nav>
 `;
 document.body.insertBefore(header, appContainer);
+
+const updateNavbarAuth = () => {
+  const profileLink = document.getElementById('profile-link');
+  const mobileProfileLink = document.getElementById('mobile-profile-link');
+  const isLoggedIn = authService.isLoggedIn();
+  const user = authService.getUser();
+  
+  const targetPath = isLoggedIn ? '/profile' : '/auth';
+  const targetText = isLoggedIn ? 'Mi Perfil' : 'Entrar';
+
+  if (profileLink) {
+    profileLink.setAttribute('href', targetPath);
+    profileLink.textContent = targetText;
+  }
+  if (mobileProfileLink) {
+    mobileProfileLink.setAttribute('href', targetPath);
+    mobileProfileLink.querySelector('span:last-child').textContent = targetText;
+  }
+};
+
+updateNavbarAuth();
 
 // Handle Navbar Scroll
 const navbar = document.getElementById('main-navbar');
@@ -264,10 +286,21 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Initialize theme and app
+// Initialize theme and sync if logged in
 const initApp = async () => {
     const theme = await dbService.getSetting('theme', 'dark');
     if (theme === 'light') document.body.classList.add('light-theme');
+
+    if (authService.isLoggedIn()) {
+      try {
+        const serverData = await authService.fetchFromServer();
+        if (serverData) {
+          await dbService.syncFromServer(serverData);
+        }
+      } catch (err) {
+        console.error('Auto-sync failed', err);
+      }
+    }
 };
 
 initApp();
