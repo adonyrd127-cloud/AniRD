@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./anime1v-api
+    container_name: anird-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - API_KEYS=dev-anime1v-key
+      - ALLOWED_ORIGINS=*
+    volumes:
+      - ./anime1v-api/downloads:/app/downloads
+    restart: always
+
+  frontend:
+    build: ./frontend
+    container_name: anird-web
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: always
