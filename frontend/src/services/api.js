@@ -126,10 +126,11 @@ export class AnimeAPI {
   async getDubbed(page = 1) {
     try {
       const res = await this.providers.jikan.request('/anime', { 
-        q: 'doblaje', 
+        q: 'latino', 
         limit: 24, 
         page,
-        order_by: 'members', 
+        status: 'airing',
+        order_by: 'popularity', 
         sort: 'desc' 
       });
       return res;
