@@ -188,7 +188,7 @@ header.innerHTML = `
   <nav class="navbar" id="main-navbar">
     <div class="nav-content">
       <div class="nav-left">
-        <a href="/" data-link class="nav-logo">AniRD</a>
+        <a href="/" data-link class="nav-logo">AniRD ☁️</a>
         <ul class="nav-links">
           <li><a href="/" data-link>Inicio</a></li>
           <li><a href="/category/popular" data-link>Populares</a></li>
