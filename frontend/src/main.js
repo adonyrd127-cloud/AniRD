@@ -255,6 +255,7 @@ const updateNavbarAuth = () => {
   }
 };
 
+window.updateNavbarAuth = updateNavbarAuth;
 updateNavbarAuth();
 
 // Control de scroll de la barra
