@@ -235,11 +235,11 @@ header.innerHTML = `
 `;
 document.body.insertBefore(header, appContainer);
 
+// Función para actualizar el estado visual del botón de perfil
 const updateNavbarAuth = () => {
   const profileLink = document.getElementById('profile-link');
   const mobileProfileLink = document.getElementById('mobile-profile-link');
   const isLoggedIn = authService.isLoggedIn();
-  const user = authService.getUser();
   
   const targetPath = isLoggedIn ? '/profile' : '/auth';
   const targetText = isLoggedIn ? 'Mi Perfil' : 'Entrar';
@@ -250,13 +250,14 @@ const updateNavbarAuth = () => {
   }
   if (mobileProfileLink) {
     mobileProfileLink.setAttribute('href', targetPath);
-    mobileProfileLink.querySelector('span:last-child').textContent = targetText;
+    const span = mobileProfileLink.querySelector('span:last-child');
+    if (span) span.textContent = targetText;
   }
 };
 
 updateNavbarAuth();
 
-// Handle Navbar Scroll
+// Control de scroll de la barra
 const navbar = document.getElementById('main-navbar');
 window.addEventListener('scroll', () => {
   if (window.scrollY > 20) {
@@ -266,7 +267,7 @@ window.addEventListener('scroll', () => {
   }
 });
 
-// Bind Search buttons
+// Eventos de búsqueda
 document.getElementById('open-search-btn').addEventListener('click', () => {
   searchPalette.open();
 });
@@ -275,22 +276,24 @@ document.getElementById('mobile-search-btn').addEventListener('click', (e) => {
   searchPalette.open();
 });
 
-// Register Service Worker for PWA
+// Registro de Service Worker (PWA)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then(registration => {
-      console.log('SW registered: ', registration);
-    }).catch(registrationError => {
-      console.log('SW registration failed: ', registrationError);
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      console.log('SW ok');
+    }).catch(err => {
+      console.log('SW fail');
     });
   });
 }
 
-// Initialize theme and sync if logged in
+// Inicialización de la App y Sincronización
 const initApp = async () => {
+    // Cargar tema
     const theme = await dbService.getSetting('theme', 'dark');
     if (theme === 'light') document.body.classList.add('light-theme');
 
+    // Sincronizar con el servidor si hay sesión activa
     if (authService.isLoggedIn()) {
       try {
         const serverData = await authService.fetchFromServer();
@@ -298,7 +301,7 @@ const initApp = async () => {
           await dbService.syncFromServer(serverData);
         }
       } catch (err) {
-        console.error('Auto-sync failed', err);
+        console.error('Error de sincronización:', err);
       }
     }
 };
