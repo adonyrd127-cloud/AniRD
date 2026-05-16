@@ -5,6 +5,7 @@ export default class ProfilePage {
   constructor(params) {
     this.params = params;
     this.user = authService.getUser();
+    this.stats = { favorites: 0, following: 0, history: 0 };
   }
 
   async render() {
@@ -13,38 +14,60 @@ export default class ProfilePage {
       return document.createElement('div');
     }
 
+    // Cargar estadísticas reales de Dexie
+    const favorites = await dbService.db.favorites.count();
+    const following = await dbService.db.anime_status.count();
+    const history = await dbService.db.history.count();
+    this.stats = { favorites, following, history };
+
     const container = document.createElement('div');
-    container.className = 'profile-container page-enter';
+    container.className = 'profile-page-container';
     
     container.innerHTML = `
-      <div class="profile-header">
-        <div class="profile-avatar">
-          ${this.user.username.charAt(0).toUpperCase()}
-        </div>
-        <h1>Hola, ${this.user.username}</h1>
-        <p>Tu cuenta AniRD está activa y sincronizada con tu Orange Pi.</p>
-      </div>
+      <div class="profile-hero">
+        <div class="profile-card page-enter">
+          <div class="profile-header">
+            <div class="user-avatar">
+              ${this.user.username.charAt(0).toUpperCase()}
+            </div>
+            <div class="user-info">
+              <h1>Hola, ${this.user.username}</h1>
+              <p class="status-badge">Cuenta Activa & Sincronizada</p>
+            </div>
+          </div>
 
-      <div class="profile-grid">
-        <div class="profile-card">
-          <div class="card-icon"><i class="fas fa-sync"></i></div>
-          <h3>Sincronización</h3>
-          <p>Tus datos se guardan automáticamente cada vez que realizas un cambio.</p>
-          <button class="btn-secondary" id="force-sync">Sincronizar ahora</button>
-        </div>
+          <div class="profile-stats-grid">
+            <div class="stat-item">
+              <span class="stat-value">${this.stats.favorites}</span>
+              <span class="stat-label">Favoritos</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">${this.stats.following}</span>
+              <span class="stat-label">Siguiendo</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">${this.stats.history}</span>
+              <span class="stat-label">Episodios</span>
+            </div>
+          </div>
 
-        <div class="profile-card">
-          <div class="card-icon"><i class="fas fa-shield-alt"></i></div>
-          <h3>Seguridad</h3>
-          <p>Sesión activa desde este navegador.</p>
-          <button class="btn-danger" id="logout-btn">Cerrar Sesión</button>
-        </div>
-      </div>
+          <div class="profile-actions">
+            <div class="action-section">
+              <h3>Sincronización</h3>
+              <p>Tus datos se guardan automáticamente en tu Orange Pi.</p>
+              <button id="sync-now-btn" class="btn-secondary">
+                <span>🔄</span> Sincronizar Ahora
+              </button>
+            </div>
 
-      <div class="profile-stats">
-        <h2>Tus estadísticas</h2>
-        <div class="stats-grid" id="stats-container">
-          <div class="stat-item">Cargando...</div>
+            <div class="action-section">
+              <h3>Seguridad</h3>
+              <p>Sesión activa en este navegador.</p>
+              <button id="logout-btn" class="btn-danger">
+                <span>🚪</span> Cerrar Sesión
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -53,48 +76,32 @@ export default class ProfilePage {
   }
 
   async afterRender() {
-    if (!this.user) return;
-
+    const syncBtn = document.getElementById('sync-now-btn');
     const logoutBtn = document.getElementById('logout-btn');
-    const syncBtn = document.getElementById('force-sync');
-    const statsContainer = document.getElementById('stats-container');
 
-    logoutBtn.addEventListener('click', () => {
-      if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-        authService.logout();
-      }
-    });
+    if (syncBtn) {
+      syncBtn.addEventListener('click', async () => {
+        syncBtn.disabled = true;
+        syncBtn.innerHTML = '<span>⏳</span> Sincronizando...';
+        try {
+          const localData = await dbService.getAllData();
+          await authService.syncWithServer(localData);
+          alert('¡Sincronización completada con éxito! ✅');
+        } catch (err) {
+          alert('Error al sincronizar: ' + err.message);
+        } finally {
+          syncBtn.disabled = false;
+          syncBtn.innerHTML = '<span>🔄</span> Sincronizar Ahora';
+        }
+      });
+    }
 
-    syncBtn.addEventListener('click', async () => {
-      syncBtn.disabled = true;
-      syncBtn.textContent = 'Sincronizando...';
-      try {
-        const localData = await dbService.getAllData();
-        await authService.syncWithServer(localData);
-        alert('¡Sincronización completada!');
-      } catch (err) {
-        alert('Error al sincronizar: ' + err.message);
-      } finally {
-        syncBtn.disabled = false;
-        syncBtn.textContent = 'Sincronizar ahora';
-      }
-    });
-
-    // Cargar estadísticas reales
-    const stats = await dbService.getAllData();
-    statsContainer.innerHTML = `
-      <div class="stat-item">
-        <span class="stat-value">${stats.favorites.length}</span>
-        <span class="stat-label">Favoritos</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-value">${stats.following.length}</span>
-        <span class="stat-label">Siguiendo</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-value">${stats.history.length}</span>
-        <span class="stat-label">Episodios vistos</span>
-      </div>
-    `;
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+          authService.logout();
+        }
+      });
+    }
   }
 }
