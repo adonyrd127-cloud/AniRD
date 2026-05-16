@@ -79,7 +79,19 @@ export class AnimeAPI {
 
   async searchLocal(query) {
     try {
-      return await this.providers.local.request('/anime/search', { q: query });
+      console.log("Searching local for:", query);
+      let res = await this.providers.local.request('/anime/search', { q: query });
+      
+      // Si no hay resultados y el nombre es largo, intentar con el "nombre limpio"
+      if ((!res.success || res.data.results.length === 0) && query.length > 5) {
+        // Limpiar: quitar todo lo que esté después de ":", "(", "Season", "Movie", etc.
+        const cleanQuery = query.split(/[:\(\-]|Season|Movie|Part/i)[0].trim();
+        if (cleanQuery !== query) {
+          console.log("Re-searching with clean query:", cleanQuery);
+          res = await this.providers.local.request('/anime/search', { q: cleanQuery });
+        }
+      }
+      return res;
     } catch (e) {
       console.error("Local search failed", e);
       return { success: false, data: { results: [] } };
