@@ -51,8 +51,9 @@ export class AppRouter {
     } else if (path.startsWith('/watch/')) {
        routeKey = '/watch';
        const parts = path.split('/');
-       params.animeId = parts[2];
-       params.episodeId = parts[3];
+       params.id = parts[2];
+       params.ep = parts[3];
+       params.lang = parts[4] || 'sub';
     } else if (path.startsWith('/category/')) {
        routeKey = '/category';
        params.name = path.split('/')[2];
