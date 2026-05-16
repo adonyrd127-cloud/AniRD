@@ -74,7 +74,12 @@ export default class ProfilePage {
               </button>
             </div>
           </div>
+
+          <div class="profile-credits" style="margin-top: 32px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; opacity: 0.6; font-size: 0.8rem;">
+            <p>Powered by <b>Jikan API</b>, <b>AniList</b> & <b>Anime1v</b></p>
+          </div>
         </div>
+
 
         <!-- Nueva sección de Mi Biblioteca -->
         <div class="profile-library page-enter" style="animation-delay: 0.2s">

@@ -45,5 +45,14 @@ AniRD es una plataforma moderna y minimalista para ver anime online, diseñada p
 - Mejora crítica en la legibilidad de las tarjetas de episodios.
 - Restauración completa de la funcionalidad de Historial.
 
+## 🤝 Créditos y Agradecimientos
+
+Este proyecto es posible gracias a las increíbles APIs abiertas de la comunidad:
+
+- **[Jikan API](https://jikan.moe/):** API oficial de MyAnimeList que utilizamos para la búsqueda global y datos generales.
+- **[AniList API](https://anilist.gitbook.io/):** Utilizada para metadatos enriquecidos, puntuaciones y estados de emisión.
+- **[Anime1v API](https://github.com/FxxMorgan/anime1v-api):** El motor original del backend adaptado para el streaming de contenidos.
+
 ---
 *Desarrollado con ❤️ por adonyrd127*
+
