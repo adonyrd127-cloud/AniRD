@@ -2,27 +2,23 @@ class JikanClient {
   constructor() {
     this.baseUrl = 'https://api.jikan.moe/v4';
     this.lastRequest = 0;
-    this.minDelay = 500; // 500ms (2 req/sec) para evitar 429
+    this.minDelay = 500;
   }
 
   async request(endpoint, params = {}) {
     const now = Date.now();
     const wait = Math.max(0, this.lastRequest + this.minDelay - now);
     if (wait > 0) await new Promise(r => setTimeout(r, wait));
-    
     this.lastRequest = Date.now();
 
     const url = new URL(`${this.baseUrl}${endpoint}`);
     Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
     
     let res = await fetch(url.toString());
-    
-    // Reintento si hay error 429 (Too Many Requests)
     if (res.status === 429) {
       await new Promise(r => setTimeout(r, 2000));
       res = await fetch(url.toString());
     }
-
     if (!res.ok) throw new Error(`Jikan error: ${res.status}`);
     return res.json();
   }
@@ -46,7 +42,6 @@ class AnilistClient {
 
 class LocalApiClient {
   constructor() {
-    // Backend anime1v-api - Usar el mismo host que el frontend pero puerto 3000
     const host = window.location.hostname || 'localhost';
     this.baseUrl = `http://${host}:3000/api/v1`;
     this.apiKey = 'dev-anime1v-key';
@@ -54,11 +49,17 @@ class LocalApiClient {
   async request(endpoint, params = {}) {
     const url = new URL(`${this.baseUrl}${endpoint}`);
     Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
-    const res = await fetch(url.toString(), {
-      headers: { 'X-API-Key': this.apiKey }
-    });
-    if (!res.ok) throw new Error(`Local API error: ${res.status}`);
-    return res.json();
+    
+    try {
+      const res = await fetch(url.toString(), {
+        headers: { 'X-API-Key': this.apiKey }
+      });
+      if (!res.ok) throw new Error(`Local API error: ${res.status}`);
+      return res.json();
+    } catch (e) {
+      console.error(`Error en petición local a ${endpoint}:`, e);
+      return { success: false, message: e.message };
+    }
   }
 }
 
@@ -69,51 +70,50 @@ export class AnimeAPI {
       anilist: new AnilistClient(),
       local: new LocalApiClient()
     };
-    this.cache = new Map(); // simple memory cache
+    this.cache = new Map();
   }
 
   async getAnimeSearch(query) {
-    // Usar Jikan para búsqueda global (Header/SearchPage) para asegurar IDs de MAL
     return await this.providers.jikan.request('/anime', { q: query, limit: 20 });
   }
 
   async searchLocal(query) {
+    if (!query) return { success: false, data: { results: [] } };
     try {
-      console.log("Searching local for:", query);
+      // 1. Intento exacto
       let res = await this.providers.local.request('/anime/search', { q: query });
       
-      // Si no hay resultados y el nombre es largo, intentar con el "nombre limpio"
-      if ((!res.success || res.data.results.length === 0) && query.length > 5) {
-        // Limpiar: quitar todo lo que esté después de ":", "(", "Season", "Movie", etc.
-        const cleanQuery = query.split(/[:\(\-]|Season|Movie|Part/i)[0].trim();
-        if (cleanQuery !== query) {
-          console.log("Re-searching with clean query:", cleanQuery);
-          res = await this.providers.local.request('/anime/search', { q: cleanQuery });
+      // 2. Fallback: Título limpio (Quitar Movie, Season, etc)
+      if ((!res.success || !res.data.results.length) && query.length > 5) {
+        const clean = query.split(/[:\(\-]|Season|Movie|Part/i)[0].trim();
+        if (clean !== query) {
+          res = await this.providers.local.request('/anime/search', { q: clean });
+        }
+      }
+
+      // 3. Fallback de emergencia: Solo la primera palabra
+      if (!res.success || !res.data.results.length) {
+        const firstWord = query.split(' ')[0];
+        if (firstWord.length > 3) {
+          res = await this.providers.local.request('/anime/search', { q: firstWord });
         }
       }
       return res;
     } catch (e) {
-      console.error("Local search failed", e);
       return { success: false, data: { results: [] } };
     }
   }
 
   async getAnimeInfo(urlOrId) {
     try {
-      console.log("Fetching anime info for:", urlOrId);
-      if(typeof urlOrId === 'string' && urlOrId.includes('http')) {
-         const res = await this.providers.local.request('/anime/info', { url: urlOrId });
-         return res; // Local ya devuelve { success, data }
+      if(typeof urlOrId === 'string' && (urlOrId.includes('http') || urlOrId.includes('anime/'))) {
+         return await this.providers.local.request('/anime/info', { url: urlOrId });
       }
-
       if (this.cache.has(urlOrId)) return this.cache.get(urlOrId);
-
       const data = await this.providers.jikan.request(`/anime/${urlOrId}/full`);
-      // Jikan devuelve { data: { ... } }, lo guardamos tal cual
       this.cache.set(urlOrId, data);
       return data;
     } catch (e) {
-      console.error("Critical error in getAnimeInfo:", e);
       return { success: false, data: null };
     }
   }
@@ -136,32 +136,15 @@ export class AnimeAPI {
 
   async getDubbed(page = 1) {
     try {
-      const res = await this.providers.jikan.request('/anime', { 
-        q: 'latino', 
-        limit: 24, 
-        page,
-        status: 'airing',
-        order_by: 'popularity', 
-        sort: 'desc' 
-      });
-      return res;
-    } catch (e) {
-      console.error("Error fetching dubbed anime", e);
-      return { data: [] };
-    }
+      return await this.providers.jikan.request('/anime', { q: 'latino', limit: 24, page, status: 'airing', order_by: 'popularity', sort: 'desc' });
+    } catch (e) { return { data: [] }; }
   }
 
   async getByGenre(genreId, page = 1) {
-    return await this.providers.jikan.request('/anime', { 
-      genres: genreId, 
-      order_by: 'popularity', 
-      limit: 24,
-      page
-    });
+    return await this.providers.jikan.request('/anime', { genres: genreId, order_by: 'popularity', limit: 24, page });
   }
 
   async getSchedule() {
-    // Para el calendario, es mejor usar los animes de la temporada actual
     return await this.providers.jikan.request('/seasons/now');
   }
 
@@ -174,19 +157,11 @@ export class AnimeAPI {
   }
 
   async getAnilistBanner(malId) {
-    const query = `
-      query ($id: Int) {
-        Media (idMal: $id, type: ANIME) {
-          bannerImage
-        }
-      }
-    `;
+    const query = `query ($id: Int) { Media (idMal: $id, type: ANIME) { bannerImage } }`;
     try {
       const data = await this.providers.anilist.request(query, { id: malId });
       return data.Media?.bannerImage;
-    } catch (e) {
-      return null;
-    }
+    } catch (e) { return null; }
   }
 }
 
