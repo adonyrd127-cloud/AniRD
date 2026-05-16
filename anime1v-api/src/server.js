@@ -95,7 +95,6 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
 
 app.use("/api/v1/anime", animeRoutes);
-app.use("/api/v1/episodes", require("./routes/episodes.routes"));
 app.use("/api/anime1v", animeRoutes);
 
 // 404
