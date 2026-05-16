@@ -9,6 +9,7 @@ export default class ProfilePage {
     this.settings = { theme: 'dark', audio: 'sub' };
     this.followedAnimes = [];
     this.favoriteAnimes = [];
+    this.intervals = [];
   }
 
   async render() {
@@ -17,7 +18,6 @@ export default class ProfilePage {
       return document.createElement('div');
     }
 
-    // Cargar datos reales
     this.followedAnimes = await db.following.toArray();
     this.favoriteAnimes = await db.favorites.toArray();
     this.settings.theme = await dbService.getSetting('theme', 'dark');
@@ -61,7 +61,6 @@ export default class ProfilePage {
           </div>
 
           <div class="profile-actions">
-            <!-- Sección de Ajustes -->
             <div class="action-section">
               <h3>Ajustes de Usuario</h3>
               <div class="settings-group">
@@ -98,8 +97,19 @@ export default class ProfilePage {
         </div>
 
         <div class="profile-library page-enter" style="animation-delay: 0.2s">
-          ${this.renderSection('Siguiendo', this.followedAnimes)}
-          ${this.renderSection('Tus Favoritos', this.favoriteAnimes)}
+          <div class="library-section">
+            <h2 class="section-title">Siguiendo</h2>
+            <div class="profile-anime-grid">
+              ${this.followedAnimes.map(anime => this.renderAnimeCard(anime, true)).join('')}
+            </div>
+          </div>
+          
+          <div class="library-section">
+            <h2 class="section-title">Tus Favoritos</h2>
+            <div class="profile-anime-grid">
+              ${this.favoriteAnimes.map(anime => this.renderAnimeCard(anime, false)).join('')}
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -107,27 +117,80 @@ export default class ProfilePage {
     return container;
   }
 
-  renderSection(title, list) {
-    if (list.length === 0) return '';
+  renderAnimeCard(anime, showCountdown) {
     return `
-      <div class="library-section">
-        <h2 class="section-title">${title}</h2>
-        <div class="profile-anime-grid">
-          ${list.map(anime => `
-            <a href="/anime/${anime.animeId}" data-link class="profile-anime-card">
-              <img src="${anime.cover}" alt="${anime.title}" loading="lazy">
-              <div class="anime-info">
-                <h3>${anime.title}</h3>
-                ${anime.broadcast ? `<span class="broadcast-tag">${anime.broadcast.day || 'Emisión'}</span>` : ''}
-              </div>
-            </a>
-          `).join('')}
+      <a href="/anime/${anime.animeId}" data-link class="profile-anime-card">
+        <img src="${anime.cover}" alt="${anime.title}" loading="lazy">
+        ${showCountdown && anime.broadcast ? `
+          <div class="countdown-overlay" data-day="${anime.broadcast.day || ''}" data-time="${anime.broadcast.time || ''}" data-tz="${anime.broadcast.timezone || 'Asia/Tokyo'}">
+            <span class="countdown-label">Cargando estreno...</span>
+          </div>
+        ` : ''}
+        <div class="anime-info">
+          <h3>${anime.title}</h3>
+          ${anime.broadcast ? `<span class="broadcast-tag">${anime.broadcast.day || 'Emisión'}</span>` : ''}
         </div>
-      </div>
+      </a>
     `;
   }
 
+  calculateTimeRemaining(day, time, timezone) {
+    if (!day || !time) return null;
+
+    const daysMap = { 
+      'mondays': 1, 'tuesdays': 2, 'wednesdays': 3, 'thursdays': 4, 
+      'fridays': 5, 'saturdays': 6, 'sundays': 0 
+    };
+
+    const now = new Date();
+    const targetDay = daysMap[day.toLowerCase().trim()];
+    if (targetDay === undefined) return null;
+
+    // Convertir hora de emisión (ej: 17:00 JST) a fecha local
+    let [hours, minutes] = time.split(':').map(Number);
+    
+    // Ajuste simple de JST a Local (Aproximado si no hay librería de TZ completa)
+    // JST es UTC+9. AdonyRD suele estar en -4/-5. Diferencia ~13-14h.
+    let target = new Date();
+    target.setUTCHours(hours - 9, minutes, 0, 0); // Convertir a UTC primero
+
+    // Mover al día correcto de la semana
+    let diff = (targetDay - now.getUTCDay() + 7) % 7;
+    if (diff === 0 && target < now) diff = 7;
+    target.setUTCDate(now.getUTCDate() + diff);
+
+    const ms = target - now;
+    if (ms < 0) return '¡Estreno Hoy!';
+
+    const d = Math.floor(ms / (1000 * 60 * 60 * 24));
+    const h = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const m = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (d > 0) return `Faltan ${d}d ${h}h`;
+    return `Estreno en ${h}h ${m}m`;
+  }
+
   async afterRender() {
+    // 1. Limpiar intervalos previos
+    this.intervals.forEach(clearInterval);
+    this.intervals = [];
+
+    // 2. Iniciar Relojes de Cuenta Regresiva
+    const overlays = document.querySelectorAll('.countdown-overlay');
+    const updateAll = () => {
+      overlays.forEach(overlay => {
+        const { day, time, tz } = overlay.dataset;
+        const text = this.calculateTimeRemaining(day, time, tz);
+        if (text) overlay.querySelector('span').textContent = text;
+        else overlay.style.display = 'none';
+      });
+    };
+
+    updateAll();
+    const timerId = setInterval(updateAll, 60000); // Actualizar cada minuto
+    this.intervals.push(timerId);
+
+    // 3. Otros eventos (Audio, Tema, Sinc, Logout)
     const audioSelect = document.getElementById('audio-pref');
     const themeSelect = document.getElementById('theme-pref');
     const syncBtn = document.getElementById('sync-now-btn');
@@ -135,16 +198,12 @@ export default class ProfilePage {
 
     audioSelect.addEventListener('change', async (e) => {
       await dbService.setSetting('audio_pref', e.target.value);
-      alert('Preferencia de audio actualizada ✅');
     });
 
     themeSelect.addEventListener('change', async (e) => {
-      await dbService.setSetting('theme', e.target.value);
-      if (e.target.value === 'light') {
-        document.body.classList.add('light-theme');
-      } else {
-        document.body.classList.remove('light-theme');
-      }
+      const theme = e.target.value;
+      await dbService.setSetting('theme', theme);
+      document.body.classList.toggle('light-theme', theme === 'light');
     });
 
     if (syncBtn) {
@@ -156,11 +215,8 @@ export default class ProfilePage {
           await authService.syncWithServer(localData);
           alert('¡Sincronización completada! ✅');
           window.location.reload();
-        } catch (err) {
-          alert('Error: ' + err.message);
-        } finally {
-          syncBtn.disabled = false;
-        }
+        } catch (err) { alert('Error: ' + err.message); }
+        finally { syncBtn.disabled = false; }
       });
     }
 
