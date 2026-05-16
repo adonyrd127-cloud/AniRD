@@ -1,5 +1,5 @@
 import { authService } from '../services/auth.service.js';
-import { dbService } from '../services/db.js';
+import { dbService, db } from '../services/db.js';
 
 export default class ProfilePage {
   constructor(params) {
@@ -14,10 +14,10 @@ export default class ProfilePage {
       return document.createElement('div');
     }
 
-    // Cargar estadísticas reales de Dexie
-    const favorites = await dbService.db.favorites.count();
-    const following = await dbService.db.anime_status.count();
-    const history = await dbService.db.history.count();
+    // Cargar estadísticas reales usando db directamente
+    const favorites = await db.favorites.count();
+    const following = await db.following.count();
+    const history = await db.history.count();
     this.stats = { favorites, following, history };
 
     const container = document.createElement('div');
