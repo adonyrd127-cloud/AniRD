@@ -7,15 +7,28 @@ export default class AnimeDetailPage {
     this.params = params;
     this.animeId = params.id;
     this.anime = null;
+    this.localInfo = null;
     this.isFavorite = false;
     this.isFollowing = false;
-    this.activeTab = 'episodes'; // 'episodes' or 'characters'
   }
 
   async render() {
+    // 1. Obtener info global (Jikan)
     this.anime = (await apiService.getAnimeInfo(this.animeId)).data;
     this.isFavorite = await dbService.isFavorite(this.animeId);
     this.isFollowing = await dbService.isFollowing(this.animeId);
+    
+    // 2. Intentar buscar en el servidor local para ver episodios publicados
+    try {
+      const searchRes = await apiService.searchLocal(this.anime.title);
+      if (searchRes.success && searchRes.data.results.length > 0) {
+        // Tomar el primer resultado que coincida mejor
+        const localAnime = searchRes.data.results[0];
+        const infoRes = await apiService.getAnimeInfo(localAnime.url);
+        if (infoRes.success) this.localInfo = infoRes.data;
+      }
+    } catch (e) { console.error("No se encontró en el servidor local", e); }
+
     const banner = await apiService.getAnilistBanner(this.animeId) || this.anime.images.jpg.large_image_url;
 
     const container = document.createElement('div');
@@ -50,20 +63,12 @@ export default class AnimeDetailPage {
         .animex-content {
           position: relative;
           z-index: 10;
-          display: flex;
-          gap: 50px;
-          width: 100%;
-          max-width: 1400px;
-          margin: 0 auto;
+          display: flex; gap: 50px; width: 100%; max-width: 1400px; margin: 0 auto;
         }
 
         .animex-poster {
-          width: 280px;
-          flex-shrink: 0;
-          border-radius: 25px;
-          overflow: hidden;
-          box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-          border: 1px solid rgba(255,255,255,0.1);
+          width: 280px; flex-shrink: 0; border-radius: 25px; overflow: hidden;
+          box-shadow: 0 30px 60px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);
         }
         .animex-poster img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -71,102 +76,59 @@ export default class AnimeDetailPage {
         
         .animex-badges { display: flex; gap: 10px; margin-bottom: 20px; }
         .animex-badge {
-          background: rgba(255,255,255,0.1);
-          color: white;
-          padding: 6px 14px;
-          border-radius: 8px;
-          font-size: 11px;
-          font-weight: 800;
-          text-transform: uppercase;
+          background: rgba(255,255,255,0.1); color: white; padding: 6px 14px;
+          border-radius: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase;
         }
 
         .animex-title {
-          font-family: 'Outfit', sans-serif;
-          font-size: clamp(2rem, 5vw, 4rem);
-          font-weight: 900;
-          line-height: 1.1;
-          margin-bottom: 20px;
-          color: white;
+          font-family: 'Outfit', sans-serif; font-size: clamp(2rem, 5vw, 4rem);
+          font-weight: 900; line-height: 1.1; margin-bottom: 20px; color: white;
         }
 
         .animex-genres { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
         .genre-pill {
-          background: rgba(255,255,255,0.05);
-          padding: 6px 18px;
-          border-radius: 50px;
-          font-size: 12px;
-          font-weight: 700;
-          color: rgba(255,255,255,0.8);
-          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.05); padding: 6px 18px; border-radius: 50px;
+          font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.08);
         }
 
         .animex-synopsis {
-          font-size: 15px;
-          line-height: 1.7;
-          color: rgba(255,255,255,0.7);
-          margin-bottom: 40px;
-          max-width: 800px;
-          display: -webkit-box;
-          -webkit-line-clamp: 4;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
+          font-size: 15px; line-height: 1.7; color: rgba(255,255,255,0.7);
+          margin-bottom: 40px; max-width: 800px; display: -webkit-box;
+          -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
         }
 
         .animex-actions { display: flex; gap: 15px; align-items: center; }
         
-        /* Tabs */
         .animex-tabs { display: flex; gap: 40px; padding: 0 5%; border-bottom: 1px solid rgba(255,255,255,0.05); margin-top: 40px; }
-        .tab-item { padding: 20px 0; color: var(--text-muted); font-weight: 800; cursor: pointer; position: relative; transition: color 0.3s; }
+        .tab-item { padding: 20px 0; color: var(--text-muted); font-weight: 800; cursor: pointer; position: relative; }
         .tab-item.active { color: white; }
         .tab-item.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--accent); }
 
-        /* Grids */
         .tab-panel-animex { min-height: 400px; padding: 40px 5%; }
-        .ep-grid-animex {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 25px;
-        }
-        .char-grid-animex {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-          gap: 20px;
-        }
+        .ep-grid-animex { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+        .char-grid-animex { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
 
         .ep-card-animex {
-          background: rgba(255,255,255,0.03);
-          border-radius: 20px;
-          overflow: hidden;
-          text-decoration: none;
-          border: 1px solid rgba(255,255,255,0.05);
-          transition: all 0.3s ease;
+          background: rgba(255,255,255,0.03); border-radius: 20px; overflow: hidden;
+          text-decoration: none; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease;
         }
         .ep-card-animex:hover { transform: translateY(-5px); border-color: var(--accent); }
         .ep-thumb { position: relative; aspect-ratio: 16/9; overflow: hidden; }
         .ep-thumb img { width: 100%; height: 100%; object-fit: cover; }
         .ep-num {
-          position: absolute; bottom: 10px; left: 10px;
-          background: rgba(0,0,0,0.8); color: white;
-          padding: 4px 12px; border-radius: 6px; font-weight: 900; font-size: 11px;
+          position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.8);
+          color: white; padding: 4px 12px; border-radius: 6px; font-weight: 900; font-size: 11px;
         }
         .ep-info { padding: 15px; font-weight: 700; color: white; font-size: 14px; }
 
-        /* Character Card */
         .char-card-animex { text-align: center; }
         .char-img { width: 100%; aspect-ratio: 1/1; border-radius: 20px; overflow: hidden; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); }
         .char-img img { width: 100%; height: 100%; object-fit: cover; }
-        .char-name { font-size: 12px; font-weight: 800; color: white; margin-bottom: 2px; }
-        .char-role { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
 
-        /* Relations */
         .recommendations-section { padding: 60px 5% 100px; }
         .horizontal-scroll-v5 { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px; scrollbar-width: none; }
         .horizontal-scroll-v5::-webkit-scrollbar { display: none; }
-        .rel-label {
-          font-size: 9px; font-weight: 900; color: var(--accent);
-          text-transform: uppercase; margin-bottom: 8px; display: block;
-          letter-spacing: 1px;
-        }
+        .rel-label { font-size: 9px; font-weight: 900; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; display: block; letter-spacing: 1px; }
 
         @media (max-width: 900px) {
           .animex-content { flex-direction: column; align-items: center; text-align: center; }
@@ -181,7 +143,7 @@ export default class AnimeDetailPage {
           <div class="animex-poster"><img src="${this.anime.images.jpg.large_image_url}"></div>
           <div class="animex-info">
             <div class="animex-badges">
-              <span class="animex-badge" style="background:var(--accent)">${this.anime.episodes || '?'} EP</span>
+              <span class="animex-badge" style="background:var(--accent)">${this.localInfo ? this.localInfo.episodes.length : '?'} / ${this.anime.episodes || '?'} EP</span>
               <span class="animex-badge">${this.anime.type}</span>
               <span class="animex-badge">${this.anime.status === 'Currently Airing' ? 'EN EMISIÓN' : 'FINALIZADO'}</span>
               <span class="animex-badge">⭐ ${this.anime.score || '0.0'}</span>
@@ -192,7 +154,7 @@ export default class AnimeDetailPage {
             </div>
             <p class="animex-synopsis">${this.anime.synopsis || 'Sin descripción disponible.'}</p>
             <div class="animex-actions">
-              <a href="/watch/${this.animeId}/1/sub" data-link class="btn-v4-primary" style="padding: 15px 40px; font-size: 15px;">▶ VER AHORA</a>
+              ${this.localInfo ? `<a href="/watch/${this.animeId}/1/sub" data-link class="btn-v4-primary" style="padding: 15px 40px; font-size: 15px;">▶ VER AHORA</a>` : '<span class="animex-badge">PRÓXIMAMENTE</span>'}
               <button id="fav-btn" class="btn-v4-secondary" style="width:50px; height:50px; border-radius:15px; padding:0">${this.isFavorite ? '❤️' : '🤍'}</button>
               <button id="follow-btn" class="btn-v4-secondary" style="width:50px; height:50px; border-radius:15px; padding:0">${this.isFollowing ? '🔔' : '🔕'}</button>
             </div>
@@ -224,28 +186,22 @@ export default class AnimeDetailPage {
     const relContainer = document.getElementById('relations-container');
     const relStatus = document.getElementById('rel-status');
 
-    // Mapeo de relaciones al español
-    const relMap = {
-      'Prequel': 'Precuela',
-      'Sequel': 'Secuela',
-      'Side story': 'Historia Paralela',
-      'Spin-off': 'Spin-off',
-      'Alternative version': 'Versión Alternativa',
-      'Summary': 'Resumen'
-    };
-
     const renderEpisodes = () => {
-      const epCount = this.anime.episodes || 12;
+      if (!this.localInfo || !this.localInfo.episodes) {
+        tabPanel.innerHTML = '<p style="color:var(--text-muted)">Este anime aún no tiene episodios publicados en nuestro servidor.</p>';
+        return;
+      }
+      
       const banner = this.anime.images.jpg.large_image_url;
       tabPanel.innerHTML = `
         <div class="ep-grid-animex">
-          ${Array.from({length: epCount}, (_, i) => i + 1).map(num => `
-            <a href="/watch/${this.animeId}/${num}/sub" data-link class="ep-card-animex page-enter">
+          ${this.localInfo.episodes.map(ep => `
+            <a href="/watch/${this.animeId}/${ep.number}/sub" data-link class="ep-card-animex page-enter">
               <div class="ep-thumb">
                 <img src="${banner}" loading="lazy">
-                <div class="ep-num">EPISODIO ${num}</div>
+                <div class="ep-num">EPISODIO ${ep.number}</div>
               </div>
-              <div class="ep-info">Episodio ${num}</div>
+              <div class="ep-info">Episodio ${ep.number}</div>
             </a>
           `).join('')}
         </div>
@@ -272,7 +228,6 @@ export default class AnimeDetailPage {
       } catch (e) { tabPanel.innerHTML = '<p style="color:white">Error al cargar personajes.</p>'; }
     };
 
-    // Lógica de Pestañas
     tabs.forEach(tab => {
       tab.addEventListener('click', async () => {
         tabs.forEach(t => t.classList.remove('active'));
@@ -282,33 +237,28 @@ export default class AnimeDetailPage {
       });
     });
 
-    // Render Inicial
     renderEpisodes();
 
-    // Cargar Relaciones con Etiquetas
+    // Cargar Relaciones
     try {
       const rels = await apiService.getAnimeRelations(this.animeId);
       if (rels && rels.data && rels.data.length > 0) {
         if(relStatus) relStatus.remove();
         rels.data.forEach(rel => {
-          const relType = relMap[rel.relation] || rel.relation;
+          const typeLabel = rel.relation === 'Prequel' ? 'Precuela' : (rel.relation === 'Sequel' ? 'Secuela' : rel.relation);
           rel.entry.forEach(entry => {
             if (entry.type === 'anime') {
-              const relBox = document.createElement('div');
-              relBox.innerHTML = `
-                <span class="rel-label">${relType}</span>
-                <anime-card></anime-card>
-              `;
-              const card = relBox.querySelector('anime-card');
-              card.data = { mal_id: entry.mal_id, title: entry.name, images: this.anime.images };
-              relContainer.appendChild(relBox);
+               const box = document.createElement('div');
+               box.innerHTML = `<span class="rel-label">${typeLabel}</span><anime-card></anime-card>`;
+               const card = box.querySelector('anime-card');
+               card.data = { mal_id: entry.mal_id, title: entry.name, images: this.anime.images };
+               relContainer.appendChild(box);
             }
           });
         });
       } else { if(relStatus) relStatus.textContent = 'No se encontraron relaciones.'; }
     } catch (e) { if(relStatus) relStatus.textContent = 'Error al cargar relaciones.'; }
 
-    // Botones Favorito/Seguir
     document.getElementById('fav-btn').addEventListener('click', async (e) => {
       this.isFavorite = !this.isFavorite;
       e.target.textContent = this.isFavorite ? '❤️' : '🤍';
