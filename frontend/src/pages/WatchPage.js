@@ -14,12 +14,18 @@ export default class WatchPage {
 
   async render() {
     try {
-      // 1. Obtener info global
+      // 1. Obtener info del anime
       const infoRes = await apiService.getAnimeInfo(this.animeId);
-      if (infoRes && infoRes.data) this.anime = infoRes.data;
+      if (infoRes && infoRes.data) {
+        this.anime = infoRes.data;
+      }
 
-      // 2. Búsqueda local con múltiples intentos (Nombre completo vs Primera palabra)
-      const searchTerm = this.anime ? this.anime.title : this.animeId;
+      // Fallback: usar el título pasado por URL si Jikan falla
+      const urlParams = new URLSearchParams(window.location.search);
+      const titleHint = urlParams.get('title');
+
+      // 2. Búsqueda local con múltiples intentos
+      const searchTerm = this.anime ? this.anime.title : (titleHint || this.animeId);
       let searchRes = await apiService.searchLocal(searchTerm);
       
       // Fallback: si no hay resultados, intentar con la primera palabra del título
@@ -108,7 +114,7 @@ export default class WatchPage {
     if (this.localInfo && this.localInfo.episodes) {
       const thumb = this.anime.images?.jpg?.large_image_url || '';
       epList.innerHTML = this.localInfo.episodes.map(ep => `
-        <a href="/watch/${this.animeId}/${ep.number}/${this.lang}" data-link class="ep-item-v5 ${ep.number === this.episodeNum ? 'active' : ''}">
+        <a href="/watch/${this.animeId}/${ep.number}/${this.lang}?title=${encodeURIComponent(this.anime.title)}" data-link class="ep-item-v5 ${ep.number === this.episodeNum ? 'active' : ''}">
           <div style="width:100px; aspect-ratio:16/9; border-radius:10px; overflow:hidden; flex-shrink:0"><img src="${thumb}" style="width:100%; height:100%; object-fit:cover"></div>
           <div style="display:flex; align-items:center"><span>Episodio ${ep.number}</span></div>
         </a>

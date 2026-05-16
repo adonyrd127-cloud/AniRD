@@ -154,7 +154,7 @@ export default class AnimeDetailPage {
             </div>
             <p class="animex-synopsis">${this.anime.synopsis || 'Sin descripción disponible.'}</p>
             <div class="animex-actions">
-              ${this.localInfo ? `<a href="/watch/${this.animeId}/1/sub" data-link class="btn-v4-primary" style="padding: 15px 40px; font-size: 15px;">▶ VER AHORA</a>` : '<span class="animex-badge">PRÓXIMAMENTE</span>'}
+              ${this.localInfo ? `<a href="/watch/${this.animeId}/1/sub?title=${encodeURIComponent(this.anime.title)}" data-link class="btn-v4-primary" style="padding: 15px 40px; font-size: 15px;">▶ VER AHORA</a>` : '<span class="animex-badge">PRÓXIMAMENTE</span>'}
               <button id="fav-btn" class="btn-v4-secondary" style="width:50px; height:50px; border-radius:15px; padding:0">${this.isFavorite ? '❤️' : '🤍'}</button>
               <button id="follow-btn" class="btn-v4-secondary" style="width:50px; height:50px; border-radius:15px; padding:0">${this.isFollowing ? '🔔' : '🔕'}</button>
             </div>
