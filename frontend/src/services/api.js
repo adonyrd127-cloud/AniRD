@@ -87,23 +87,22 @@ export class AnimeAPI {
   }
 
   async getAnimeInfo(urlOrId) {
-    // Determina si usar local (URL) o Jikan/Anilist (ID)
     try {
+      console.log("Fetching anime info for:", urlOrId);
       if(typeof urlOrId === 'string' && urlOrId.includes('http')) {
-         return await this.providers.local.request('/anime/info', { url: urlOrId });
+         const res = await this.providers.local.request('/anime/info', { url: urlOrId });
+         return res; // Local ya devuelve { success, data }
       }
 
-      // Check cache
-      if (this.cache.has(urlOrId)) {
-        return this.cache.get(urlOrId);
-      }
+      if (this.cache.has(urlOrId)) return this.cache.get(urlOrId);
 
       const data = await this.providers.jikan.request(`/anime/${urlOrId}/full`);
+      // Jikan devuelve { data: { ... } }, lo guardamos tal cual
       this.cache.set(urlOrId, data);
       return data;
     } catch (e) {
-      console.error("Error fetching anime info", e);
-      throw e;
+      console.error("Critical error in getAnimeInfo:", e);
+      return { success: false, data: null };
     }
   }
 
