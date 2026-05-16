@@ -35,12 +35,7 @@ export default class HomePage {
           position: relative;
           z-index: 10;
           max-width: 700px;
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(20px);
-          padding: 40px;
-          border-radius: 30px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+          padding: 40px 0;
         }
         .hero-title-v4 {
           font-family: 'Outfit', sans-serif;
