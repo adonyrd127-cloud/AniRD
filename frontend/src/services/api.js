@@ -158,6 +158,10 @@ export class AnimeAPI {
     return await this.providers.jikan.request(`/anime/${id}/relations`);
   }
 
+  async getAnimeCharacters(id) {
+    return await this.providers.jikan.request(`/anime/${id}/characters`);
+  }
+
   async getAnilistBanner(malId) {
     const query = `
       query ($id: Int) {
