@@ -58,35 +58,6 @@ export default class HomePage {
         }
         .hero-actions-v4 { display: flex; gap: 15px; }
         
-        .btn-v4-primary {
-          background: #ff0000;
-          color: white;
-          padding: 12px 35px;
-          border-radius: 50px;
-          font-weight: 800;
-          text-decoration: none;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 13px;
-          box-shadow: 0 10px 20px rgba(255, 0, 0, 0.3);
-          transition: all 0.3s ease;
-        }
-        .btn-v4-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(255, 0, 0, 0.4); }
-
-        .btn-v4-secondary {
-          background: rgba(255, 255, 255, 0.1);
-          color: white;
-          padding: 12px 25px;
-          border-radius: 50px;
-          font-weight: 700;
-          text-decoration: none;
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          transition: all 0.3s ease;
-        }
-        .btn-v4-secondary:hover { background: rgba(255, 255, 255, 0.2); }
-
         .home-sections-v4 { padding: 60px 5% 100px; max-width: 1600px; margin: 0 auto; }
         .horizontal-scroll-v4 { display: flex; gap: 20px; overflow-x: auto; padding: 10px 0 30px; scrollbar-width: none; }
         .horizontal-scroll-v4::-webkit-scrollbar { display: none; }
