@@ -1,6 +1,6 @@
 {
   "name": "anird-api",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Backend AniRD - API de anime personal",
   "main": "src/server.js",
   "type": "commonjs",

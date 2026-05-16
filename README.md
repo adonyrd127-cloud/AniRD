@@ -25,7 +25,14 @@ AniRD es una plataforma moderna y minimalista para ver anime online, diseñada p
 
 ## 📝 Notas de Versión Recientes
 
-### v2.1 - Personalización y Seguimiento (Actual)
+### v3.0 - The Cloud Update (Actual) ☁️
+- **Sincronización Multi-dispositivo:** Tus favoritos e historial ahora se guardan en tu Orange Pi y se sincronizan automáticamente en cualquier dispositivo.
+- **Sistema de Cuentas:** Registro e inicio de sesión seguro con JWT y persistencia de datos.
+- **Mi Biblioteca Personal:** Nueva sección en el perfil para gestionar animes seguidos y favoritos con una interfaz visual mejorada.
+- **Estadísticas en Tiempo Real:** Contador de episodios vistos y animes en seguimiento directamente en tu perfil.
+- **Estabilización de UI:** Corrección de parpadeos en animaciones y optimización de carga de componentes.
+
+### v2.1 - Personalización y Seguimiento
 - **Modo Claro (Light Theme):** Soporte completo para tema claro con corrección de contraste en textos, tarjetas y navegación.
 - **Preferencias de Audio:** Selección inteligente entre Latino y Subtitulado que se aplica automáticamente al reproductor y episodios.
 - **Sistema de Seguimiento:** Nueva sección "Siguiendo" en el perfil con **Reloj de Cuenta Regresiva** para próximos estrenos.
