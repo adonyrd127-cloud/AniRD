@@ -139,14 +139,14 @@ export default class WatchPage {
 
       // 2. Obtener los links del episodio
       const linksRes = await apiService.getEpisode(episode.url);
-      const preferredLang = await dbService.getSetting('lang', 'SUB');
+      const preferredLang = await dbService.getSetting('audio_pref', 'sub');
       
       const serversData = linksRes.data?.servers || {};
       const dubServers = serversData.dub || [];
       const subServers = serversData.sub || [];
 
       let servers = [];
-      if (preferredLang === 'DUB') {
+      if (preferredLang === 'dub') {
           // Si prefiere Latino, intentar DUB primero, si no hay usar SUB
           servers = dubServers.length > 0 ? dubServers : subServers;
       } else {

@@ -370,6 +370,37 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
   margin-bottom: 16px;
 }
 
+.settings-group {
+  margin-bottom: 20px;
+}
+
+.settings-group label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.settings-select {
+  width: 100%;
+  padding: 10px 15px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.settings-select:focus {
+  border-color: var(--accent);
+}
+
 @media (max-width: 600px) {
   .profile-stats-grid { grid-template-columns: 1fr; }
   .profile-actions { grid-template-columns: 1fr; }

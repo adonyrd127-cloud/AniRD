@@ -6,6 +6,7 @@ export default class ProfilePage {
     this.params = params;
     this.user = authService.getUser();
     this.stats = { favorites: 0, following: 0, history: 0 };
+    this.settings = { theme: 'dark', audio: 'sub' };
     this.followedAnimes = [];
     this.favoriteAnimes = [];
   }
@@ -19,6 +20,8 @@ export default class ProfilePage {
     // Cargar datos reales
     this.followedAnimes = await db.following.toArray();
     this.favoriteAnimes = await db.favorites.toArray();
+    this.settings.theme = await dbService.getSetting('theme', 'dark');
+    this.settings.audio = await dbService.getSetting('audio_pref', 'sub');
     
     this.stats = {
       favorites: this.favoriteAnimes.length,
@@ -58,30 +61,42 @@ export default class ProfilePage {
           </div>
 
           <div class="profile-actions">
+            <!-- Sección de Ajustes -->
             <div class="action-section">
-              <h3>Sincronización</h3>
-              <p>Tus datos se guardan automáticamente en tu Orange Pi.</p>
-              <button id="sync-now-btn" class="btn-secondary">
-                <span>🔄</span> Sincronizar Ahora
-              </button>
+              <h3>Ajustes de Usuario</h3>
+              <div class="settings-group">
+                <label>Preferencia de Audio</label>
+                <select id="audio-pref" class="settings-select">
+                  <option value="sub" ${this.settings.audio === 'sub' ? 'selected' : ''}>Subtitulado (Japonés)</option>
+                  <option value="dub" ${this.settings.audio === 'dub' ? 'selected' : ''}>Latino (Doblaje)</option>
+                </select>
+              </div>
+              <div class="settings-group">
+                <label>Tema Visual</label>
+                <select id="theme-pref" class="settings-select">
+                  <option value="dark" ${this.settings.theme === 'dark' ? 'selected' : ''}>Modo Oscuro (Noche)</option>
+                  <option value="light" ${this.settings.theme === 'light' ? 'selected' : ''}>Modo Claro (Día)</option>
+                </select>
+              </div>
             </div>
 
             <div class="action-section">
-              <h3>Seguridad</h3>
-              <p>Sesión activa en este navegador.</p>
-              <button id="logout-btn" class="btn-danger">
+              <h3>Sincronización</h3>
+              <p>Tus datos se guardan en tu Orange Pi.</p>
+              <button id="sync-now-btn" class="btn-secondary" style="width: 100%; margin-bottom: 10px;">
+                <span>🔄</span> Sincronizar Ahora
+              </button>
+              <button id="logout-btn" class="btn-danger" style="width: 100%;">
                 <span>🚪</span> Cerrar Sesión
               </button>
             </div>
           </div>
 
-          <div class="profile-credits" style="margin-top: 32px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; opacity: 0.6; font-size: 0.8rem;">
+          <div class="profile-credits">
             <p>Powered by <b>Jikan API</b>, <b>AniList</b> & <b>Anime1v</b></p>
           </div>
         </div>
 
-
-        <!-- Nueva sección de Mi Biblioteca -->
         <div class="profile-library page-enter" style="animation-delay: 0.2s">
           ${this.renderSection('Siguiendo', this.followedAnimes)}
           ${this.renderSection('Tus Favoritos', this.favoriteAnimes)}
@@ -94,7 +109,6 @@ export default class ProfilePage {
 
   renderSection(title, list) {
     if (list.length === 0) return '';
-    
     return `
       <div class="library-section">
         <h2 class="section-title">${title}</h2>
@@ -114,8 +128,24 @@ export default class ProfilePage {
   }
 
   async afterRender() {
+    const audioSelect = document.getElementById('audio-pref');
+    const themeSelect = document.getElementById('theme-pref');
     const syncBtn = document.getElementById('sync-now-btn');
     const logoutBtn = document.getElementById('logout-btn');
+
+    audioSelect.addEventListener('change', async (e) => {
+      await dbService.setSetting('audio_pref', e.target.value);
+      alert('Preferencia de audio actualizada ✅');
+    });
+
+    themeSelect.addEventListener('change', async (e) => {
+      await dbService.setSetting('theme', e.target.value);
+      if (e.target.value === 'light') {
+        document.body.classList.add('light-theme');
+      } else {
+        document.body.classList.remove('light-theme');
+      }
+    });
 
     if (syncBtn) {
       syncBtn.addEventListener('click', async () => {
@@ -124,22 +154,19 @@ export default class ProfilePage {
         try {
           const localData = await dbService.getAllData();
           await authService.syncWithServer(localData);
-          alert('¡Sincronización completada con éxito! ✅');
+          alert('¡Sincronización completada! ✅');
           window.location.reload();
         } catch (err) {
-          alert('Error al sincronizar: ' + err.message);
+          alert('Error: ' + err.message);
         } finally {
           syncBtn.disabled = false;
-          syncBtn.innerHTML = '<span>🔄</span> Sincronizar Ahora';
         }
       });
     }
 
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => {
-        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-          authService.logout();
-        }
+        if (confirm('¿Cerrar sesión?')) authService.logout();
       });
     }
   }
