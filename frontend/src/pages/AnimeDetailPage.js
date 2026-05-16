@@ -9,6 +9,7 @@ export default class AnimeDetailPage {
     this.anime = null;
     this.isFavorite = false;
     this.isFollowing = false;
+    this.activeTab = 'episodes'; // 'episodes' or 'characters'
   }
 
   async render() {
@@ -115,17 +116,23 @@ export default class AnimeDetailPage {
         
         /* Tabs */
         .animex-tabs { display: flex; gap: 40px; padding: 0 5%; border-bottom: 1px solid rgba(255,255,255,0.05); margin-top: 40px; }
-        .tab-item { padding: 20px 0; color: var(--text-muted); font-weight: 800; cursor: pointer; position: relative; }
+        .tab-item { padding: 20px 0; color: var(--text-muted); font-weight: 800; cursor: pointer; position: relative; transition: color 0.3s; }
         .tab-item.active { color: white; }
         .tab-item.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--accent); }
 
-        /* Episodes Grid */
+        /* Grids */
+        .tab-panel-animex { min-height: 400px; padding: 40px 5%; }
         .ep-grid-animex {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
           gap: 25px;
-          padding: 40px 5%;
         }
+        .char-grid-animex {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+          gap: 20px;
+        }
+
         .ep-card-animex {
           background: rgba(255,255,255,0.03);
           border-radius: 20px;
@@ -144,14 +151,26 @@ export default class AnimeDetailPage {
         }
         .ep-info { padding: 15px; font-weight: 700; color: white; font-size: 14px; }
 
+        /* Character Card */
+        .char-card-animex { text-align: center; }
+        .char-img { width: 100%; aspect-ratio: 1/1; border-radius: 20px; overflow: hidden; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); }
+        .char-img img { width: 100%; height: 100%; object-fit: cover; }
+        .char-name { font-size: 12px; font-weight: 800; color: white; margin-bottom: 2px; }
+        .char-role { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+
+        /* Relations */
         .recommendations-section { padding: 60px 5% 100px; }
         .horizontal-scroll-v5 { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px; scrollbar-width: none; }
         .horizontal-scroll-v5::-webkit-scrollbar { display: none; }
+        .rel-label {
+          font-size: 9px; font-weight: 900; color: var(--accent);
+          text-transform: uppercase; margin-bottom: 8px; display: block;
+          letter-spacing: 1px;
+        }
 
         @media (max-width: 900px) {
           .animex-content { flex-direction: column; align-items: center; text-align: center; }
           .animex-poster { width: 200px; }
-          .animex-badges, .animex-genres, .animex-actions { justify-content: center; }
           .ep-grid-animex { grid-template-columns: 1fr; }
         }
       </style>
@@ -173,7 +192,7 @@ export default class AnimeDetailPage {
             </div>
             <p class="animex-synopsis">${this.anime.synopsis || 'Sin descripción disponible.'}</p>
             <div class="animex-actions">
-              <a href="/watch/${this.animeId}/1/sub" data-link class="btn-v4-primary" style="padding: 15px 40px; font-size: 15px;">▶ WATCH NOW</a>
+              <a href="/watch/${this.animeId}/1/sub" data-link class="btn-v4-primary" style="padding: 15px 40px; font-size: 15px;">▶ VER AHORA</a>
               <button id="fav-btn" class="btn-v4-secondary" style="width:50px; height:50px; border-radius:15px; padding:0">${this.isFavorite ? '❤️' : '🤍'}</button>
               <button id="follow-btn" class="btn-v4-secondary" style="width:50px; height:50px; border-radius:15px; padding:0">${this.isFollowing ? '🔔' : '🔕'}</button>
             </div>
@@ -182,11 +201,11 @@ export default class AnimeDetailPage {
       </div>
 
       <nav class="animex-tabs">
-        <div class="tab-item active">EPISODES</div>
-        <div class="tab-item">CHARACTERS</div>
+        <div class="tab-item active" data-tab="episodes">EPISODIOS</div>
+        <div class="tab-item" data-tab="characters">PERSONAJES</div>
       </nav>
 
-      <div class="ep-grid-animex" id="episodes-container"></div>
+      <div class="tab-panel-animex" id="tab-panel-content"></div>
 
       <div class="recommendations-section">
         <h2 class="section-title">PRECUELAS & SECUELAS</h2>
@@ -200,42 +219,96 @@ export default class AnimeDetailPage {
   }
 
   async afterRender() {
-    const epContainer = document.getElementById('episodes-container');
+    const tabPanel = document.getElementById('tab-panel-content');
+    const tabs = document.querySelectorAll('.tab-item');
     const relContainer = document.getElementById('relations-container');
     const relStatus = document.getElementById('rel-status');
 
-    // Cargar Episodios Estilo Animex
-    const epCount = this.anime.episodes || 12;
-    const banner = this.anime.images.jpg.large_image_url;
-    
-    epContainer.innerHTML = Array.from({length: epCount}, (_, i) => i + 1).map(num => `
-      <a href="/watch/${this.animeId}/${num}/sub" data-link class="ep-card-animex page-enter">
-        <div class="ep-thumb">
-          <img src="${banner}" loading="lazy">
-          <div class="ep-num">EPISODE ${num}</div>
-        </div>
-        <div class="ep-info">Episodio ${num}</div>
-      </a>
-    `).join('');
+    // Mapeo de relaciones al español
+    const relMap = {
+      'Prequel': 'Precuela',
+      'Sequel': 'Secuela',
+      'Side story': 'Historia Paralela',
+      'Spin-off': 'Spin-off',
+      'Alternative version': 'Versión Alternativa',
+      'Summary': 'Resumen'
+    };
 
-    // Cargar Relaciones (Precuelas/Secuelas)
+    const renderEpisodes = () => {
+      const epCount = this.anime.episodes || 12;
+      const banner = this.anime.images.jpg.large_image_url;
+      tabPanel.innerHTML = `
+        <div class="ep-grid-animex">
+          ${Array.from({length: epCount}, (_, i) => i + 1).map(num => `
+            <a href="/watch/${this.animeId}/${num}/sub" data-link class="ep-card-animex page-enter">
+              <div class="ep-thumb">
+                <img src="${banner}" loading="lazy">
+                <div class="ep-num">EPISODIO ${num}</div>
+              </div>
+              <div class="ep-info">Episodio ${num}</div>
+            </a>
+          `).join('')}
+        </div>
+      `;
+    };
+
+    const renderCharacters = async () => {
+      tabPanel.innerHTML = '<p style="color:white">Cargando personajes...</p>';
+      try {
+        const res = await apiService.getAnimeCharacters(this.animeId);
+        if (res && res.data) {
+          tabPanel.innerHTML = `
+            <div class="char-grid-animex">
+              ${res.data.slice(0, 18).map(char => `
+                <div class="char-card-animex page-enter">
+                  <div class="char-img"><img src="${char.character.images.jpg.image_url}" loading="lazy"></div>
+                  <div class="char-name">${char.character.name}</div>
+                  <div class="char-role">${char.role === 'Main' ? 'Principal' : 'Secundario'}</div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+      } catch (e) { tabPanel.innerHTML = '<p style="color:white">Error al cargar personajes.</p>'; }
+    };
+
+    // Lógica de Pestañas
+    tabs.forEach(tab => {
+      tab.addEventListener('click', async () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        if (tab.dataset.tab === 'episodes') renderEpisodes();
+        else await renderCharacters();
+      });
+    });
+
+    // Render Inicial
+    renderEpisodes();
+
+    // Cargar Relaciones con Etiquetas
     try {
       const rels = await apiService.getAnimeRelations(this.animeId);
       if (rels && rels.data && rels.data.length > 0) {
-        relStatus.remove();
+        if(relStatus) relStatus.remove();
         rels.data.forEach(rel => {
+          const relType = relMap[rel.relation] || rel.relation;
           rel.entry.forEach(entry => {
             if (entry.type === 'anime') {
-              const card = document.createElement('anime-card');
+              const relBox = document.createElement('div');
+              relBox.innerHTML = `
+                <span class="rel-label">${relType}</span>
+                <anime-card></anime-card>
+              `;
+              const card = relBox.querySelector('anime-card');
               card.data = { mal_id: entry.mal_id, title: entry.name, images: this.anime.images };
-              relContainer.appendChild(card);
+              relContainer.appendChild(relBox);
             }
           });
         });
-      } else { relStatus.textContent = 'No se encontraron relaciones.'; }
+      } else { if(relStatus) relStatus.textContent = 'No se encontraron relaciones.'; }
     } catch (e) { if(relStatus) relStatus.textContent = 'Error al cargar relaciones.'; }
 
-    // Botones
+    // Botones Favorito/Seguir
     document.getElementById('fav-btn').addEventListener('click', async (e) => {
       this.isFavorite = !this.isFavorite;
       e.target.textContent = this.isFavorite ? '❤️' : '🤍';
