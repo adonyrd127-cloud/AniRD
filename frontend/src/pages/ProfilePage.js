@@ -6,6 +6,8 @@ export default class ProfilePage {
     this.params = params;
     this.user = authService.getUser();
     this.stats = { favorites: 0, following: 0, history: 0 };
+    this.followedAnimes = [];
+    this.favoriteAnimes = [];
   }
 
   async render() {
@@ -14,11 +16,15 @@ export default class ProfilePage {
       return document.createElement('div');
     }
 
-    // Cargar estadísticas reales usando db directamente
-    const favorites = await db.favorites.count();
-    const following = await db.following.count();
-    const history = await db.history.count();
-    this.stats = { favorites, following, history };
+    // Cargar datos reales
+    this.followedAnimes = await db.following.toArray();
+    this.favoriteAnimes = await db.favorites.toArray();
+    
+    this.stats = {
+      favorites: this.favoriteAnimes.length,
+      following: this.followedAnimes.length,
+      history: await db.history.count()
+    };
 
     const container = document.createElement('div');
     container.className = 'profile-page-container';
@@ -69,10 +75,37 @@ export default class ProfilePage {
             </div>
           </div>
         </div>
+
+        <!-- Nueva sección de Mi Biblioteca -->
+        <div class="profile-library page-enter" style="animation-delay: 0.2s">
+          ${this.renderSection('Siguiendo', this.followedAnimes)}
+          ${this.renderSection('Tus Favoritos', this.favoriteAnimes)}
+        </div>
       </div>
     `;
 
     return container;
+  }
+
+  renderSection(title, list) {
+    if (list.length === 0) return '';
+    
+    return `
+      <div class="library-section">
+        <h2 class="section-title">${title}</h2>
+        <div class="profile-anime-grid">
+          ${list.map(anime => `
+            <a href="/anime/${anime.animeId}" data-link class="profile-anime-card">
+              <img src="${anime.cover}" alt="${anime.title}" loading="lazy">
+              <div class="anime-info">
+                <h3>${anime.title}</h3>
+                ${anime.broadcast ? `<span class="broadcast-tag">${anime.broadcast.day || 'Emisión'}</span>` : ''}
+              </div>
+            </a>
+          `).join('')}
+        </div>
+      </div>
+    `;
   }
 
   async afterRender() {
@@ -87,6 +120,7 @@ export default class ProfilePage {
           const localData = await dbService.getAllData();
           await authService.syncWithServer(localData);
           alert('¡Sincronización completada con éxito! ✅');
+          window.location.reload();
         } catch (err) {
           alert('Error al sincronizar: ' + err.message);
         } finally {
