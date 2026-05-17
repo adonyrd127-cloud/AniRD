@@ -164,11 +164,66 @@ export default class ProfilePage {
       if (tabName === 'list') {
         tabContent.innerHTML = `<div class="grid-v5" id="grid-follow"></div>`;
         const grid = document.getElementById('grid-follow');
+        
+        function getNextEpisodeCountdown(broadcast) {
+          if (!broadcast || !broadcast.day || !broadcast.time || !broadcast.timezone) return null;
+          const days = { 'Sundays': 0, 'Mondays': 1, 'Tuesdays': 2, 'Wednesdays': 3, 'Thursdays': 4, 'Fridays': 5, 'Saturdays': 6 };
+          const targetDay = days[broadcast.day];
+          if (targetDay === undefined) return null;
+
+          const [hours, minutes] = broadcast.time.split(':').map(Number);
+          const tokyoNow = new Date(new Date().toLocaleString("en-US", {timeZone: broadcast.timezone}));
+          
+          let targetDate = new Date(tokyoNow);
+          targetDate.setHours(hours, minutes, 0, 0);
+
+          let daysToAdd = targetDay - tokyoNow.getDay();
+          if (daysToAdd < 0 || (daysToAdd === 0 && targetDate < tokyoNow)) {
+            daysToAdd += 7;
+          }
+          targetDate.setDate(targetDate.getDate() + daysToAdd);
+
+          const diffMs = targetDate - tokyoNow;
+          if (diffMs <= 0) return null;
+
+          const d = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          const h = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
+          
+          if (d > 0) return `${d}d ${h}h para nuevo cap.`;
+          if (h > 0) return `${h}h para nuevo cap.`;
+          return `¡Nuevo cap en breve!`;
+        }
+
         if (this.followedAnimes.length > 0) {
           this.followedAnimes.forEach(a => {
             const card = document.createElement('anime-card');
-            card.data = { mal_id: a.animeId, title: a.title, images: { jpg: { large_image_url: a.cover } } };
+            const initialData = { mal_id: a.animeId, title: a.title, images: { jpg: { large_image_url: a.cover } } };
+            card.data = initialData;
             grid.appendChild(card);
+
+            // Cargar episodio actual e info en paralelo
+            Promise.all([
+              import('../services/db.js').then(({ db }) => db.history.where('animeId').equals(String(a.animeId)).reverse().sortBy('timestamp')),
+              import('../services/api.js').then(({ apiService }) => apiService.getAnimeInfo(a.animeId))
+            ]).then(([history, res]) => {
+              let updatedData = { ...initialData };
+              
+              if (history && history.length > 0) {
+                updatedData.currentEpisode = history[0].episodeId;
+              }
+
+              if (res && res.data) {
+                if (res.data.status === 'Currently Airing') {
+                  const countdown = getNextEpisodeCountdown(res.data.broadcast);
+                  if (countdown) updatedData.nextEpisodeText = countdown;
+                  updatedData.status = 'EN EMISIÓN';
+                } else if (res.data.status === 'Finished Airing') {
+                  updatedData.status = 'FINALIZADO';
+                }
+              }
+              
+              card.data = updatedData;
+            });
           });
         } else { tabContent.innerHTML = '<p style="color:var(--text-muted)">Tu lista de seguimiento está vacía.</p>'; }
       }

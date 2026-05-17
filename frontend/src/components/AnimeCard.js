@@ -102,6 +102,7 @@ export class AnimeCard extends HTMLElement {
           <div class="meta-v4">${this._anime.type || 'TV'} • ${this._anime.status || 'EN EMISIÓN'}</div>
           <h3 class="title-v4">${title}</h3>
           ${this._anime.currentEpisode ? `<div style="font-size: 10px; color: #ff0000; font-weight: 800; margin-top: 2px;">Visto Ep. ${this._anime.currentEpisode}</div>` : ''}
+          ${this._anime.nextEpisodeText ? `<div style="font-size: 10px; color: #00ff88; font-weight: 800; margin-top: 2px;">⏱ ${this._anime.nextEpisodeText}</div>` : ''}
         </div>
       </a>
     `;
