@@ -43,32 +43,13 @@ class AnilistClient {
 class LocalApiClient {
   constructor() {
     const host = window.location.hostname || 'localhost';
-    // Intentar puerto 3000 por defecto, pero permitir cambio dinamico
-    this.port = 3000;
+    // El puerto expuesto en docker-compose es estrictamente 3005
+    this.port = 3005;
     this.baseUrl = `http://${host}:${this.port}/api/v1`;
     this.apiKey = 'dev-anime1v-key';
-    this.initialized = false;
-  }
-
-  async init() {
-    if (this.initialized) return;
-    const host = window.location.hostname || 'localhost';
-    try {
-      const res = await fetch(`http://${host}:3000/health`).catch(() => null);
-      if (!res || !res.ok) {
-        console.log("Servidor no detectado en 3000, probando 3005...");
-        const res2 = await fetch(`http://${host}:3005/health`).catch(() => null);
-        if (res2 && res2.ok) {
-          this.port = 3005;
-          this.baseUrl = `http://${host}:3005/api/v1`;
-        }
-      }
-    } catch (e) { console.warn("Error detectando puerto, usando 3000"); }
-    this.initialized = true;
   }
 
   async request(endpoint, params = {}) {
-    await this.init();
     const url = new URL(`${this.baseUrl}${endpoint}`);
     Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
     

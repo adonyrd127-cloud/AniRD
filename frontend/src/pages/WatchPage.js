@@ -56,8 +56,11 @@ export default class WatchPage {
             const epUrl = `${localAnime.url}-episodio-${this.episodeNum}`;
             console.log("Solicitando servidores para:", epUrl);
             const epRes = await apiService.getEpisode(epUrl);
-            if (epRes.success) {
+            if (epRes.success && epRes.data) {
               this.episodeData = epRes.data;
+              // El API v2 devuelve los servidores agrupados por idioma (sub / dub)
+              const serverList = this.episodeData.servers[this.lang] || this.episodeData.servers.sub || [];
+              this.episodeData.activeServers = serverList;
             } else {
               console.warn("No se encontraron servidores para este episodio");
             }
@@ -101,7 +104,7 @@ export default class WatchPage {
       <div class="watch-layout-v5">
         <main>
           <div class="video-wrapper-v5" id="video-container">
-            ${this.episodeData ? `<iframe src="${this.episodeData.servers[0].code}" allowfullscreen></iframe>` : `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#111"><h3 style="margin-bottom:10px">Video no disponible</h3><p style="color:var(--text-muted); font-size:12px">El episodio ${this.episodeNum} aún no tiene enlaces de reproducción.</p></div>`}
+            ${this.episodeData && this.episodeData.activeServers && this.episodeData.activeServers.length > 0 ? `<iframe src="${this.episodeData.activeServers[0].url}" allowfullscreen></iframe>` : `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#111"><h3 style="margin-bottom:10px">Video no disponible</h3><p style="color:var(--text-muted); font-size:12px">El episodio ${this.episodeNum} aún no tiene enlaces de reproducción.</p></div>`}
           </div>
           
           <div style="padding:0 10px; margin-bottom:30px">
@@ -113,7 +116,7 @@ export default class WatchPage {
             <div class="control-box-v5">
               <label style="font-size:10px; font-weight:800; color:var(--text-muted); display:block; margin-bottom:10px">SERVIDOR</label>
               <select id="server-select" class="select-v4">
-                ${this.episodeData ? this.episodeData.servers.map(s => `<option value="${s.code}">${s.title}</option>`).join('') : '<option>Sin servidores</option>'}
+                ${this.episodeData && this.episodeData.activeServers && this.episodeData.activeServers.length > 0 ? this.episodeData.activeServers.map(s => `<option value="${s.url}">${s.server}</option>`).join('') : '<option>Sin servidores</option>'}
               </select>
             </div>
             <div class="control-box-v5">
