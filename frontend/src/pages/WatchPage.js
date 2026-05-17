@@ -52,17 +52,22 @@ export default class WatchPage {
           if (localDetails.success) {
             this.localInfo = localDetails.data;
             // 4. Intentar cargar servidores del episodio
-            // El backend espera la URL base del anime + "-episodio-" + número
-            const epUrl = `${localAnime.url}-episodio-${this.episodeNum}`;
-            console.log("Solicitando servidores para:", epUrl);
-            const epRes = await apiService.getEpisode(epUrl);
-            if (epRes.success && epRes.data) {
-              this.episodeData = epRes.data;
-              // El API v2 devuelve los servidores agrupados por idioma (sub / dub)
-              const serverList = this.episodeData.servers[this.lang] || this.episodeData.servers.sub || [];
-              this.episodeData.activeServers = serverList;
+            // Buscar la URL exacta del episodio en la lista que nos dio el servidor
+            const targetEpisode = this.localInfo.episodes.find(ep => ep.number === this.episodeNum);
+            
+            if (targetEpisode && targetEpisode.url) {
+              console.log("Solicitando servidores para:", targetEpisode.url);
+              const epRes = await apiService.getEpisode(targetEpisode.url);
+              if (epRes.success && epRes.data) {
+                this.episodeData = epRes.data;
+                // El API v2 devuelve los servidores agrupados por idioma (sub / dub)
+                const serverList = this.episodeData.servers[this.lang] || this.episodeData.servers.sub || [];
+                this.episodeData.activeServers = serverList;
+              } else {
+                console.warn("No se encontraron servidores para este episodio");
+              }
             } else {
-              console.warn("No se encontraron servidores para este episodio");
+              console.warn("No se encontró el enlace para el episodio", this.episodeNum);
             }
           }
         }
