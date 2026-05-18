@@ -123,6 +123,9 @@ export default class CategoryPage {
         
         if (items.length === 0) {
             this.hasMore = false;
+            if (this.page === 1) {
+                this.grid.innerHTML = '<div style="color:var(--text-muted); padding:40px; text-align:center; grid-column: 1 / -1; font-size:1.2rem;">No se encontraron animes en esta categoría.</div>';
+            }
         } else {
             // Clear skeletons on first load
             if (this.page === 1) this.grid.innerHTML = '';

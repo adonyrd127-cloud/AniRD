@@ -156,7 +156,7 @@ export class AnimeAPI {
 
   async getDubbed(page = 1) {
     try {
-      return await this.providers.jikan.request('/anime', { q: 'latino', limit: 24, page, status: 'airing', order_by: 'popularity', sort: 'desc' });
+      return await this.providers.jikan.request('/anime', { q: 'latino', limit: 24, page, order_by: 'popularity', sort: 'desc' });
     } catch (e) { return { data: [] }; }
   }
 
