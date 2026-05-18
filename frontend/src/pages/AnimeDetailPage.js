@@ -123,14 +123,15 @@ export default class AnimeDetailPage {
     const tabs = document.querySelectorAll('.tab-item');
     const relContainer = document.getElementById('relations-container');
 
-    const renderEpisodes = () => {
-      const epCount = this.anime.episodes || 12;
+    let cachedEpCount = null;
+
+    const renderGrid = (count) => {
       const thumb = this.anime.images.jpg.large_image_url;
       const titleParam = `?title=${encodeURIComponent(this.anime.title)}`;
       
       tabPanel.innerHTML = `
         <div class="ep-grid-animex">
-          ${Array.from({length: epCount}, (_, i) => i + 1).map(num => `
+          ${Array.from({length: count}, (_, i) => i + 1).map(num => `
             <a href="/watch/${this.animeId}/${num}/sub${titleParam}" data-link class="ep-card-animex page-enter">
               <div class="ep-thumb">
                 <img src="${thumb}" loading="lazy">
@@ -141,6 +142,37 @@ export default class AnimeDetailPage {
           `).join('')}
         </div>
       `;
+    };
+
+    const renderEpisodes = async () => {
+      if (cachedEpCount) {
+        renderGrid(cachedEpCount);
+        return;
+      }
+      
+      let epCount = this.anime.episodes;
+      
+      // Si está en emisión o no tiene episodes definidos, buscamos la cantidad real de episodios emitidos
+      if (!epCount || this.anime.status === 'Currently Airing') {
+        tabPanel.innerHTML = '<div style="color:white;text-align:center;padding:40px;">Cargando episodios emitidos...</div>';
+        try {
+          const epRes = await apiService.providers.jikan.request(`/anime/${this.animeId}/episodes`);
+          if (epRes && epRes.data && epRes.data.length > 0) {
+            const lastPage = epRes.pagination.last_visible_page;
+            if (lastPage > 1) {
+              const lastPageRes = await apiService.providers.jikan.request(`/anime/${this.animeId}/episodes?page=${lastPage}`);
+              epCount = lastPageRes.data[lastPageRes.data.length - 1].mal_id;
+            } else {
+              epCount = epRes.data[epRes.data.length - 1].mal_id;
+            }
+          }
+        } catch (e) {
+          console.error('Error fetching exact episodes', e);
+        }
+      }
+      
+      cachedEpCount = epCount || 12; // Fallback
+      renderGrid(cachedEpCount);
     };
 
     const renderCharacters = async () => {
