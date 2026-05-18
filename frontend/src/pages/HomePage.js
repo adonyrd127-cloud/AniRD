@@ -105,7 +105,12 @@ export default class HomePage {
     const continueSection = document.getElementById('continue-section');
 
     try {
-      const res = await apiService.getTrending();
+      // Load trending and movies in parallel (was sequential before)
+      const [res, movieRes] = await Promise.all([
+        apiService.getTrending(),
+        apiService.getMovies()
+      ]);
+
       if (res && res.data) {
         const trendingAnimes = res.data.slice(0, 5);
         const banners = await Promise.all(trendingAnimes.map(a => apiService.getAnilistBanner(a.mal_id)));
@@ -142,25 +147,36 @@ export default class HomePage {
         });
       }
 
-      // Movies
-      const movieRes = await apiService.getMovies();
+      // Movies (already loaded in parallel above)
       if(movieRes.data) movieRes.data.forEach(a => {
         const card = document.createElement('anime-card');
         card.data = a;
         movieGrid.appendChild(card);
       });
 
-      // Continue Watching
+      // Continue Watching (load all cards in parallel for speed)
       const history = await dbService.getContinueWatching();
       if (history.length > 0) {
         continueSection.style.display = 'block';
-        for (const item of history.slice(0, 8)) {
-           const animeRes = await apiService.getAnimeInfo(item.animeId);
-           const card = document.createElement('anime-card');
-           card.setAttribute('mode', 'thumbnail');
-           card.data = { ...animeRes.data, currentEpisode: item.episodeId };
-           continueGrid.appendChild(card);
-        }
+        const items = history.slice(0, 8);
+        
+        // Create placeholder cards immediately
+        const cardSlots = items.map(item => {
+          const card = document.createElement('anime-card');
+          card.setAttribute('mode', 'thumbnail');
+          continueGrid.appendChild(card);
+          return { card, item };
+        });
+
+        // Load all anime info in parallel
+        await Promise.all(cardSlots.map(async ({ card, item }) => {
+          try {
+            const animeRes = await apiService.getAnimeInfo(item.animeId);
+            if (animeRes && animeRes.data) {
+              card.data = { ...animeRes.data, currentEpisode: item.episodeId };
+            }
+          } catch (e) { /* skip failed cards silently */ }
+        }));
       }
     } catch (e) { console.error(e); }
   }

@@ -3,24 +3,44 @@ class JikanClient {
     this.baseUrl = 'https://api.jikan.moe/v4';
     this.lastRequest = 0;
     this.minDelay = 500;
+    this.cache = new Map();       // TTL cache: key -> { data, expires }
+    this.inflight = new Map();    // Dedup: key -> Promise
+    this.cacheTTL = 10 * 60 * 1000; // 10 minutes
   }
 
   async request(endpoint, params = {}) {
-    const now = Date.now();
-    const wait = Math.max(0, this.lastRequest + this.minDelay - now);
-    if (wait > 0) await new Promise(r => setTimeout(r, wait));
-    this.lastRequest = Date.now();
-
     const url = new URL(`${this.baseUrl}${endpoint}`);
     Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
-    
-    let res = await fetch(url.toString());
-    if (res.status === 429) {
-      await new Promise(r => setTimeout(r, 2000));
-      res = await fetch(url.toString());
-    }
-    if (!res.ok) throw new Error(`Jikan error: ${res.status}`);
-    return res.json();
+    const cacheKey = url.toString();
+
+    // Return cached if still valid
+    const cached = this.cache.get(cacheKey);
+    if (cached && cached.expires > Date.now()) return cached.data;
+
+    // Deduplicate concurrent identical requests
+    if (this.inflight.has(cacheKey)) return this.inflight.get(cacheKey);
+
+    const promise = (async () => {
+      const now = Date.now();
+      const wait = Math.max(0, this.lastRequest + this.minDelay - now);
+      if (wait > 0) await new Promise(r => setTimeout(r, wait));
+      this.lastRequest = Date.now();
+
+      let res = await fetch(cacheKey);
+      if (res.status === 429) {
+        await new Promise(r => setTimeout(r, 2000));
+        res = await fetch(cacheKey);
+      }
+      if (!res.ok) throw new Error(`Jikan error: ${res.status}`);
+      const data = await res.json();
+
+      this.cache.set(cacheKey, { data, expires: Date.now() + this.cacheTTL });
+      this.inflight.delete(cacheKey);
+      return data;
+    })();
+
+    this.inflight.set(cacheKey, promise);
+    return promise;
   }
 }
 
