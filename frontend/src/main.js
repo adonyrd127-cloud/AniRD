@@ -21,8 +21,37 @@ header.innerHTML = `
       <li><a href="/category/popular" data-link>Populares</a></li>
       <li><a href="/category/movies" data-link>Películas</a></li>
       <li><a href="/category/dub" data-link>Latino</a></li>
-      <li><a href="/category/action" data-link>Acción</a></li>
-      <li><a href="/category/comedy" data-link>Comedia</a></li>
+      <li class="nav-dropdown">
+        <a>
+          Categorías <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 2px;"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <div class="nav-dropdown-content">
+          <div class="dropdown-grid">
+            <div class="dropdown-column">
+              <span class="dropdown-title">GÉNEROS</span>
+              <a href="/category/action" data-link>Acción</a>
+              <a href="/category/adventure" data-link>Aventura</a>
+              <a href="/category/comedy" data-link>Comedia</a>
+              <a href="/category/drama" data-link>Drama</a>
+              <a href="/category/fantasy" data-link>Fantasía</a>
+            </div>
+            <div class="dropdown-column" style="padding-top:28px">
+              <a href="/category/music" data-link>Musical</a>
+              <a href="/category/romance" data-link>Romance</a>
+              <a href="/category/sci-fi" data-link>Ciencia Ficción</a>
+              <a href="/category/seinen" data-link>Seinen</a>
+              <a href="/category/shoujo" data-link>Shoujo</a>
+            </div>
+            <div class="dropdown-column" style="padding-top:28px">
+              <a href="/category/shounen" data-link>Shounen</a>
+              <a href="/category/slice-of-life" data-link>Recuentos de la Vida</a>
+              <a href="/category/sports" data-link>Deportes</a>
+              <a href="/category/supernatural" data-link>Sobrenatural</a>
+              <a href="/category/thriller" data-link>Thriller</a>
+            </div>
+          </div>
+        </div>
+      </li>
       <li><a href="/calendar" data-link>Calendario</a></li>
     </ul>
 

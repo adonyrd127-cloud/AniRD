@@ -48,8 +48,11 @@ export class AppRouter {
     // Category title map
     const categoryTitles = {
       popular: 'Animes Populares', movies: 'Películas', latest: 'Últimos Lanzamientos',
-      dub: 'Anime Latino', action: 'Acción', comedy: 'Comedia',
-      romance: 'Romance', supernatural: 'Sobrenatural'
+      dub: 'Anime Latino', action: 'Acción', comedy: 'Comedia', romance: 'Romance',
+      supernatural: 'Sobrenatural', adventure: 'Aventura', drama: 'Drama',
+      fantasy: 'Fantasía', music: 'Musical', 'sci-fi': 'Ciencia Ficción',
+      seinen: 'Seinen', shoujo: 'Shoujo', shounen: 'Shounen',
+      'slice-of-life': 'Recuentos de la Vida', sports: 'Deportes', thriller: 'Thriller'
     };
 
     if (path.startsWith('/anime/')) {

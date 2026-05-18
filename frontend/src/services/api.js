@@ -156,7 +156,9 @@ export class AnimeAPI {
 
   async getDubbed(page = 1) {
     try {
-      return await this.providers.jikan.request('/anime', { q: 'latino', limit: 24, page, order_by: 'popularity', sort: 'desc' });
+      // Usamos "dub" ya que MyAnimeList no tiene un filtro exclusivo para "latino"
+      // Esto retornará miles de animes que tienen doblaje disponible (la mayoría también en español).
+      return await this.providers.jikan.request('/anime', { q: 'dub', limit: 24, page, order_by: 'popularity', sort: 'desc' });
     } catch (e) { return { data: [] }; }
   }
 

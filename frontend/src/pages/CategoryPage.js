@@ -13,15 +13,37 @@ export default class CategoryPage {
       latest: 'Últimos Lanzamientos',
       dub: 'Animes en Latino',
       action: 'Acción',
+      adventure: 'Aventura',
       comedy: 'Comedia',
+      drama: 'Drama',
+      fantasy: 'Fantasía',
+      music: 'Musical',
       romance: 'Romance',
-      supernatural: 'Sobrenatural'
+      'sci-fi': 'Ciencia Ficción',
+      seinen: 'Seinen',
+      shoujo: 'Shoujo',
+      shounen: 'Shounen',
+      'slice-of-life': 'Recuentos de la Vida',
+      sports: 'Deportes',
+      supernatural: 'Sobrenatural',
+      thriller: 'Thriller'
     };
     this.genres = {
       action: 1,
+      adventure: 2,
       comedy: 4,
+      drama: 8,
+      fantasy: 10,
+      music: 19,
       romance: 22,
-      supernatural: 37
+      'sci-fi': 24,
+      seinen: 42,
+      shoujo: 25,
+      shounen: 27,
+      'slice-of-life': 36,
+      sports: 30,
+      supernatural: 37,
+      thriller: 41
     };
   }
 
