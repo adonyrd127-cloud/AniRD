@@ -156,9 +156,11 @@ export class AnimeAPI {
 
   async getDubbed(page = 1) {
     try {
-      // Usamos "dub" ya que MyAnimeList no tiene un filtro exclusivo para "latino"
-      // Esto retornará miles de animes que tienen doblaje disponible (la mayoría también en español).
-      return await this.providers.jikan.request('/anime', { q: 'dub', limit: 24, page, order_by: 'popularity', sort: 'desc' });
+      // Jikan no tiene filtro de idioma para "Latino".
+      // En vez de buscar por título (que devuelve animes chinos llamados "Dubu"),
+      // filtramos por Crunchyroll (1191) y Funimation (108), que son los mayores distribuidores de doblajes latinos.
+      // Esto retornará miles de animes que, en su gran mayoría, tienen doblaje latino.
+      return await this.providers.jikan.request('/anime', { producers: '1191,108', limit: 24, page, order_by: 'popularity', sort: 'desc' });
     } catch (e) { return { data: [] }; }
   }
 
