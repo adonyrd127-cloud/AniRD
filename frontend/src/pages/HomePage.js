@@ -69,7 +69,17 @@ export default class HomePage {
         }
       </style>
       
-      <div id="hero-container-v4"></div>
+      <div id="hero-container-v4">
+        <!-- Skeleton Hero (visible until real data loads) -->
+        <div class="skeleton-hero">
+          <div class="skeleton-hero-content">
+            <div class="skeleton skeleton-hero-title"></div>
+            <div class="skeleton skeleton-hero-text"></div>
+            <div class="skeleton skeleton-hero-text" style="width:50%"></div>
+            <div class="skeleton skeleton-hero-btn"></div>
+          </div>
+        </div>
+      </div>
 
       <div class="home-sections-v4">
         <div id="continue-section" style="display:none;">
@@ -83,14 +93,18 @@ export default class HomePage {
           <div class="section-header">
             <h2 class="section-title">POPULARES ESTE VERANO</h2>
           </div>
-          <div class="horizontal-scroll-v4" id="trending-grid"></div>
+          <div class="horizontal-scroll-v4" id="trending-grid">
+            ${Array.from({length: 8}, () => `<div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>`).join('')}
+          </div>
         </div>
 
         <div class="section-wrapper">
           <div class="section-header">
             <h2 class="section-title">PELÍCULAS DESTACADAS</h2>
           </div>
-          <div class="horizontal-scroll-v4" id="movies-grid"></div>
+          <div class="horizontal-scroll-v4" id="movies-grid">
+            ${Array.from({length: 8}, () => `<div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>`).join('')}
+          </div>
         </div>
       </div>
     `;
@@ -140,6 +154,7 @@ export default class HomePage {
           renderHero(currentIndex);
         }, 8000);
 
+        trendingGrid.innerHTML = ''; // Clear skeletons
         res.data.forEach(anime => {
           const card = document.createElement('anime-card');
           card.data = anime;
@@ -148,6 +163,7 @@ export default class HomePage {
       }
 
       // Movies (already loaded in parallel above)
+      movieGrid.innerHTML = ''; // Clear skeletons
       if(movieRes.data) movieRes.data.forEach(a => {
         const card = document.createElement('anime-card');
         card.data = a;
@@ -173,7 +189,12 @@ export default class HomePage {
           try {
             const animeRes = await apiService.getAnimeInfo(item.animeId);
             if (animeRes && animeRes.data) {
-              card.data = { ...animeRes.data, currentEpisode: item.episodeId };
+              card.data = { 
+                ...animeRes.data, 
+                currentEpisode: item.episodeId,
+                progress: item.progress || 0,
+                duration_watched: item.duration || 0
+              };
             }
           } catch (e) { /* skip failed cards silently */ }
         }));

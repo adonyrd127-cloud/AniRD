@@ -45,23 +45,52 @@ export class AppRouter {
     let routeKey = '/';
     let params = {};
 
+    // Category title map
+    const categoryTitles = {
+      popular: 'Animes Populares', movies: 'Películas', latest: 'Últimos Lanzamientos',
+      dub: 'Anime Latino', action: 'Acción', comedy: 'Comedia',
+      romance: 'Romance', supernatural: 'Sobrenatural'
+    };
+
     if (path.startsWith('/anime/')) {
        routeKey = '/anime';
        params.id = path.split('/')[2];
+       document.title = `Cargando... — AniRD`;
     } else if (path.startsWith('/watch/')) {
        routeKey = '/watch';
        const parts = path.split('/');
        params.id = parts[2];
        params.ep = parts[3];
        params.lang = parts[4] || 'sub';
+       document.title = `Ep. ${params.ep} — AniRD`;
     } else if (path.startsWith('/category/')) {
        routeKey = '/category';
        params.name = path.split('/')[2];
+       document.title = `${categoryTitles[params.name] || 'Explorar'} — AniRD`;
     } else if (path === '/search') {
        routeKey = '/search';
        params.q = url.searchParams.get('q');
+       document.title = `Buscar "${params.q || ''}" — AniRD`;
+    } else if (path === '/profile') {
+       routeKey = '/profile';
+       document.title = `Mi Perfil — AniRD`;
+    } else if (path === '/auth') {
+       routeKey = '/auth';
+       document.title = `Iniciar Sesión — AniRD`;
+    } else if (path === '/calendar') {
+       routeKey = '/calendar';
+       document.title = `Calendario — AniRD`;
+    } else if (path === '/history' || path === '/my-anird') {
+       routeKey = routes[path] ? path : '/';
+       document.title = `Mi Historial — AniRD`;
+    } else if (path === '/favorites') {
+       routeKey = '/favorites';
+       document.title = `Favoritos — AniRD`;
     } else if (routes[path]) {
        routeKey = path;
+       document.title = `AniRD — Tu plataforma de anime`;
+    } else {
+       document.title = `AniRD — Tu plataforma de anime`;
     }
 
     useAppStore.getState().setCurrentRoute(path);

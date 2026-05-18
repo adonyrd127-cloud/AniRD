@@ -2,11 +2,27 @@ export class AnimeCard extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    this._renderSkeleton();
   }
 
   set data(anime) {
     this._anime = anime;
     this.render();
+  }
+
+  _renderSkeleton() {
+    const isThumbnail = this.getAttribute('mode') === 'thumbnail';
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: block; width: ${isThumbnail ? '320px' : '185px'}; flex-shrink: 0; }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .sk { background: linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite ease-in-out; border-radius: 22px; }
+        .sk-img { width: 100%; aspect-ratio: ${isThumbnail ? '16/9' : '2/3'}; margin-bottom: 12px; }
+        .sk-t { height: 14px; border-radius: 7px; margin-bottom: 6px; }
+        .sk-t2 { height: 10px; width: 60%; border-radius: 5px; }
+      </style>
+      <div><div class="sk sk-img"></div><div class="sk sk-t"></div><div class="sk sk-t2"></div></div>
+    `;
   }
 
   render() {
@@ -16,6 +32,9 @@ export class AnimeCard extends HTMLElement {
     const title = this._anime.title || 'Anime';
     const id = this._anime.mal_id || this._anime.id;
     const score = this._anime.score || this._anime.rating || '?.?';
+    const progress = this._anime.progress || 0;
+    const duration = this._anime.duration_watched || 0;
+    const progressPct = duration > 0 ? Math.min((progress / duration) * 100, 100) : 0;
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -72,6 +91,21 @@ export class AnimeCard extends HTMLElement {
           gap: 4px;
         }
 
+        .progress-bar {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          background: rgba(255, 255, 255, 0.1);
+        }
+        .progress-fill {
+          height: 100%;
+          background: #ff0000;
+          border-radius: 0 2px 2px 0;
+          transition: width 0.3s ease;
+        }
+
         .info-v4 { padding: 0 4px; }
         .title-v4 {
           font-family: 'Outfit', sans-serif;
@@ -97,6 +131,7 @@ export class AnimeCard extends HTMLElement {
         <div class="img-box">
           <img src="${imgUrl}" alt="${title}" loading="lazy" referrerpolicy="no-referrer">
           <div class="rating-v4"><span style="color:#ff0000">★</span> ${score}</div>
+          ${progressPct > 0 ? `<div class="progress-bar"><div class="progress-fill" style="width:${progressPct}%"></div></div>` : ''}
         </div>
         <div class="info-v4">
           <div class="meta-v4">${this._anime.type || 'TV'} • ${this._anime.status || 'EN EMISIÓN'}</div>

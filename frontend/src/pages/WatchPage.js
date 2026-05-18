@@ -91,6 +91,9 @@ export default class WatchPage {
       return container;
     }
 
+    // SEO: Dynamic title with anime name + episode
+    document.title = `${this.anime.title} Ep. ${this.episodeNum} — AniRD`;
+
     container.innerHTML = `
       <style>
         .watch-layout-v5 { display: grid; grid-template-columns: 1fr 350px; gap: 20px; padding: 100px 2% 40px; max-width: 1800px; margin: 0 auto; }

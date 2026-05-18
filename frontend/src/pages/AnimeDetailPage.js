@@ -17,6 +17,9 @@ export default class AnimeDetailPage {
     this.isFollowing = await dbService.isFollowing(this.animeId);
     const banner = await apiService.getAnilistBanner(this.animeId) || this.anime.images.jpg.large_image_url;
 
+    // SEO: Dynamic title
+    document.title = `${this.anime.title} — AniRD`;
+
     const container = document.createElement('div');
     container.className = 'page-enter';
     

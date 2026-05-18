@@ -68,7 +68,9 @@ export default class CategoryPage {
         <div class="category-header">
             <h2 class="category-title">${this.titles[this.category] || 'Explorar'}</h2>
         </div>
-        <div class="anime-grid" id="category-grid"></div>
+        <div class="anime-grid" id="category-grid">
+          ${Array.from({length: 12}, () => `<div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>`).join('')}
+        </div>
         <div id="grid-loader" class="loader" style="display:none;">Cargando más...</div>
       </div>
     `;
@@ -122,6 +124,8 @@ export default class CategoryPage {
         if (items.length === 0) {
             this.hasMore = false;
         } else {
+            // Clear skeletons on first load
+            if (this.page === 1) this.grid.innerHTML = '';
             items.forEach(anime => {
                 const card = document.createElement('anime-card');
                 card.data = anime;
