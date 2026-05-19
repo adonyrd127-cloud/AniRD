@@ -2,13 +2,14 @@ import Dexie from 'dexie';
 
 export const db = new Dexie('AniRD_DB');
 
-db.version(2).stores({
+db.version(3).stores({
   history: '++id, animeId, episodeId, progress, duration, timestamp, updatedAt',
   favorites: 'animeId, title, cover, addedAt',
   following: 'animeId, title, cover, broadcast, addedAt',
   lists: '++id, name, animeIds, createdAt',
   cache: 'key, data, expiresAt',
-  settings: 'key, value'
+  settings: 'key, value',
+  notifications: '++id, animeId, isRead, timestamp'
 });
 
 export const dbService = {
@@ -92,7 +93,8 @@ export const dbService = {
         cover: anime.images?.jpg?.large_image_url || anime.cover || '',
         status: anime.status || '',
         broadcast: anime.broadcast || null,
-        addedAt: Date.now()
+        addedAt: Date.now(),
+        lastNotified: Date.now()
       });
       return true; // Added
     }
