@@ -82,29 +82,68 @@ export default class HomePage {
       </div>
 
       <div class="home-sections-v4">
-        <div id="continue-section" style="display:none;">
+        <div id="continue-section" class="section-wrapper" style="display:none;">
           <div class="section-header">
             <h2 class="section-title">CONTINUAR VIENDO</h2>
           </div>
+          <button class="scroll-btn scroll-left" onclick="document.getElementById('continue-grid').scrollBy({left: -800, behavior: 'smooth'})">❮</button>
           <div class="horizontal-scroll-v4" id="continue-grid"></div>
+          <button class="scroll-btn scroll-right" onclick="document.getElementById('continue-grid').scrollBy({left: 800, behavior: 'smooth'})">❯</button>
+        </div>
+
+        <div class="section-wrapper">
+          <div class="section-header">
+            <h2 class="section-title">ÚLTIMOS LANZAMIENTOS</h2>
+          </div>
+          <button class="scroll-btn scroll-left" onclick="document.getElementById('latest-grid').scrollBy({left: -800, behavior: 'smooth'})">❮</button>
+          <div class="horizontal-scroll-v4" id="latest-grid">
+            ${Array.from({length: 8}, () => `<div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>`).join('')}
+          </div>
+          <button class="scroll-btn scroll-right" onclick="document.getElementById('latest-grid').scrollBy({left: 800, behavior: 'smooth'})">❯</button>
         </div>
 
         <div class="section-wrapper">
           <div class="section-header">
             <h2 class="section-title">POPULARES ESTE VERANO</h2>
           </div>
+          <button class="scroll-btn scroll-left" onclick="document.getElementById('trending-grid').scrollBy({left: -800, behavior: 'smooth'})">❮</button>
           <div class="horizontal-scroll-v4" id="trending-grid">
             ${Array.from({length: 8}, () => `<div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>`).join('')}
           </div>
+          <button class="scroll-btn scroll-right" onclick="document.getElementById('trending-grid').scrollBy({left: 800, behavior: 'smooth'})">❯</button>
+        </div>
+
+        <div class="section-wrapper">
+          <div class="section-header">
+            <h2 class="section-title">ANIMES EN LATINO</h2>
+          </div>
+          <button class="scroll-btn scroll-left" onclick="document.getElementById('latino-grid').scrollBy({left: -800, behavior: 'smooth'})">❮</button>
+          <div class="horizontal-scroll-v4" id="latino-grid">
+            ${Array.from({length: 8}, () => `<div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>`).join('')}
+          </div>
+          <button class="scroll-btn scroll-right" onclick="document.getElementById('latino-grid').scrollBy({left: 800, behavior: 'smooth'})">❯</button>
         </div>
 
         <div class="section-wrapper">
           <div class="section-header">
             <h2 class="section-title">PELÍCULAS DESTACADAS</h2>
           </div>
+          <button class="scroll-btn scroll-left" onclick="document.getElementById('movies-grid').scrollBy({left: -800, behavior: 'smooth'})">❮</button>
           <div class="horizontal-scroll-v4" id="movies-grid">
             ${Array.from({length: 8}, () => `<div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>`).join('')}
           </div>
+          <button class="scroll-btn scroll-right" onclick="document.getElementById('movies-grid').scrollBy({left: 800, behavior: 'smooth'})">❯</button>
+        </div>
+        
+        <div class="section-wrapper">
+          <div class="section-header">
+            <h2 class="section-title">ACCIÓN Y AVENTURA</h2>
+          </div>
+          <button class="scroll-btn scroll-left" onclick="document.getElementById('action-grid').scrollBy({left: -800, behavior: 'smooth'})">❮</button>
+          <div class="horizontal-scroll-v4" id="action-grid">
+            ${Array.from({length: 8}, () => `<div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>`).join('')}
+          </div>
+          <button class="scroll-btn scroll-right" onclick="document.getElementById('action-grid').scrollBy({left: 800, behavior: 'smooth'})">❯</button>
         </div>
       </div>
     `;
@@ -119,10 +158,17 @@ export default class HomePage {
     const continueSection = document.getElementById('continue-section');
 
     try {
-      // Load trending and movies in parallel (was sequential before)
-      const [res, movieRes] = await Promise.all([
+      const latestGrid = document.getElementById('latest-grid');
+      const latinoGrid = document.getElementById('latino-grid');
+      const actionGrid = document.getElementById('action-grid');
+
+      // Load all sections in parallel for max speed
+      const [res, movieRes, latestRes, latinoRes, actionRes] = await Promise.all([
         apiService.getTrending(),
-        apiService.getMovies()
+        apiService.getMovies(),
+        apiService.getLatest(),
+        apiService.getDubbed(),
+        apiService.getByGenre('1,2')
       ]);
 
       if (res && res.data) {
@@ -133,6 +179,7 @@ export default class HomePage {
         const renderHero = (index) => {
           const anime = trendingAnimes[index];
           const banner = banners[index] || anime.images?.jpg?.large_image_url;
+          if (!anime) return;
           heroContainer.innerHTML = `
             <div class="hero-v4">
               <div class="hero-backdrop-v4" style="background-image: url('${banner}')"></div>
@@ -153,30 +200,32 @@ export default class HomePage {
           currentIndex = (currentIndex + 1) % trendingAnimes.length;
           renderHero(currentIndex);
         }, 8000);
-
-        trendingGrid.innerHTML = ''; // Clear skeletons
-        res.data.forEach(anime => {
-          const card = document.createElement('anime-card');
-          card.data = anime;
-          trendingGrid.appendChild(card);
-        });
       }
 
-      // Movies (already loaded in parallel above)
-      movieGrid.innerHTML = ''; // Clear skeletons
-      if(movieRes.data) movieRes.data.forEach(a => {
-        const card = document.createElement('anime-card');
-        card.data = a;
-        movieGrid.appendChild(card);
-      });
+      // Reusable grid renderer
+      const renderGrid = (gridEl, dataList) => {
+        if(gridEl && dataList) {
+          gridEl.innerHTML = '';
+          dataList.forEach(a => {
+            const card = document.createElement('anime-card');
+            card.data = a;
+            gridEl.appendChild(card);
+          });
+        }
+      };
 
-      // Continue Watching (load all cards in parallel for speed)
+      renderGrid(trendingGrid, res?.data);
+      renderGrid(movieGrid, movieRes?.data);
+      renderGrid(latestGrid, latestRes?.data);
+      renderGrid(latinoGrid, latinoRes?.data);
+      renderGrid(actionGrid, actionRes?.data);
+
+      // Continue Watching
       const history = await dbService.getContinueWatching();
       if (history.length > 0) {
         continueSection.style.display = 'block';
         const items = history.slice(0, 8);
         
-        // Create placeholder cards immediately
         const cardSlots = items.map(item => {
           const card = document.createElement('anime-card');
           card.setAttribute('mode', 'thumbnail');
@@ -184,7 +233,6 @@ export default class HomePage {
           return { card, item };
         });
 
-        // Load all anime info in parallel
         await Promise.all(cardSlots.map(async ({ card, item }) => {
           try {
             const animeRes = await apiService.getAnimeInfo(item.animeId);
@@ -196,7 +244,7 @@ export default class HomePage {
                 duration_watched: item.duration || 0
               };
             }
-          } catch (e) { /* skip failed cards silently */ }
+          } catch (e) { }
         }));
       }
     } catch (e) { console.error(e); }

@@ -274,6 +274,49 @@ body {
   padding: 40px 5%;
 }
 
+.section-wrapper {
+  position: relative;
+  margin-bottom: 40px;
+}
+
+.section-wrapper:hover .scroll-btn {
+  opacity: 1;
+}
+
+.scroll-btn {
+  position: absolute;
+  top: 55%;
+  transform: translateY(-50%);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 20;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.scroll-btn:hover {
+  background: var(--accent);
+  color: black;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.scroll-left { left: -20px; }
+.scroll-right { right: -20px; }
+
+@media (max-width: 768px) {
+  .scroll-btn { display: none; }
+}
+
 .section-header {
   display: flex;
   justify-content: space-between;
