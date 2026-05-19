@@ -234,8 +234,23 @@ export default class ProfilePage {
         if (this.favoriteAnimes.length > 0) {
           this.favoriteAnimes.forEach(a => {
             const card = document.createElement('anime-card');
-            card.data = { mal_id: a.animeId, title: a.title, images: { jpg: { large_image_url: a.cover } } };
+            const initialData = { mal_id: a.animeId, title: a.title, images: { jpg: { large_image_url: a.cover } }, status: a.status, broadcast: a.broadcast };
+            card.data = initialData;
             grid.appendChild(card);
+            
+            import('../services/api.js').then(({ apiService }) => {
+              apiService.getAnimeInfo(a.animeId).then(res => {
+                if (res && res.data) {
+                  card.data = {
+                    ...initialData,
+                    status: res.data.status,
+                    broadcast: res.data.broadcast,
+                    episodes: res.data.episodes,
+                    score: res.data.score
+                  };
+                }
+              });
+            });
           });
         } else { tabContent.innerHTML = '<p style="color:var(--text-muted)">Aún no tienes favoritos.</p>'; }
       }

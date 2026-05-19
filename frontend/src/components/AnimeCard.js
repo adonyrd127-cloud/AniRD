@@ -35,6 +35,29 @@ export class AnimeCard extends HTMLElement {
     const progress = this._anime.progress || 0;
     const duration = this._anime.duration_watched || 0;
     const progressPct = duration > 0 ? Math.min((progress / duration) * 100, 100) : 0;
+    
+    let nextEpText = this._anime.nextEpisodeText || '';
+    if (!nextEpText && this._anime.status === 'Currently Airing' && this._anime.broadcast && this._anime.broadcast.time) {
+      const b = this._anime.broadcast;
+      const days = { 'Sundays': 0, 'Mondays': 1, 'Tuesdays': 2, 'Wednesdays': 3, 'Thursdays': 4, 'Fridays': 5, 'Saturdays': 6 };
+      if (days[b.day] !== undefined) {
+        const [h, m] = b.time.split(':').map(Number);
+        const tokyoNow = new Date(new Date().toLocaleString("en-US", {timeZone: b.timezone || 'Asia/Tokyo'}));
+        let target = new Date(tokyoNow);
+        target.setHours(h, m, 0, 0);
+        let dAdd = days[b.day] - tokyoNow.getDay();
+        if (dAdd < 0 || (dAdd === 0 && target < tokyoNow)) dAdd += 7;
+        target.setDate(target.getDate() + dAdd);
+        const diffMs = target - tokyoNow;
+        if (diffMs > 0) {
+          const d = Math.floor(diffMs / 86400000);
+          const hrs = Math.floor((diffMs / 3600000) % 24);
+          if (d > 0) nextEpText = `${d}d ${hrs}h para nuevo cap.`;
+          else if (hrs > 0) nextEpText = `${hrs}h para nuevo cap.`;
+          else nextEpText = `¡Nuevo cap en breve!`;
+        }
+      }
+    }
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -137,7 +160,7 @@ export class AnimeCard extends HTMLElement {
           <div class="meta-v4">${this._anime.type || 'TV'} • ${this._anime.status || 'EN EMISIÓN'}</div>
           <h3 class="title-v4">${title}</h3>
           ${this._anime.currentEpisode ? `<div style="font-size: 10px; color: #ff0000; font-weight: 800; margin-top: 2px;">Visto Ep. ${this._anime.currentEpisode}</div>` : ''}
-          ${this._anime.nextEpisodeText ? `<div style="font-size: 10px; color: #00ff88; font-weight: 800; margin-top: 2px;">⏱ ${this._anime.nextEpisodeText}</div>` : ''}
+          ${nextEpText ? `<div style="font-size: 10px; color: #00ff88; font-weight: 800; margin-top: 2px;">⏱ ${nextEpText}</div>` : ''}
         </div>
       </a>
     `;

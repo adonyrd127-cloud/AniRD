@@ -60,6 +60,8 @@ export const dbService = {
         type: anime.type || '',
         score: anime.score || '',
         episodes: anime.episodes || null,
+        status: anime.status || '',
+        broadcast: anime.broadcast || null,
         addedAt: Date.now()
       });
       return true; // Added
@@ -88,6 +90,7 @@ export const dbService = {
         animeId: id,
         title: anime.title,
         cover: anime.images?.jpg?.large_image_url || anime.cover || '',
+        status: anime.status || '',
         broadcast: anime.broadcast || null,
         addedAt: Date.now()
       });

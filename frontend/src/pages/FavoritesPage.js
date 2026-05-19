@@ -56,15 +56,33 @@ export default class FavoritesPage {
     favorites.forEach(fav => {
       const card = document.createElement('anime-card');
       // Adaptar datos guardados al formato que espera AnimeCard
-      card.data = {
+      const initialData = {
         mal_id: fav.animeId,
         title: fav.title,
         images: { jpg: { large_image_url: fav.cover } },
         type: fav.type,
         score: fav.score,
-        episodes: fav.episodes
+        episodes: fav.episodes,
+        status: fav.status,
+        broadcast: fav.broadcast
       };
+      card.data = initialData;
       grid.appendChild(card);
+
+      // Fetch live data to ensure accurate countdowns and status
+      import('../services/api.js').then(({ apiService }) => {
+        apiService.getAnimeInfo(fav.animeId).then(res => {
+          if (res && res.data) {
+            card.data = {
+              ...initialData,
+              status: res.data.status,
+              broadcast: res.data.broadcast,
+              episodes: res.data.episodes,
+              score: res.data.score
+            };
+          }
+        });
+      });
     });
   }
 }
