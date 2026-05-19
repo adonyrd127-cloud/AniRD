@@ -25,7 +25,16 @@ AniRD es una plataforma moderna y minimalista para ver anime online, diseñada p
 
 ## 📝 Notas de Versión Recientes
 
-### v3.0 - The Cloud Update (Actual) ☁️
+### v3.5 - The Discovery Update (Actual) 🌟
+- **Menú de Categorías Premium:** Reemplazo de enlaces estáticos por un menú desplegable (Dropdown) con 15 géneros y estética Glassmorphism, perfectamente alineado con la barra de navegación.
+- **Sistema de Notificaciones Inteligente:** Nuevo ícono de campana en la barra superior. Un motor matemático `offline-first` calcula y te avisa exactamente cuándo se estrena un nuevo episodio de los animes que sigues, sin sobrecargar la API.
+- **Conteo Regresivo Exacto:** Las tarjetas de animes en las secciones de Favoritos y Mi Perfil ahora muestran un temporizador en vivo (ej. "⏱ 3d 5h para nuevo cap.") con el tiempo exacto faltante para el próximo episodio.
+- **Inicio Expandido (Home Page):** Se añadieron 3 nuevos carruseles ("Últimos Lanzamientos", "Animes en Latino", "Acción y Aventura") con carga en paralelo (0 retraso).
+- **Desplazamiento Fluido (Scroll Buttons):** Implementación de botones laterales (❮ ❯) al pasar el ratón por los carruseles del inicio para deslizar horizontalmente al puro estilo Netflix.
+- **Sincronización Perfecta de Episodios:** La página de detalles de anime ahora verifica en tiempo real con el servidor local para asegurarse de que los últimos episodios emitidos (ej. cap 8) no se oculten si Jikan/MAL va retrasado.
+- **Optimización del Catálogo Latino:** Reestructuración de la búsqueda usando IDs de Productores (Crunchyroll/Funimation) en lugar de filtros de texto, devolviendo miles de resultados correctos en la categoría "Latino".
+
+### v3.0 - The Cloud Update ☁️
 - **Sincronización Multi-dispositivo:** Tus favoritos e historial ahora se guardan en tu Orange Pi y se sincronizan automáticamente en cualquier dispositivo.
 - **Sistema de Cuentas:** Registro e inicio de sesión seguro con JWT y persistencia de datos.
 - **Mi Biblioteca Personal:** Nueva sección en el perfil para gestionar animes seguidos y favoritos con una interfaz visual mejorada.
