@@ -156,15 +156,28 @@ export default class AnimeDetailPage {
       if (!epCount || this.anime.status === 'Currently Airing') {
         tabPanel.innerHTML = '<div style="color:white;text-align:center;padding:40px;">Cargando episodios emitidos...</div>';
         try {
-          const epRes = await apiService.providers.jikan.request(`/anime/${this.animeId}/episodes`);
-          if (epRes && epRes.data && epRes.data.length > 0) {
-            const lastPage = epRes.pagination.last_visible_page;
-            if (lastPage > 1) {
-              const lastPageRes = await apiService.providers.jikan.request(`/anime/${this.animeId}/episodes?page=${lastPage}`);
-              epCount = lastPageRes.data[lastPageRes.data.length - 1].mal_id;
-            } else {
-              epCount = epRes.data[epRes.data.length - 1].mal_id;
+          // 1. Intentar buscar en el servidor local (AnimeFLV) que suele estar más actualizado que MyAnimeList
+          const searchRes = await apiService.searchLocal(this.anime.title);
+          if (searchRes && searchRes.success && searchRes.data && searchRes.data.results.length > 0) {
+            const bestMatch = searchRes.data.results.find(a => a.title.toLowerCase().includes(this.anime.title.toLowerCase())) || searchRes.data.results[0];
+            const infoRes = await apiService.getAnimeInfo(bestMatch.url);
+            if (infoRes && infoRes.success && infoRes.data && infoRes.data.episodes) {
+              epCount = infoRes.data.episodes.length;
             }
+          }
+
+          // 2. Si no se pudo obtener del servidor local o falló, recurrimos a Jikan API como respaldo
+          if (!epCount) {
+             const epRes = await apiService.providers.jikan.request(`/anime/${this.animeId}/episodes`);
+             if (epRes && epRes.data && epRes.data.length > 0) {
+               const lastPage = epRes.pagination.last_visible_page;
+               if (lastPage > 1) {
+                 const lastPageRes = await apiService.providers.jikan.request(`/anime/${this.animeId}/episodes?page=${lastPage}`);
+                 epCount = lastPageRes.data[lastPageRes.data.length - 1].mal_id;
+               } else {
+                 epCount = epRes.data[epRes.data.length - 1].mal_id;
+               }
+             }
           }
         } catch (e) {
           console.error('Error fetching exact episodes', e);
