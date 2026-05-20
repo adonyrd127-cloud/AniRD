@@ -14,6 +14,7 @@ export default class WatchPage {
     this.relatedAnimes = [];
     this.anilistEpisodes = [];
     this.isFav = false;
+    this.watchedEpisodes = new Set();
     
     // UI state
     this.isTheater = localStorage.getItem('watch-theater-mode') === 'true';
@@ -76,6 +77,10 @@ export default class WatchPage {
       // Verificar si es favorito en IndexedDB
       this.isFav = await dbService.isFavorite(this.animeId);
 
+      // Cargar episodios vistos de este anime
+      const watched = await db.history.where({ animeId: String(this.animeId) }).toArray();
+      this.watchedEpisodes = new Set(watched.map(w => Number(w.episodeId)));
+
     } catch (e) {
       console.error("Error crítico al renderizar WatchPage Premium:", e);
     }
@@ -97,6 +102,9 @@ export default class WatchPage {
 
     // Título SEO dinámico
     document.title = `${this.anime.title} — Episodio ${this.episodeNum} (${this.lang.toUpperCase()}) — AniRD`;
+
+    // Calcular si el episodio actual ya ha sido visto
+    const isWatchedCurrent = this.watchedEpisodes.has(this.episodeNum);
 
     // Metadatos para enlaces externos
     const anilistLink = `https://anilist.co/search/anime?search=${encodeURIComponent(this.anime.title)}`;
@@ -164,6 +172,9 @@ export default class WatchPage {
               </button>
               <button class="control-btn-v5 ${this.isTheater ? 'active' : ''}" id="btn-theater">
                 🎬 <span id="theater-text">${this.isTheater ? 'Modo Normal' : 'Modo Cine'}</span>
+              </button>
+              <button class="control-btn-v5 ${isWatchedCurrent ? 'active' : ''}" id="btn-watched-status">
+                👁️ <span id="watched-status-text">${isWatchedCurrent ? 'Visto' : 'Marcar Visto'}</span>
               </button>
             </div>
             <div class="player-controls-right">
@@ -280,9 +291,10 @@ export default class WatchPage {
             <div class="sidebar-header-v5">
               <div class="sidebar-title-row">
                 <h3 class="sidebar-title-v5">Episodios</h3>
-                <button id="btn-sort-ep" class="sidebar-icon-btn" title="Invertir orden">
-                  ⇅
-                </button>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <button id="btn-watched-all" class="sidebar-icon-btn" title="Marcar temporada como vista">✓✓</button>
+                  <button id="btn-sort-ep" class="sidebar-icon-btn" title="Invertir orden">⇅</button>
+                </div>
               </div>
               <div class="ep-search-container-v5">
                 <input type="text" id="ep-search-input" placeholder="Buscar episodio..." class="ep-search-input-v5">
@@ -305,18 +317,27 @@ export default class WatchPage {
     this._initPlayerControls();
     this._initServerPills();
     this._initSynopsisExpand();
+    this._initWatchedToggleControls();
     
     // Iniciar cargas asíncronas en segundo plano para evitar bloqueos
     this._loadEnrichedEpisodesAndRecommendations();
     
-    // Guardar en el historial de IndexedDB
+    // Guardar en el historial de IndexedDB y actualizar estado en memoria
     if (this.anime) {
       await dbService.addToHistory(
         String(this.animeId),
         this.episodeNum,
-        0, // progreso inicial (se actualizará dinámicamente)
+        0, // progreso inicial
         0  // duración inicial
       );
+      this.watchedEpisodes.add(this.episodeNum);
+
+      const btnWatchedStatus = document.getElementById('btn-watched-status');
+      const watchedStatusText = document.getElementById('watched-status-text');
+      if (btnWatchedStatus) {
+        btnWatchedStatus.classList.add('active');
+        if (watchedStatusText) watchedStatusText.textContent = 'Visto';
+      }
     }
   }
 
@@ -535,12 +556,18 @@ export default class WatchPage {
           }
 
           const isActive = ep.number === this.episodeNum;
+          const isWatched = this.watchedEpisodes.has(ep.number);
           const href = `/watch/${this.animeId}/${ep.number}/${this.lang}?title=${encodeURIComponent(titleHint)}`;
 
+          const badgeHtml = isWatched ? `<div class="ep-watched-badge-v5">✓ Visto</div>` : '';
+          const progressBarHtml = isWatched ? `<div class="ep-progress-bar-v5"><div class="ep-progress-fill-v5"></div></div>` : '';
+
           return `
-            <a href="${href}" data-link class="ep-item-horizontal-v5 ${isActive ? 'active' : ''}">
+            <a href="${href}" data-link class="ep-item-horizontal-v5 ${isActive ? 'active' : ''} ${isWatched ? 'watched' : ''}">
               <div class="ep-thumb-wrapper-v5">
                 <img src="${epThumb}" alt="Episodio ${ep.number}" loading="lazy">
+                ${badgeHtml}
+                ${progressBarHtml}
                 <div class="ep-play-overlay-v5">
                   <div class="ep-play-icon-v5">▶</div>
                 </div>
@@ -552,7 +579,19 @@ export default class WatchPage {
             </a>
           `;
         }).join('');
+
+        // Actualizar botón de marcar temporada
+        const btnWatchedAll = document.getElementById('btn-watched-all');
+        if (btnWatchedAll && this.localInfo && this.localInfo.episodes) {
+          const allEpNums = this.localInfo.episodes.map(e => e.number);
+          const allWatched = allEpNums.every(num => this.watchedEpisodes.has(num));
+          btnWatchedAll.classList.toggle('active', allWatched);
+          btnWatchedAll.title = allWatched ? "Desmarcar toda la temporada" : "Marcar toda la temporada como vista";
+        }
       };
+
+      // Guardar referencia a renderEpisodes para actualizaciones reactivas
+      this.renderEpisodes = renderEpisodes;
 
       // Iniciar render inicial de episodios
       renderEpisodes();
@@ -575,6 +614,105 @@ export default class WatchPage {
           renderEpisodes();
         });
       }
+    }
+  }
+
+  _initWatchedToggleControls() {
+    const btnWatchedStatus = document.getElementById('btn-watched-status');
+    const watchedStatusText = document.getElementById('watched-status-text');
+    const btnWatchedAll = document.getElementById('btn-watched-all');
+
+    if (btnWatchedStatus) {
+      btnWatchedStatus.addEventListener('click', async () => {
+        const isCurrentlyWatched = this.watchedEpisodes.has(this.episodeNum);
+        if (isCurrentlyWatched) {
+          // Desmarcar: eliminar de IndexedDB history
+          const existing = await db.history.where({ animeId: String(this.animeId), episodeId: this.episodeNum }).first();
+          if (existing) {
+            await db.history.delete(existing.id);
+          }
+          this.watchedEpisodes.delete(this.episodeNum);
+          btnWatchedStatus.classList.remove('active');
+          if (watchedStatusText) watchedStatusText.textContent = 'Marcar Visto';
+        } else {
+          // Marcar: agregar a IndexedDB
+          await dbService.addToHistory(String(this.animeId), this.episodeNum, 0, 0);
+          this.watchedEpisodes.add(this.episodeNum);
+          btnWatchedStatus.classList.add('active');
+          if (watchedStatusText) watchedStatusText.textContent = 'Visto';
+        }
+
+        // Refrescar reactivamente
+        if (this.renderEpisodes) {
+          this.renderEpisodes();
+        }
+      });
+    }
+
+    if (btnWatchedAll) {
+      btnWatchedAll.addEventListener('click', async () => {
+        if (!this.localInfo || !this.localInfo.episodes) return;
+        const episodes = this.localInfo.episodes;
+        const allEpNums = episodes.map(ep => ep.number);
+
+        // Verificar si todos están vistos
+        const allWatched = allEpNums.every(num => this.watchedEpisodes.has(num));
+
+        if (allWatched) {
+          // Desmarcar todos
+          await db.transaction('rw', db.history, async () => {
+            for (const num of allEpNums) {
+              const existing = await db.history.where({ animeId: String(this.animeId), episodeId: num }).first();
+              if (existing) {
+                await db.history.delete(existing.id);
+              }
+            }
+          });
+          allEpNums.forEach(num => this.watchedEpisodes.delete(num));
+          
+          // Sincronizar botón del reproductor
+          if (this.watchedEpisodes.has(this.episodeNum)) {
+            if (btnWatchedStatus) btnWatchedStatus.classList.add('active');
+            if (watchedStatusText) watchedStatusText.textContent = 'Visto';
+          } else {
+            if (btnWatchedStatus) btnWatchedStatus.classList.remove('active');
+            if (watchedStatusText) watchedStatusText.textContent = 'Marcar Visto';
+          }
+        } else {
+          // Marcar todos
+          const timestamp = Date.now();
+          await db.transaction('rw', db.history, async () => {
+            for (const num of allEpNums) {
+              const existing = await db.history.where({ animeId: String(this.animeId), episodeId: num }).first();
+              if (!existing) {
+                await db.history.add({
+                  animeId: String(this.animeId),
+                  episodeId: num,
+                  progress: 0,
+                  duration: 0,
+                  timestamp,
+                  updatedAt: timestamp
+                });
+              }
+            }
+          });
+          allEpNums.forEach(num => this.watchedEpisodes.add(num));
+
+          // Sincronizar botón del reproductor
+          if (this.watchedEpisodes.has(this.episodeNum)) {
+            if (btnWatchedStatus) btnWatchedStatus.classList.add('active');
+            if (watchedStatusText) watchedStatusText.textContent = 'Visto';
+          } else {
+            if (btnWatchedStatus) btnWatchedStatus.classList.remove('active');
+            if (watchedStatusText) watchedStatusText.textContent = 'Marcar Visto';
+          }
+        }
+
+        // Refrescar reactivamente
+        if (this.renderEpisodes) {
+          this.renderEpisodes();
+        }
+      });
     }
   }
 }

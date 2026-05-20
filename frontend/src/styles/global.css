@@ -1124,4 +1124,76 @@ body {
   }
 }
 
+/* ==========================================================================
+   👁️ SISTEMA DE EPISODIOS VISTOS (WATCHED EPISODES SYSTEM)
+   ========================================================================== */
+
+/* Badge Glassmórfico de Visto */
+.ep-watched-badge-v5 {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(5, 5, 5, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  color: #00ff88;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  z-index: 10;
+  pointer-events: none;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.3s ease;
+}
+
+/* Barra de Progreso Estilo Netflix (100% Completa) */
+.ep-progress-bar-v5 {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 10;
+  overflow: hidden;
+}
+
+.ep-progress-fill-v5 {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #ff3e3e 0%, #ff0000 100%);
+  box-shadow: 0 0 8px #ff0000;
+}
+
+/* Atenuación Suave de Opacidad para Episodios Vistos */
+.ep-item-horizontal-v5.watched {
+  opacity: 0.65;
+  transition: opacity 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.ep-item-horizontal-v5.watched:hover {
+  opacity: 1;
+}
+
+/* Botón del Reproductor Premium de Visto (Verde Activo) */
+#btn-watched-status.active {
+  background: rgba(0, 255, 136, 0.12);
+  border-color: rgba(0, 255, 136, 0.4);
+  color: #00ff88;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+}
+
+/* Botón de Temporada Completa en el Sidebar */
+.sidebar-icon-btn#btn-watched-all.active {
+  background: rgba(0, 255, 136, 0.15);
+  border-color: rgba(0, 255, 136, 0.4);
+  color: #00ff88;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+}
+
 
