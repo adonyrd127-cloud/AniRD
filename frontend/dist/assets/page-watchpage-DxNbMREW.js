@@ -23,8 +23,7 @@ import{a as E,d as $}from"./page-homepage-BLqD5dcZ.js";import"./vendor-Cmt3X8aB.
           
           <!-- Reproductor de Video -->
           <div class="video-wrapper-v5" id="video-container">
-            ${this.episodeData&&this.episodeData.activeServers&&this.episodeData.activeServers.length>0?`<iframe src="${this.episodeData.activeServers[0].url}" allowfullscreen allow="autoplay; encrypted-media"></iframe>
-                 <div class="player-watermark-v5">AniRD ☁️</div>`:`<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#111; gap: 15px; padding: 20px; text-align: center;">
+            ${this.episodeData&&this.episodeData.activeServers&&this.episodeData.activeServers.length>0?`<iframe src="${this.episodeData.activeServers[0].url}" allowfullscreen allow="autoplay; encrypted-media"></iframe>`:`<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#111; gap: 15px; padding: 20px; text-align: center;">
                   <span style="font-size: 40px;">⚠️</span>
                   <h3 style="font-family:'Outfit'; font-size:18px;">Video no disponible</h3>
                   <p style="color:var(--text-muted); font-size:13px; max-width: 400px; margin: 0;">El episodio ${this.episodeNum} en idioma ${this.lang==="sub"?"Subtitulado":"Latino"} no tiene enlaces disponibles actualmente.</p>
