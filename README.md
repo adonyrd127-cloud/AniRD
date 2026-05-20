@@ -25,7 +25,18 @@ AniRD es una plataforma moderna y minimalista para ver anime online, diseñada p
 
 ## 📝 Notas de Versión Recientes
 
-### v3.5 - The Discovery Update (Actual) 🌟
+### v3.6 - Premium Playback Update 🎬 (Nueva)
+- **Modo Ambiente (Cinematic Glow):** Resplandor ambiental de fondo dinámico y desenfocado basado en la imagen del anime activo, brindando una atmósfera inmersiva de cine.
+- **Theater Mode (Modo Cine) Inteligente:** Redimensión del reproductor a tamaño completo usando posicionamiento CSS Grid puro para evitar recargar el iframe del video, reteniendo el progreso de la reproducción.
+- **Apagar Luces (Dim Lights):** Overlay oscuro elegante al 94% sobre toda la página que resalta únicamente el reproductor de video para máxima concentración.
+- **Selectores Premium Estilo Animex:** Reemplazo de los dropdowns estáticos clásicos por píldoras de botones interactivos para servidores (`Uwu`, `Mochi`, `Beep`) e idiomas (`Subtitulado` / `Latino`).
+- **Ficha Técnica Ampliada & Cuenta Regresiva:** Detalles enriquecidos (Estudio, Duración, Episodios, Géneros) al lado del póster del anime con sinopsis expandible mediante un botón de "... ver más" inteligente, junto a un temporizador interactivo para próximos episodios en emisión.
+- **Sidebar de Episodios con Miniaturas:** Rediseño completo del listado de episodios usando tarjetas horizontales con miniaturas y títulos dinámicos provistos por AniList, acompañados de un buscador en tiempo real y selector de orden.
+- **Animes Recomendados:** Carrusel de sugerencias y recomendaciones de Jikan cargadas en paralelo en la parte inferior con skeletons de carga fluida.
+- **Botón de Favorito IndexedDB:** Sincronización en tiempo real con IndexedDB mediante `dbService` directamente desde el panel de reproducción.
+
+### v3.5 - The Discovery Update 🌟
+
 - **Menú de Categorías Premium:** Reemplazo de enlaces estáticos por un menú desplegable (Dropdown) con 15 géneros y estética Glassmorphism, perfectamente alineado con la barra de navegación.
 - **Sistema de Notificaciones Inteligente:** Nuevo ícono de campana en la barra superior. Un motor matemático `offline-first` calcula y te avisa exactamente cuándo se estrena un nuevo episodio de los animes que sigues, sin sobrecargar la API.
 - **Conteo Regresivo Exacto:** Las tarjetas de animes en las secciones de Favoritos y Mi Perfil ahora muestran un temporizador en vivo (ej. "⏱ 3d 5h para nuevo cap.") con el tiempo exacto faltante para el próximo episodio.

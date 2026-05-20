@@ -187,6 +187,30 @@ export class AnimeAPI {
       return data.Media?.bannerImage;
     } catch (e) { return null; }
   }
+
+  async getAnimeRecommendations(id) {
+    return await this.providers.jikan.request(`/anime/${id}/recommendations`);
+  }
+
+  async getAnilistEpisodes(malId) {
+    const query = `
+      query ($id: Int) {
+        Media (idMal: $id, type: ANIME) {
+          streamingEpisodes {
+            title
+            thumbnail
+          }
+        }
+      }
+    `;
+    try {
+      const data = await this.providers.anilist.request(query, { id: malId });
+      return data.Media?.streamingEpisodes || [];
+    } catch (e) {
+      console.warn("Error al cargar episodios desde AniList:", e);
+      return [];
+    }
+  }
 }
 
 export const apiService = new AnimeAPI();

@@ -1,4 +1,4 @@
-import{a as m}from"./main-CtB6XwmH.js";import"./vendor-Cmt3X8aB.js";class y{async render(){return this.container=document.createElement("div"),this.container.innerHTML=`
+import{a as m}from"./page-homepage-BLqD5dcZ.js";import"./vendor-Cmt3X8aB.js";class y{async render(){return this.container=document.createElement("div"),this.container.innerHTML=`
       <style>
         .page-container {
           padding: 40px 4%;
