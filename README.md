@@ -25,7 +25,12 @@ AniRD es una plataforma moderna y minimalista para ver anime online, diseñada p
 
 ## 📝 Notas de Versión Recientes
 
-### v3.6 - Premium Playback Update 🎬 (Nueva)
+### v3.7 - Watched Episodes Update 👁️ (Nueva)
+- **Seguimiento Automatizado (Netflix Style):** Los episodios se marcan automáticamente como vistos al reproducirse. En el sidebar se muestra una barra de progreso roja llena al 100% en la base de la miniatura, un badge translúcido de `✓ Visto` con estética glassmorphic en la esquina superior, y una opacidad reducida al 65% para identificar visualmente qué episodios ya has consumido.
+- **Botón de Marcado Manual de Episodio:** Añadido un botón premium `Marcar Visto` / `✓ Visto` en los controles principales del reproductor, sincronizado en tiempo real con IndexedDB.
+- **Botón de Marcado de Temporada Completa:** Un nuevo botón `✓✓` en la cabecera del sidebar de episodios que permite marcar o desmarcar la temporada completa en bloque mediante transacciones ultra rápidas en IndexedDB, sin recargar el reproductor ni perder tu progreso.
+
+### v3.6 - Premium Playback Update 🎬
 - **Modo Ambiente (Cinematic Glow):** Resplandor ambiental de fondo dinámico y desenfocado basado en la imagen del anime activo, brindando una atmósfera inmersiva de cine.
 - **Theater Mode (Modo Cine) Inteligente:** Redimensión del reproductor a tamaño completo usando posicionamiento CSS Grid puro para evitar recargar el iframe del video, reteniendo el progreso de la reproducción.
 - **Apagar Luces (Dim Lights):** Overlay oscuro elegante al 94% sobre toda la página que resalta únicamente el reproductor de video para máxima concentración.
