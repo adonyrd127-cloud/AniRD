@@ -276,9 +276,10 @@ export default class ProfilePage {
               </select>
             </div>
             <hr style="border:none; border-top:1px solid rgba(255,255,255,0.05); margin:30px 0">
-            <div style="display:flex; gap:15px">
-              <button id="sync-btn" class="btn-v4-primary" style="flex:1">Sincronizar Datos</button>
-              <button id="logout-btn" class="btn-v4-secondary" style="flex:1; background:rgba(255,0,0,0.1); color:#ff4444">Cerrar Sesión</button>
+            <div style="display:flex; gap:15px; flex-wrap:wrap;">
+              <button id="sync-btn" class="btn-v4-primary" style="flex:1; min-width:140px;">Sincronizar Datos</button>
+              <button id="reset-db-btn" class="btn-v4-secondary" style="flex:1; min-width:140px; background:rgba(255,165,0,0.1); color:#ffa500; border-color:rgba(255,165,0,0.2)">Restablecer Local</button>
+              <button id="logout-btn" class="btn-v4-secondary" style="flex:1; min-width:140px; background:rgba(255,0,0,0.1); color:#ff4444">Cerrar Sesión</button>
             </div>
           </div>
         `;
@@ -295,6 +296,19 @@ export default class ProfilePage {
           const localData = await dbService.getAllData();
           await authService.syncWithServer(localData);
           window.location.reload();
+        });
+        document.getElementById('reset-db-btn').addEventListener('click', async (e) => {
+          if (confirm('¿Estás seguro de que deseas restablecer la base de datos local? Tu historial y favoritos se descargarán de nuevo de la nube de forma limpia.')) {
+            e.target.textContent = 'Restableciendo...';
+            try {
+              const Dexie = (await import('dexie')).default;
+              await Dexie.delete('AniRD_DB');
+              window.location.reload();
+            } catch (err) {
+              alert('Error al restablecer la base de datos: ' + err.message);
+              window.location.reload();
+            }
+          }
         });
         document.getElementById('logout-btn').addEventListener('click', () => authService.logout());
       }

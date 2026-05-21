@@ -61,7 +61,19 @@ class AuthService {
   logout() {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);
-    window.location.href = '/';
+    try {
+      console.log("[Auth] Borrando base de datos IndexedDB local AniRD_DB al cerrar sesión...");
+      const req = indexedDB.deleteDatabase('AniRD_DB');
+      const redirect = () => { window.location.href = '/'; };
+      req.onsuccess = redirect;
+      req.onerror = redirect;
+      req.onblocked = redirect;
+      // Redirigir a los 800ms por seguridad si se bloquea la eliminación
+      setTimeout(redirect, 800);
+    } catch (e) {
+      console.error("[Auth] Error borrando DB:", e);
+      window.location.href = '/';
+    }
   }
 
   async syncWithServer(localData) {
@@ -74,6 +86,7 @@ class AuthService {
         'Authorization': `Bearer ${this.getToken()}`,
       },
       body: JSON.stringify(localData),
+      keepalive: true, // Permite que la petición continúe en segundo plano si el usuario cierra o recarga la página
     });
     return await res.json();
   }

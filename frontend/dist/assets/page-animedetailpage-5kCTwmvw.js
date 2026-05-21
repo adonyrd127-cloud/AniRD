@@ -1,4 +1,4 @@
-import{a as o,d as l}from"./page-homepage-BLqD5dcZ.js";import"./vendor-Cmt3X8aB.js";class f{constructor(n){this.params=n,this.animeId=n.id,this.anime=null,this.isFavorite=!1,this.isFollowing=!1}async render(){this.anime=(await o.getAnimeInfo(this.animeId)).data,this.isFavorite=await l.isFavorite(this.animeId),this.isFollowing=await l.isFollowing(this.animeId);const n=await o.getAnilistBanner(this.animeId)||this.anime.images.jpg.large_image_url;document.title=`${this.anime.title} — AniRD`;const r=document.createElement("div");return r.className="page-enter",r.innerHTML=`
+import{a as r,d as c,b}from"./page-homepage-Ditd0iT1.js";import"./vendor-DIPEJTOH.js";class w{constructor(o){this.params=o,this.animeId=o.id,this.anime=null,this.isFavorite=!1,this.isFollowing=!1}async render(){this.anime=(await r.getAnimeInfo(this.animeId)).data,this.isFavorite=await c.isFavorite(this.animeId),this.isFollowing=await c.isFollowing(this.animeId);const o=await r.getAnilistBanner(this.animeId)||this.anime.images.jpg.large_image_url;document.title=`${this.anime.title} — AniRD`;const d=document.createElement("div");return d.className="page-enter",d.innerHTML=`
       <style>
         .animex-hero {
           position: relative;
@@ -12,7 +12,7 @@ import{a as o,d as l}from"./page-homepage-BLqD5dcZ.js";import"./vendor-Cmt3X8aB.
         .animex-banner {
           position: absolute;
           inset: 0;
-          background: url('${n}') center/cover no-repeat;
+          background: url('${o}') center/cover no-repeat;
           filter: brightness(0.3) blur(5px);
           z-index: 0;
         }
@@ -43,9 +43,33 @@ import{a as o,d as l}from"./page-homepage-BLqD5dcZ.js";import"./vendor-Cmt3X8aB.
         .ep-card-animex { background: rgba(255,255,255,0.03); border-radius: 20px; overflow: hidden; text-decoration: none; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
         .ep-card-animex:hover { transform: translateY(-5px); border-color: var(--accent); }
         .ep-thumb { position: relative; aspect-ratio: 16/9; overflow: hidden; }
-        .ep-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .ep-thumb img { width: 100%; height: 100%; object-fit: cover; transition: all 0.3s ease; }
         .ep-num { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.8); color: white; padding: 4px 12px; border-radius: 6px; font-weight: 900; font-size: 11px; }
         .ep-info { padding: 15px; font-weight: 700; color: white; font-size: 14px; }
+        .ep-card-animex.watched { border-color: rgba(168, 85, 247, 0.4); background: rgba(168, 85, 247, 0.02); }
+        .ep-card-animex.watched .ep-thumb img { opacity: 0.65; filter: grayscale(0.2); }
+        .ep-watched-badge-animex {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: rgba(168, 85, 247, 0.85);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          color: white;
+          padding: 4px 10px;
+          border-radius: 6px;
+          font-size: 10px;
+          font-weight: 900;
+          letter-spacing: 0.5px;
+          box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          animation: pulse-watched 2s infinite alternate;
+          z-index: 5;
+        }
+        @keyframes pulse-watched {
+          0% { box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3); }
+          100% { box-shadow: 0 4px 20px rgba(168, 85, 247, 0.6); }
+        }
         .recommendations-section { padding: 60px 5% 100px; }
         .horizontal-scroll-v5 { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px; scrollbar-width: none; }
         .rel-label { font-size: 9px; font-weight: 900; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; display: block; }
@@ -65,7 +89,7 @@ import{a as o,d as l}from"./page-homepage-BLqD5dcZ.js";import"./vendor-Cmt3X8aB.
             </div>
             <h1 class="animex-title">${this.anime.title}</h1>
             <div class="animex-genres">
-              ${this.anime.genres.map(c=>`<span class="genre-pill">${c.name}</span>`).join("")}
+              ${this.anime.genres.map(p=>`<span class="genre-pill">${p.name}</span>`).join("")}
             </div>
             <p class="animex-synopsis">${this.anime.synopsis||"Sin descripción disponible."}</p>
             <div class="animex-actions">
@@ -88,19 +112,20 @@ import{a as o,d as l}from"./page-homepage-BLqD5dcZ.js";import"./vendor-Cmt3X8aB.
         <h2 class="section-title">PRECUELAS & SECUELAS</h2>
         <div class="horizontal-scroll-v5" id="relations-container"></div>
       </div>
-    `,r}async afterRender(){const n=document.getElementById("tab-panel-content"),r=document.querySelectorAll(".tab-item"),c=document.getElementById("relations-container");let d=null;const p=e=>{const i=this.anime.images.jpg.large_image_url,t=`?title=${encodeURIComponent(this.anime.title)}`;n.innerHTML=`
+    `,d}async afterRender(){const o=document.getElementById("tab-panel-content"),d=document.querySelectorAll(".tab-item"),p=document.getElementById("relations-container");let l=null;const m=(e,i)=>{const t=this.anime.images.jpg.large_image_url,n=`?title=${encodeURIComponent(this.anime.title)}`;o.innerHTML=`
         <div class="ep-grid-animex">
-          ${Array.from({length:e},(a,s)=>s+1).map(a=>`
-            <a href="/watch/${this.animeId}/${a}/sub${t}" data-link class="ep-card-animex page-enter">
-              <div class="ep-thumb">
-                <img src="${i}" loading="lazy">
-                <div class="ep-num">EPISODIO ${a}</div>
-              </div>
-              <div class="ep-info">Episodio ${a}</div>
-            </a>
-          `).join("")}
+          ${Array.from({length:e},(a,s)=>s+1).map(a=>{const s=i?i.has(a):!1,h=s?'<div class="ep-watched-badge-animex">✓ Visto</div>':"";return`
+              <a href="/watch/${this.animeId}/${a}/sub${n}" data-link class="ep-card-animex page-enter ${s?"watched":""}">
+                <div class="ep-thumb">
+                  <img src="${t}" loading="lazy">
+                  ${h}
+                  <div class="ep-num">EPISODIO ${a}</div>
+                </div>
+                <div class="ep-info">Episodio ${a}</div>
+              </a>
+            `}).join("")}
         </div>
-      `},m=async()=>{if(d){p(d);return}let e=this.anime.episodes;if(!e||this.anime.status==="Currently Airing"){n.innerHTML='<div style="color:white;text-align:center;padding:40px;">Cargando episodios emitidos...</div>';try{const i=await o.searchLocal(this.anime.title);if(i&&i.success&&i.data&&i.data.results.length>0){const t=i.data.results.find(s=>s.title.toLowerCase().includes(this.anime.title.toLowerCase()))||i.data.results[0],a=await o.getAnimeInfo(t.url);a&&a.success&&a.data&&a.data.episodes&&(e=a.data.episodes.length)}if(!e){const t=await o.providers.jikan.request(`/anime/${this.animeId}/episodes`);if(t&&t.data&&t.data.length>0){const a=t.pagination.last_visible_page;if(a>1){const s=await o.providers.jikan.request(`/anime/${this.animeId}/episodes?page=${a}`);e=s.data[s.data.length-1].mal_id}else e=t.data[t.data.length-1].mal_id}}}catch(i){console.error("Error fetching exact episodes",i)}}d=e||12,p(d)},g=async()=>{n.innerHTML='<p style="color:white">Cargando personajes...</p>';try{const e=await o.getAnimeCharacters(this.animeId);e&&e.data&&(n.innerHTML=`<div class="char-grid-animex" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:20px;">
+      `},g=async()=>{let e=new Set;try{const t=await b.history.where({animeId:String(this.animeId)}).toArray();e=new Set(t.map(n=>Number(n.episodeId)))}catch(t){console.error("Error consultando el historial de episodios vistos:",t)}if(l){m(l,e);return}let i=this.anime.episodes;if(!i||this.anime.status==="Currently Airing"){o.innerHTML='<div style="color:white;text-align:center;padding:40px;">Cargando episodios emitidos...</div>';try{const t=await r.searchLocal(this.anime.title);if(t&&t.success&&t.data&&t.data.results.length>0){const n=t.data.results.find(s=>s.title.toLowerCase().includes(this.anime.title.toLowerCase()))||t.data.results[0],a=await r.getAnimeInfo(n.url);a&&a.success&&a.data&&a.data.episodes&&(i=a.data.episodes.length)}if(!i){const n=await r.providers.jikan.request(`/anime/${this.animeId}/episodes`);if(n&&n.data&&n.data.length>0){const a=n.pagination.last_visible_page;if(a>1){const s=await r.providers.jikan.request(`/anime/${this.animeId}/episodes?page=${a}`);i=s.data[s.data.length-1].mal_id}else i=n.data[n.data.length-1].mal_id}}}catch(t){console.error("Error fetching exact episodes",t)}}l=i||12,m(l,e)},x=async()=>{o.innerHTML='<p style="color:white">Cargando personajes...</p>';try{const e=await r.getAnimeCharacters(this.animeId);e&&e.data&&(o.innerHTML=`<div class="char-grid-animex" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:20px;">
             ${e.data.slice(0,18).map(i=>`
               <div class="char-card-animex page-enter" style="text-align:center">
                 <div class="char-img" style="width:100%; aspect-ratio:1/1; border-radius:20px; overflow:hidden; margin-bottom:10px; border:1px solid rgba(255,255,255,0.1)"><img src="${i.character.images.jpg.image_url}" style="width:100%; height:100%; object-fit:cover"></div>
@@ -108,4 +133,4 @@ import{a as o,d as l}from"./page-homepage-BLqD5dcZ.js";import"./vendor-Cmt3X8aB.
                 <div class="char-role" style="font-size:10px; color:var(--text-muted); text-transform:uppercase">${i.role==="Main"?"Principal":"Secundario"}</div>
               </div>
             `).join("")}
-          </div>`)}catch{n.innerHTML='<p style="color:white">Error al cargar personajes.</p>'}};r.forEach(e=>{e.addEventListener("click",async()=>{r.forEach(i=>i.classList.remove("active")),e.classList.add("active"),e.dataset.tab==="episodes"?m():await g()})}),m();try{const e=await o.getAnimeRelations(this.animeId);e&&e.data&&e.data.forEach(i=>{const t=i.relation==="Prequel"?"Precuela":i.relation==="Sequel"?"Secuela":i.relation;i.entry.forEach(a=>{if(a.type==="anime"){const s=document.createElement("div");s.innerHTML=`<span class="rel-label">${t}</span><anime-card></anime-card>`;const h=s.querySelector("anime-card");h.data={mal_id:a.mal_id,title:a.name,images:this.anime.images},c.appendChild(s)}})})}catch{}document.getElementById("fav-btn").addEventListener("click",async e=>{this.isFavorite=!this.isFavorite,e.target.textContent=this.isFavorite?"❤️":"🤍",await l.toggleFavorite(this.anime)}),document.getElementById("follow-btn").addEventListener("click",async e=>{this.isFollowing=!this.isFollowing,e.target.textContent=this.isFollowing?"🔔":"🔕",await l.toggleFollowing(this.anime)})}}export{f as default};
+          </div>`)}catch{o.innerHTML='<p style="color:white">Error al cargar personajes.</p>'}};d.forEach(e=>{e.addEventListener("click",async()=>{d.forEach(i=>i.classList.remove("active")),e.classList.add("active"),e.dataset.tab==="episodes"?g():await x()})}),g();try{const e=await r.getAnimeRelations(this.animeId);e&&e.data&&e.data.forEach(i=>{const t=i.relation==="Prequel"?"Precuela":i.relation==="Sequel"?"Secuela":i.relation;i.entry.forEach(n=>{if(n.type==="anime"){const a=document.createElement("div");a.innerHTML=`<span class="rel-label">${t}</span><anime-card></anime-card>`;const s=a.querySelector("anime-card");s.data={mal_id:n.mal_id,title:n.name,images:this.anime.images},p.appendChild(a)}})})}catch{}document.getElementById("fav-btn").addEventListener("click",async e=>{this.isFavorite=!this.isFavorite,e.target.textContent=this.isFavorite?"❤️":"🤍",await c.toggleFavorite(this.anime)}),document.getElementById("follow-btn").addEventListener("click",async e=>{this.isFollowing=!this.isFollowing,e.target.textContent=this.isFollowing?"🔔":"🔕",await c.toggleFollowing(this.anime)})}}export{w as default};

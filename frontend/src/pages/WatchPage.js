@@ -322,21 +322,63 @@ export default class WatchPage {
     // Iniciar cargas asíncronas en segundo plano para evitar bloqueos
     this._loadEnrichedEpisodesAndRecommendations();
     
-    // Guardar en el historial de IndexedDB y actualizar estado en memoria
+    // Limpiar de forma segura cualquier temporizador activo previo para evitar fugas de memoria
+    if (window.activeWatchInterval) {
+      clearInterval(window.activeWatchInterval);
+      window.activeWatchInterval = null;
+    }
+    
+    // Configurar estado visual inicial e iniciar temporizador si no está visto
     if (this.anime) {
-      await dbService.addToHistory(
-        String(this.animeId),
-        this.episodeNum,
-        0, // progreso inicial
-        0  // duración inicial
-      );
-      this.watchedEpisodes.add(this.episodeNum);
-
+      const isWatched = this.watchedEpisodes.has(this.episodeNum);
       const btnWatchedStatus = document.getElementById('btn-watched-status');
       const watchedStatusText = document.getElementById('watched-status-text');
-      if (btnWatchedStatus) {
-        btnWatchedStatus.classList.add('active');
+
+      if (isWatched) {
+        if (btnWatchedStatus) btnWatchedStatus.classList.add('active');
         if (watchedStatusText) watchedStatusText.textContent = 'Visto';
+      } else {
+        if (btnWatchedStatus) btnWatchedStatus.classList.remove('active');
+        if (watchedStatusText) watchedStatusText.textContent = 'Marcar Visto';
+
+        // Inicializar el temporizador de 2 minutos de visualización activa
+        this.watchTimeCounter = 0;
+
+        window.activeWatchInterval = setInterval(async () => {
+          // Autocleanup si el layout ya no está en el DOM (navegación SPA)
+          const isStillInDOM = document.getElementById('watch-layout');
+          if (!isStillInDOM) {
+            clearInterval(window.activeWatchInterval);
+            window.activeWatchInterval = null;
+            return;
+          }
+
+          // Solo sumar segundos si la pestaña está activa/visible
+          if (!document.hidden) {
+            this.watchTimeCounter++;
+
+            if (this.watchTimeCounter >= 120) {
+              clearInterval(window.activeWatchInterval);
+              window.activeWatchInterval = null;
+              console.log("[WatchTimer] 2 minutos cumplidos. Marcando como visto automáticamente.");
+
+              await dbService.addToHistory(
+                String(this.animeId),
+                this.episodeNum,
+                120,
+                120
+              );
+              this.watchedEpisodes.add(this.episodeNum);
+
+              if (btnWatchedStatus) btnWatchedStatus.classList.add('active');
+              if (watchedStatusText) watchedStatusText.textContent = 'Visto';
+
+              if (this.renderEpisodes) {
+                this.renderEpisodes();
+              }
+            }
+          }
+        }, 1000);
       }
     }
   }
@@ -625,6 +667,13 @@ export default class WatchPage {
     if (btnWatchedStatus) {
       btnWatchedStatus.addEventListener('click', async () => {
         const isCurrentlyWatched = this.watchedEpisodes.has(this.episodeNum);
+
+        // Cancelar cualquier temporizador activo al interactuar manualmente
+        if (window.activeWatchInterval) {
+          clearInterval(window.activeWatchInterval);
+          window.activeWatchInterval = null;
+        }
+
         if (isCurrentlyWatched) {
           // Desmarcar: eliminar de IndexedDB history
           const existing = await db.history.where({ animeId: String(this.animeId), episodeId: this.episodeNum }).first();
@@ -634,12 +683,16 @@ export default class WatchPage {
           this.watchedEpisodes.delete(this.episodeNum);
           btnWatchedStatus.classList.remove('active');
           if (watchedStatusText) watchedStatusText.textContent = 'Marcar Visto';
+          
+          // Sincronizar desmarcado de inmediato con el servidor
+          await dbService.triggerSync();
         } else {
           // Marcar: agregar a IndexedDB
-          await dbService.addToHistory(String(this.animeId), this.episodeNum, 0, 0);
+          await dbService.addToHistory(String(this.animeId), this.episodeNum, 120, 120);
           this.watchedEpisodes.add(this.episodeNum);
           btnWatchedStatus.classList.add('active');
           if (watchedStatusText) watchedStatusText.textContent = 'Visto';
+          // triggerSync se dispara automáticamente dentro de addToHistory()
         }
 
         // Refrescar reactivamente
@@ -654,6 +707,12 @@ export default class WatchPage {
         if (!this.localInfo || !this.localInfo.episodes) return;
         const episodes = this.localInfo.episodes;
         const allEpNums = episodes.map(ep => ep.number);
+
+        // Cancelar temporizador activo al interactuar en lote
+        if (window.activeWatchInterval) {
+          clearInterval(window.activeWatchInterval);
+          window.activeWatchInterval = null;
+        }
 
         // Verificar si todos están vistos
         const allWatched = allEpNums.every(num => this.watchedEpisodes.has(num));
@@ -688,8 +747,8 @@ export default class WatchPage {
                 await db.history.add({
                   animeId: String(this.animeId),
                   episodeId: num,
-                  progress: 0,
-                  duration: 0,
+                  progress: 120,
+                  duration: 120,
                   timestamp,
                   updatedAt: timestamp
                 });
@@ -707,6 +766,9 @@ export default class WatchPage {
             if (watchedStatusText) watchedStatusText.textContent = 'Marcar Visto';
           }
         }
+
+        // Sincronizar lote completo con el servidor de inmediato
+        await dbService.triggerSync();
 
         // Refrescar reactivamente
         if (this.renderEpisodes) {

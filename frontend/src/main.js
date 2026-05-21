@@ -14,7 +14,7 @@ const searchPalette = new SearchPalette(router);
 const header = document.createElement('header');
 header.innerHTML = `
   <nav class="nav-v4" id="main-navbar">
-    <div class="nav-logo">AniRD ☁️</div>
+    <a href="/" data-link class="nav-logo">AniRD ☁️</a>
     
     <ul class="nav-links">
       <li><a href="/" data-link>Inicio</a></li>

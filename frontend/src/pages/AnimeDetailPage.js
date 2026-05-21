@@ -1,5 +1,5 @@
 import { apiService } from '../services/api.js';
-import { dbService } from '../services/db.js';
+import { dbService, db } from '../services/db.js';
 import '../components/AnimeCard.js';
 
 export default class AnimeDetailPage {
@@ -68,9 +68,33 @@ export default class AnimeDetailPage {
         .ep-card-animex { background: rgba(255,255,255,0.03); border-radius: 20px; overflow: hidden; text-decoration: none; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
         .ep-card-animex:hover { transform: translateY(-5px); border-color: var(--accent); }
         .ep-thumb { position: relative; aspect-ratio: 16/9; overflow: hidden; }
-        .ep-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .ep-thumb img { width: 100%; height: 100%; object-fit: cover; transition: all 0.3s ease; }
         .ep-num { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.8); color: white; padding: 4px 12px; border-radius: 6px; font-weight: 900; font-size: 11px; }
         .ep-info { padding: 15px; font-weight: 700; color: white; font-size: 14px; }
+        .ep-card-animex.watched { border-color: rgba(168, 85, 247, 0.4); background: rgba(168, 85, 247, 0.02); }
+        .ep-card-animex.watched .ep-thumb img { opacity: 0.65; filter: grayscale(0.2); }
+        .ep-watched-badge-animex {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: rgba(168, 85, 247, 0.85);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          color: white;
+          padding: 4px 10px;
+          border-radius: 6px;
+          font-size: 10px;
+          font-weight: 900;
+          letter-spacing: 0.5px;
+          box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          animation: pulse-watched 2s infinite alternate;
+          z-index: 5;
+        }
+        @keyframes pulse-watched {
+          0% { box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3); }
+          100% { box-shadow: 0 4px 20px rgba(168, 85, 247, 0.6); }
+        }
         .recommendations-section { padding: 60px 5% 100px; }
         .horizontal-scroll-v5 { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px; scrollbar-width: none; }
         .rel-label { font-size: 9px; font-weight: 900; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; display: block; }
@@ -125,28 +149,42 @@ export default class AnimeDetailPage {
 
     let cachedEpCount = null;
 
-    const renderGrid = (count) => {
+    const renderGrid = (count, watchedSet) => {
       const thumb = this.anime.images.jpg.large_image_url;
       const titleParam = `?title=${encodeURIComponent(this.anime.title)}`;
       
       tabPanel.innerHTML = `
         <div class="ep-grid-animex">
-          ${Array.from({length: count}, (_, i) => i + 1).map(num => `
-            <a href="/watch/${this.animeId}/${num}/sub${titleParam}" data-link class="ep-card-animex page-enter">
-              <div class="ep-thumb">
-                <img src="${thumb}" loading="lazy">
-                <div class="ep-num">EPISODIO ${num}</div>
-              </div>
-              <div class="ep-info">Episodio ${num}</div>
-            </a>
-          `).join('')}
+          ${Array.from({length: count}, (_, i) => i + 1).map(num => {
+            const isWatched = watchedSet ? watchedSet.has(num) : false;
+            const badgeHtml = isWatched ? `<div class="ep-watched-badge-animex">✓ Visto</div>` : '';
+            return `
+              <a href="/watch/${this.animeId}/${num}/sub${titleParam}" data-link class="ep-card-animex page-enter ${isWatched ? 'watched' : ''}">
+                <div class="ep-thumb">
+                  <img src="${thumb}" loading="lazy">
+                  ${badgeHtml}
+                  <div class="ep-num">EPISODIO ${num}</div>
+                </div>
+                <div class="ep-info">Episodio ${num}</div>
+              </a>
+            `;
+          }).join('')}
         </div>
       `;
     };
 
     const renderEpisodes = async () => {
+      // Cargar los episodios vistos de este anime en IndexedDB
+      let watchedSet = new Set();
+      try {
+        const watched = await db.history.where({ animeId: String(this.animeId) }).toArray();
+        watchedSet = new Set(watched.map(w => Number(w.episodeId)));
+      } catch (err) {
+        console.error("Error consultando el historial de episodios vistos:", err);
+      }
+
       if (cachedEpCount) {
-        renderGrid(cachedEpCount);
+        renderGrid(cachedEpCount, watchedSet);
         return;
       }
       
@@ -185,7 +223,7 @@ export default class AnimeDetailPage {
       }
       
       cachedEpCount = epCount || 12; // Fallback
-      renderGrid(cachedEpCount);
+      renderGrid(cachedEpCount, watchedSet);
     };
 
     const renderCharacters = async () => {
