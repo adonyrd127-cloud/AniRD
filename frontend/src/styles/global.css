@@ -2094,4 +2094,33 @@ body {
   .scroll-btn {
     display: none !important;
   }
+
+  /* --- Ajustes Premium de Cabecera Móvil (Zona Verde) --- */
+  .nav-v4 {
+    height: 60px !important;
+    padding: 0 16px !important;
+  }
+
+  .nav-logo {
+    font-size: 20px !important;
+    white-space: nowrap !important;
+    gap: 6px !important;
+  }
+
+  .nav-v4 .search-pill {
+    display: none !important;
+  }
+
+  .nav-v4 .btn-profile, 
+  .nav-v4 #profile-link {
+    display: none !important;
+  }
+
+  .nav-right {
+    gap: 10px !important;
+  }
+
+  .nav-notifications {
+    margin-right: 0 !important;
+  }
 }
