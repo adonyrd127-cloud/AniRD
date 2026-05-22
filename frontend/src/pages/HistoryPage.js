@@ -180,12 +180,31 @@ export default class HistoryPage {
       historyGrid.innerHTML = '';
       for (const item of history) {
         try {
-          const animeRes = await apiService.getAnimeInfo(item.animeId);
-          const anime = animeRes.data;
           const card = document.createElement('anime-card');
           card.setAttribute('mode', 'thumbnail');
-          card.data = { ...anime, currentEpisode: item.episodeId };
           historyGrid.appendChild(card);
+
+          if (item.animeTitle && item.animeCover) {
+            card.data = {
+              mal_id: item.animeId,
+              title: item.animeTitle,
+              images: { jpg: { large_image_url: item.animeCover } },
+              type: item.animeType || '',
+              score: item.animeScore || '',
+              currentEpisode: item.episodeId
+            };
+
+            // Fetch in background for full info (like recommendations, etc.)
+            apiService.getAnimeInfo(item.animeId).then(animeRes => {
+              if (animeRes && animeRes.data) {
+                card.data = { ...animeRes.data, currentEpisode: item.episodeId };
+              }
+            }).catch(e => {});
+          } else {
+            const animeRes = await apiService.getAnimeInfo(item.animeId);
+            const anime = animeRes.data;
+            card.data = { ...anime, currentEpisode: item.episodeId };
+          }
         } catch (e) { console.error(e); }
       }
     }

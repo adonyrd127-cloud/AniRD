@@ -38,15 +38,15 @@ export const dbService = {
     }
   },
 
-  async addToHistory(animeId, episodeId, progress, duration) {
+  async addToHistory(animeId, episodeId, progress, duration, animeDetails = {}) {
     const timestamp = Date.now();
     const existing = await db.history.where({ animeId, episodeId }).first();
     let result;
 
     if (existing) {
-      result = await db.history.update(existing.id, { progress, duration, updatedAt: timestamp });
+      result = await db.history.update(existing.id, { progress, duration, updatedAt: timestamp, ...animeDetails });
     } else {
-      result = await db.history.add({ animeId, episodeId, progress, duration, timestamp, updatedAt: timestamp });
+      result = await db.history.add({ animeId, episodeId, progress, duration, timestamp, updatedAt: timestamp, ...animeDetails });
     }
 
     this.triggerSync();

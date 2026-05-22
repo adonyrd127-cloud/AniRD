@@ -25,7 +25,16 @@ AniRD es una plataforma moderna y minimalista para ver anime online, diseñada p
 
 ## 📝 Notas de Versión Recientes
 
-### v3.7 - Watched Episodes Update 👁️ (Nueva)
+### v3.8 - Cloud Sync & Premium Authentication Update 🔐 (Nueva)
+- **Rediseño Premium de Autenticación:** Interfaz de inicio de sesión y registro completamente reestructurada con estética Glassmorphism, sombreado de resplandor ambiental, campos de texto interactivos con foco reactivo en tiempo real, menú de pestañas estilo cápsula, animación de sacudida interactiva (`shake`) ante credenciales incorrectas y spinner animado para llamadas asíncronas.
+- **Sincronización Inteligente Bidireccional (Two-Way Merge):** Fusión en dos vías entre IndexedDB y el backend de la Orange Pi comparando marcas de tiempo (`updatedAt` / `addedAt`) para unificar favoritos, historial y seguimiento de forma segura sin sobrescribir cambios recientes sin conexión.
+- **Persistencia Antirruptura (Fetch Keepalive):** Configuración de llamadas a la API de sincronización con la bandera `{ keepalive: true }`, garantizando que el navegador complete la carga de datos al servidor incluso si el usuario cierra la pestaña o sale de la aplicación rápidamente.
+- **Auto-Recuperación de Base de Datos:** Captura global de errores críticos de IndexedDB; si ocurre un bloqueo de versión o corrupción, el sistema borra de forma segura la base local y recarga la página para restaurar desde la nube de forma transparente.
+- **Botón de Restablecimiento en Ajustes:** Nueva opción "Restablecer Local" en la pestaña de Ajustes del Perfil para depurar la base de datos local manualmente y forzar una resincronización limpia desde el servidor.
+- **Navegación SPA en Logo:** El logo principal de AniRD en la barra superior se reestructuró con enrutamiento dinámico SPA para volver a la página de inicio instantáneamente sin recargas molestas del navegador.
+- **Temporizador de 2 Minutos de Visualización Activa:** Medidor inteligente de 120 segundos que detiene el acumulador si la pestaña está oculta (`document.hidden`), con limpieza segura del hilo de ejecución en el enrutador para evitar fugas de memoria.
+
+### v3.7 - Watched Episodes Update 👁️
 - **Seguimiento Automatizado (Netflix Style):** Los episodios se marcan automáticamente como vistos al reproducirse. En el sidebar se muestra una barra de progreso roja llena al 100% en la base de la miniatura, un badge translúcido de `✓ Visto` con estética glassmorphic en la esquina superior, y una opacidad reducida al 65% para identificar visualmente qué episodios ya has consumido.
 - **Botón de Marcado Manual de Episodio:** Añadido un botón premium `Marcar Visto` / `✓ Visto` en los controles principales del reproductor, sincronizado en tiempo real con IndexedDB.
 - **Botón de Marcado de Temporada Completa:** Un nuevo botón `✓✓` en la cabecera del sidebar de episodios que permite marcar o desmarcar la temporada completa en bloque mediante transacciones ultra rápidas en IndexedDB, sin recargar el reproductor ni perder tu progreso.

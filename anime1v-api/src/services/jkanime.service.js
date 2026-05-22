@@ -1,6 +1,6 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
-const vm = require("node:vm");
+const { safeEvaluate } = require("../utils/safe-eval");
 const { URL } = require("node:url");
 const { ApiError } = require("../utils/api-error");
 
@@ -224,18 +224,6 @@ function extractBalancedSection(text, startIndex, openChar, closeChar) {
   }
 
   return null;
-}
-
-function safeEvaluate(expression) {
-  try {
-    const context = Object.create(null);
-    return vm.runInNewContext(expression, context, {
-      timeout: 1000,
-      displayErrors: false,
-    });
-  } catch (_error) {
-    return null;
-  }
 }
 
 function extractVarLiteral(html, varName) {

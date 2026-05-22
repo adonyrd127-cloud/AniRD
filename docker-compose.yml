@@ -11,6 +11,7 @@ services:
       - PORT=3000
       - API_KEYS=dev-anime1v-key
       - ALLOWED_ORIGINS=*
+      - JWT_SECRET=anird-secure-cloud-key-998877
     volumes:
       - ./anime1v-api/downloads:/app/downloads
       - ./anime1v-api/data:/app/data

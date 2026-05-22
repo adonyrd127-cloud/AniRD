@@ -5,7 +5,10 @@ const jwt = require("jsonwebtoken");
 const dataService = require("../services/data.service");
 const { ApiError } = require("../utils/api-error");
 
-const JWT_SECRET = process.env.JWT_SECRET || "anird-secret-key-127";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("FATAL: JWT_SECRET environment variable is not defined.");
+}
 
 // Registro
 router.post("/register", async (req, res, next) => {
@@ -21,7 +24,7 @@ router.post("/register", async (req, res, next) => {
       throw new ApiError(400, "El usuario ya existe");
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = {
       username,
       password: hashedPassword,
