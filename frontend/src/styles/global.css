@@ -2562,11 +2562,13 @@ body {
   }
 }
 
-/* Ocultación global de elementos de escritorio por defecto (para móvil) */
-.nav-divider-desktop,
-.nav-center-container,
-.header-profile-btn {
-  display: none !important;
+/* Ocultación de elementos de escritorio por defecto en pantallas móviles/tablets */
+@media (max-width: 1023px) {
+  .nav-divider-desktop,
+  .nav-center-container,
+  .header-profile-btn {
+    display: none !important;
+  }
 }
 
 /* ==========================================================================
@@ -2761,6 +2763,38 @@ body.tv-mode .anime-details-card-v5 {
 
 body.tv-mode .details-poster-v5 {
   max-width: 280px !important;
+}
+
+/* Ocultación de barra lateral y cabecera en secciones internas de consumo en Modo TV */
+body.tv-mode.route-anime .desktop-sidebar,
+body.tv-mode.route-watch .desktop-sidebar {
+  display: none !important;
+}
+
+body.tv-mode.route-watch .nav-v4 {
+  display: none !important;
+}
+
+body.tv-mode.route-anime .nav-v4 {
+  left: 0 !important;
+}
+
+body.tv-mode.route-anime #app,
+body.tv-mode.route-watch #app {
+  margin-left: 0 !important;
+  padding: 30px !important;
+}
+
+body.tv-mode.route-watch #app {
+  padding-top: 30px !important;
+}
+
+body.tv-mode.route-watch .watch-layout-v5 {
+  padding-top: 10px !important;
+}
+
+body.tv-mode.route-watch .page-container {
+  padding-top: 0 !important;
 }
 
 

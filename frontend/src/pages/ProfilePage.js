@@ -1,5 +1,6 @@
 import { authService } from '../services/auth.service.js';
 import { dbService, db } from '../services/db.js';
+import { spatialNavigation } from '../services/spatialNavigation.js';
 import '../components/AnimeCard.js';
 
 export default class ProfilePage {
@@ -286,6 +287,13 @@ export default class ProfilePage {
                 <option value="light" ${theme === 'light' ? 'selected' : ''}>Modo Claro</option>
               </select>
             </div>
+            <div class="settings-item-v4">
+              <label>Modo Smart TV (Control D-Pad)</label>
+              <select id="tv-mode-pref" class="select-v4">
+                <option value="off" ${localStorage.getItem('tvMode') !== 'true' ? 'selected' : ''}>Apagado (PC / Móvil)</option>
+                <option value="on" ${localStorage.getItem('tvMode') === 'true' ? 'selected' : ''}>Encendido (Modo TV)</option>
+              </select>
+            </div>
             <hr style="border:none; border-top:1px solid rgba(255,255,255,0.05); margin:30px 0">
             <div style="display:flex; gap:15px; flex-wrap:wrap;">
               <button id="sync-btn" class="btn-v4-primary" style="flex:1; min-width:140px;">Sincronizar Datos</button>
@@ -301,6 +309,29 @@ export default class ProfilePage {
           const t = e.target.value;
           await dbService.setSetting('theme', t);
           document.body.classList.toggle('light-theme', t === 'light');
+        });
+        document.getElementById('tv-mode-pref').addEventListener('change', (e) => {
+          const active = e.target.value === 'on';
+          if (active) {
+            spatialNavigation.init();
+          } else {
+            spatialNavigation.destroy();
+          }
+          
+          const headerToggleBtn = document.getElementById('header-tv-toggle');
+          if (headerToggleBtn) {
+            if (active) {
+              headerToggleBtn.classList.add('active');
+              headerToggleBtn.style.background = 'rgba(255, 0, 85, 0.2)';
+              headerToggleBtn.style.boxShadow = '0 0 15px rgba(255, 0, 85, 0.4)';
+              headerToggleBtn.style.border = '1px solid rgba(255, 0, 85, 0.4)';
+            } else {
+              headerToggleBtn.classList.remove('active');
+              headerToggleBtn.style.background = 'rgba(255,255,255,0.05)';
+              headerToggleBtn.style.boxShadow = 'none';
+              headerToggleBtn.style.border = 'none';
+            }
+          }
         });
         document.getElementById('sync-btn').addEventListener('click', async (e) => {
           e.target.textContent = 'Procesando...';

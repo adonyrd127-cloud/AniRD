@@ -96,6 +96,20 @@ export class AppRouter {
        document.title = `AniRD — Tu plataforma de anime`;
     }
 
+    // Limpiar clases de ruta previas de forma compatible en Smart TVs
+    const classesToRemove = [];
+    for (let i = 0; i < document.body.classList.length; i++) {
+      const cls = document.body.classList[i];
+      if (cls && cls.startsWith('route-')) {
+        classesToRemove.push(cls);
+      }
+    }
+    classesToRemove.forEach(cls => document.body.classList.remove(cls));
+
+    // Agregar la clase de la ruta activa
+    const routeClass = `route-${routeKey.replace('/', '') || 'home'}`;
+    document.body.classList.add(routeClass);
+
     useAppStore.getState().setCurrentRoute(path);
 
     const loadModule = routes[routeKey] || routes['/']; // fallback 404/home
