@@ -1,7 +1,7 @@
 import './styles/global.css';
 import { AppRouter } from './app.js';
 import { useAppStore } from './stores/appStore.js';
-import { dbService } from './services/db.js';
+import { dbService, db } from './services/db.js';
 import { SearchPalette } from './components/SearchPalette.js';
 import { getRouter } from './app.js';
 import { authService } from './services/auth.service.js';
@@ -122,9 +122,74 @@ header.innerHTML = `
 `;
 document.body.insertBefore(header, appContainer);
 
+// Inyectar Barra Lateral Premium de Escritorio
+const sidebar = document.createElement('aside');
+sidebar.className = 'desktop-sidebar';
+sidebar.innerHTML = `
+  <div class="sidebar-logo">
+    <a href="/" data-link class="sidebar-logo-link">AniRD ☁️</a>
+  </div>
+  
+  <ul class="sidebar-menu">
+    <li>
+      <a href="/" data-link class="sidebar-link" data-route="/">
+        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <span>Inicio</span>
+      </a>
+    </li>
+    <li>
+      <a href="#" class="sidebar-link" id="sidebar-search-btn">
+        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <span>Explorar</span>
+      </a>
+    </li>
+    <li>
+      <a href="/favorites" data-link class="sidebar-link" data-route="/favorites">
+        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span>Favoritos</span>
+      </a>
+    </li>
+    <li>
+      <a href="/history" data-link class="sidebar-link" data-route="/history">
+        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span>Historial</span>
+      </a>
+    </li>
+    <li>
+      <a id="sidebar-profile-link" href="/auth" data-link class="sidebar-link" data-route="/profile">
+        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span>Mi Perfil</span>
+      </a>
+    </li>
+  </ul>
+
+  <hr class="sidebar-divider">
+
+  <div class="sidebar-section-title">SIGUIENDO</div>
+  <div class="sidebar-following-list" id="sidebar-following-list">
+    <div style="color: rgba(255,255,255,0.3); font-size: 11px; padding: 10px 20px; text-align: center;">Cargando lista...</div>
+  </div>
+`;
+document.body.insertBefore(sidebar, appContainer);
+
 const updateNavbarAuth = () => {
   const profileLink = document.getElementById('profile-link');
   const mobileProfileLink = document.getElementById('mobile-profile-link');
+  const sidebarProfileLink = document.getElementById('sidebar-profile-link');
   const isLoggedIn = authService.isLoggedIn();
   
   const targetPath = isLoggedIn ? '/profile' : '/auth';
@@ -138,6 +203,11 @@ const updateNavbarAuth = () => {
     mobileProfileLink.setAttribute('href', targetPath);
     const label = mobileProfileLink.querySelector('.nav-label');
     if (label) label.textContent = isLoggedIn ? 'Perfil' : 'Entrar';
+  }
+  if (sidebarProfileLink) {
+    sidebarProfileLink.setAttribute('href', targetPath);
+    const textSpan = sidebarProfileLink.querySelector('span');
+    if (textSpan) textSpan.textContent = isLoggedIn ? 'Mi Perfil' : 'Entrar';
   }
 };
 
@@ -167,17 +237,91 @@ const updateMobileNavActive = (route) => {
   }
 };
 
+const updateSidebarActive = (route) => {
+  const sidebarEl = document.querySelector('.desktop-sidebar');
+  if (!sidebarEl) return;
+  const links = sidebarEl.querySelectorAll('.sidebar-link');
+  links.forEach(link => link.classList.remove('active'));
+
+  let activeRoute = '/';
+  if (route === '/' || route.startsWith('/anime/') || route.startsWith('/watch/') || route.startsWith('/category/') || route === '/calendar') {
+    activeRoute = '/';
+  } else if (route === '/favorites') {
+    activeRoute = '/favorites';
+  } else if (route === '/history' || route === '/my-anird') {
+    activeRoute = '/history';
+  } else if (route === '/profile' || route === '/auth') {
+    activeRoute = '/profile';
+  }
+
+  const activeLink = sidebarEl.querySelector(`.sidebar-link[data-route="${activeRoute}"]`);
+  if (activeLink) {
+    activeLink.classList.add('active');
+  }
+};
+
+const renderSidebarFollowing = async () => {
+  const listContainer = document.getElementById('sidebar-following-list');
+  if (!listContainer) return;
+
+  try {
+    const following = await dbService.getFollowing();
+    if (following.length === 0) {
+      listContainer.innerHTML = `
+        <div class="sidebar-following-empty">
+          Aún no sigues ningún anime. Haz clic en "Seguir" en la ficha del anime para agregarlo aquí.
+        </div>
+      `;
+      return;
+    }
+
+    // Obtener el último episodio reproducido en el historial de forma rápida
+    const history = await db.history.orderBy('updatedAt').reverse().toArray();
+    const lastEpMap = new Map();
+    history.forEach(item => {
+      if (!lastEpMap.has(item.animeId)) {
+        lastEpMap.set(item.animeId, item.episodeId);
+      }
+    });
+
+    listContainer.innerHTML = following.slice(0, 5).map(anime => {
+      const animeId = Number(anime.animeId);
+      const lastEp = lastEpMap.get(animeId);
+      const epText = lastEp ? `Ep. ${lastEp}` : 'Ver ahora';
+      return `
+        <a href="/anime/${animeId}" data-link class="sidebar-following-item">
+          <img class="sidebar-following-cover" src="${anime.cover}" alt="${anime.title}" loading="lazy">
+          <div class="sidebar-following-info">
+            <div class="sidebar-following-title">${anime.title}</div>
+            <div class="sidebar-following-ep">${epText}</div>
+          </div>
+        </a>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error("Error al renderizar siguiendo en la barra lateral:", err);
+  }
+};
+
 // Suscribirse a cambios de ruta de Zustand
 useAppStore.subscribe((state) => {
   updateMobileNavActive(state.currentRoute);
+  updateSidebarActive(state.currentRoute);
+  renderSidebarFollowing();
 });
 
 window.updateNavbarAuth = updateNavbarAuth;
 updateNavbarAuth();
 updateMobileNavActive(window.location.pathname);
+updateSidebarActive(window.location.pathname);
+renderSidebarFollowing();
 
 document.getElementById('open-search-btn').addEventListener('click', () => searchPalette.open());
 document.getElementById('mobile-search-btn').addEventListener('click', (e) => {
+  e.preventDefault();
+  searchPalette.open();
+});
+document.getElementById('sidebar-search-btn').addEventListener('click', (e) => {
   e.preventDefault();
   searchPalette.open();
 });
