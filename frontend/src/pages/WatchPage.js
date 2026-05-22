@@ -681,6 +681,17 @@ export default class WatchPage {
           renderEpisodes();
         });
       }
+    } else {
+      if (epListEl) {
+        epListEl.innerHTML = `
+          <div style="text-align:center; padding:30px 15px; color:var(--text-muted); font-size:12px; line-height:1.6;">
+            <span style="font-size:28px; display:block; margin-bottom:12px;">🔌</span>
+            <strong style="color:white; display:block; margin-bottom:8px; font-size:13px; font-family:'Outfit';">Servidor Local desconectado</strong>
+            El backend en la Orange Pi no pudo extraer los videos o la lista de reproducción local para este anime.<br>
+            <span style="display:block; margin-top:12px; font-size:10px; color:var(--accent); font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Código de error: Scraper/Network Timeout</span>
+          </div>
+        `;
+      }
     }
   }
 

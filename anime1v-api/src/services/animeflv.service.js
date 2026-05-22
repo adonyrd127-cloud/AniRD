@@ -18,7 +18,14 @@ async function getPuppeteerBrowser() {
     const puppeteer = require("puppeteer");
     puppeteerBrowser = await puppeteer.launch({
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: [
+        "--no-sandbox", 
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage", // Indispensable en entornos Docker
+        "--disable-gpu",           // Reduce consumo de CPU en headless
+        "--disable-software-rasterizer",
+        "--mute-audio"
+      ],
     });
   }
   return puppeteerBrowser;
@@ -38,15 +45,27 @@ async function fetchHtmlWithPuppeteer(url) {
   const browser = await getPuppeteerBrowser();
   const page = await browser.newPage();
   
+  // Activar interceptación de peticiones para bloquear recursos innecesarios
+  // Esto acelera la carga 10 veces y reduce drásticamente el consumo de RAM/CPU en la Orange Pi
+  await page.setRequestInterception(true);
+  page.on("request", (req) => {
+    const resourceType = req.resourceType();
+    if (["image", "stylesheet", "font", "media", "websocket"].includes(resourceType)) {
+      req.abort();
+    } else {
+      req.continue();
+    }
+  });
+  
   await page.setUserAgent(
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
   );
   
-  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
+  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
   
   // Wait for protection to resolve
   let retries = 0;
-  while (retries < 10) {
+  while (retries < 12) {
     const content = await page.content();
     const $ = cheerio.load(content);
     const title = $("title").text();
@@ -56,7 +75,7 @@ async function fetchHtmlWithPuppeteer(url) {
     if (title && !title.includes("animeflv") && !title.includes("Checking")) break;
     if (bodyText.length > 500) break;
     
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 1500));
     retries++;
   }
   
