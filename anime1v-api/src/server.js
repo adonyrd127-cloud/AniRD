@@ -37,12 +37,16 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) {
+    // En desarrollo, permitir cualquier origen para acceso por red local
+    if (process.env.NODE_ENV !== "production") {
       return callback(null, true);
     }
 
-    if (allowedOrigins.includes(origin)) {
+    if (!origin || origin.includes("localhost") || origin.includes("127.0.0.1")) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
