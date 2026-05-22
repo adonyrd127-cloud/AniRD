@@ -1,4 +1,4 @@
-import{c as d,d as l}from"./page-homepage-Ditd0iT1.js";import"./vendor-DIPEJTOH.js";class p{constructor(e){this.params=e,this.mode="login"}async render(){const e=document.createElement("div");return e.className="auth-container",e.innerHTML=`
+import{c as d,d as l}from"./page-homepage-C8RU0l7O.js";import"./vendor-DIPEJTOH.js";class p{constructor(e){this.params=e,this.mode="login"}async render(){const e=document.createElement("div");return e.className="auth-container",e.innerHTML=`
       <div class="auth-card page-enter">
         <div class="auth-header">
           <img src="/favicon.ico" alt="AniRD Logo" class="auth-logo">
