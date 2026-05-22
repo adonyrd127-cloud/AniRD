@@ -185,6 +185,9 @@ export default class WatchPage {
           <!-- Barra de Controles Premium -->
           <div class="player-controls-v5">
             <div class="player-controls-left">
+              <button class="control-btn-v5" id="btn-back-watch">
+                ⬅ <span>Volver</span>
+              </button>
               <button class="control-btn-v5" id="btn-lights">
                 💡 <span id="lights-text">Apagar Luces</span>
               </button>
@@ -196,6 +199,9 @@ export default class WatchPage {
               </button>
             </div>
             <div class="player-controls-right">
+              <button class="control-btn-v5" id="btn-fullscreen-watch">
+                📺 <span>Pantalla Completa</span>
+              </button>
               <button class="control-btn-v5 ${this.isFav ? 'active' : ''}" id="btn-favorite">
                 ⭐ <span id="fav-text">${this.isFav ? 'Quitar Favorito' : 'Favorito'}</span>
               </button>
@@ -471,6 +477,35 @@ export default class WatchPage {
         this.isFav = added;
         btnFav.classList.toggle('active', added);
         if (favText) favText.textContent = added ? 'Quitar Favorito' : 'Favorito';
+      });
+    }
+
+    // VOLVER ATRÁS
+    const btnBackWatch = document.getElementById('btn-back-watch');
+    if (btnBackWatch) {
+      btnBackWatch.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.history.back();
+      });
+    }
+
+    // PANTALLA COMPLETA
+    const btnFullscreen = document.getElementById('btn-fullscreen-watch');
+    if (btnFullscreen) {
+      btnFullscreen.addEventListener('click', (e) => {
+        e.preventDefault();
+        const iframe = document.querySelector('.video-wrapper-v5 iframe');
+        if (iframe) {
+          if (iframe.requestFullscreen) {
+            iframe.requestFullscreen();
+          } else if (iframe.webkitRequestFullscreen) {
+            iframe.webkitRequestFullscreen();
+          } else if (iframe.mozRequestFullScreen) {
+            iframe.mozRequestFullScreen();
+          } else if (iframe.msRequestFullscreen) {
+            iframe.msRequestFullscreen();
+          }
+        }
       });
     }
   }
