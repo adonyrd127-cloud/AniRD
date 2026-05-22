@@ -45,27 +45,15 @@ async function fetchHtmlWithPuppeteer(url) {
   const browser = await getPuppeteerBrowser();
   const page = await browser.newPage();
   
-  // Activar interceptación de peticiones para bloquear recursos innecesarios
-  // Esto acelera la carga 10 veces y reduce drásticamente el consumo de RAM/CPU en la Orange Pi
-  await page.setRequestInterception(true);
-  page.on("request", (req) => {
-    const resourceType = req.resourceType();
-    if (["image", "stylesheet", "font", "media", "websocket"].includes(resourceType)) {
-      req.abort();
-    } else {
-      req.continue();
-    }
-  });
-  
   await page.setUserAgent(
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
   );
   
-  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
+  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
   
-  // Wait for protection to resolve
+  // Wait for protection to resolve - Lógica exacta de v3.7
   let retries = 0;
-  while (retries < 12) {
+  while (retries < 10) {
     const content = await page.content();
     const $ = cheerio.load(content);
     const title = $("title").text();
@@ -75,7 +63,7 @@ async function fetchHtmlWithPuppeteer(url) {
     if (title && !title.includes("animeflv") && !title.includes("Checking")) break;
     if (bodyText.length > 500) break;
     
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, 2000));
     retries++;
   }
   
