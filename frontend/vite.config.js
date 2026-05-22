@@ -21,7 +21,6 @@ export default defineConfig({
              }
              return 'dependencies';
           }
-          // Split each page into its own chunk for better code-splitting
           if (id.includes('/pages/')) {
             const match = id.match(/pages\/(\w+)/);
             if (match) return `page-${match[1].toLowerCase()}`;
@@ -33,5 +32,9 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
   }
 });
