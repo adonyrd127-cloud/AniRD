@@ -193,9 +193,29 @@ export default class AnimeDetailPage {
       
       try {
         // 1. Intentar buscar siempre primero en el servidor local (AnimeFLV)
-        const searchRes = await apiService.searchLocal(this.anime.title);
-        if (searchRes && searchRes.success && searchRes.data && searchRes.data.results && searchRes.data.results.length > 0) {
-          const bestMatch = searchRes.data.results.find(a => a.title.toLowerCase().includes(this.anime.title.toLowerCase())) || searchRes.data.results[0];
+        // Construimos una lista de títulos posibles para maximizar las probabilidades de encontrarlo en local
+        const titlesToSearch = [
+          this.anime.title,
+          this.anime.title_english,
+          this.anime.title_japanese,
+          ...(this.anime.title_synonyms || [])
+        ].filter(Boolean);
+
+        let searchRes = null;
+        for (const title of titlesToSearch) {
+          const res = await apiService.searchLocal(title);
+          if (res && res.success && res.data && res.data.results && res.data.results.length > 0) {
+            searchRes = res;
+            break;
+          }
+        }
+
+        if (searchRes) {
+          // Encontrar la mejor coincidencia local basándonos en nuestra lista de títulos
+          const bestMatch = searchRes.data.results.find(a => 
+            titlesToSearch.some(t => a.title.toLowerCase().includes(t.toLowerCase()))
+          ) || searchRes.data.results[0];
+
           const infoRes = await apiService.getAnimeInfo(bestMatch.url);
           if (infoRes && infoRes.success && infoRes.data && infoRes.data.episodes) {
             epCount = infoRes.data.episodes.length;
@@ -205,11 +225,11 @@ export default class AnimeDetailPage {
         console.error('Error al buscar episodios locales:', e);
       }
 
-      // 2. Si no se encontró localmente, recurrimos al conteo oficial de MyAnimeList o Jikan
+      // 2. Si no se encontró localmente, recurrimos a los datos oficiales
       if (!epCount) {
-        if (this.anime.episodes) {
-          epCount = this.anime.episodes;
-        } else {
+        // Si el anime está en emisión, no usamos ciegamente this.anime.episodes (que es el total de la temporada entera)
+        // porque mostraría episodios que aún no se han publicado. En su lugar, consultamos los episodios emitidos en Jikan.
+        if (this.anime.status === 'Currently Airing') {
           try {
             const epRes = await apiService.providers.jikan.request(`/anime/${this.animeId}/episodes`);
             if (epRes && epRes.data && epRes.data.length > 0) {
@@ -222,7 +242,29 @@ export default class AnimeDetailPage {
               }
             }
           } catch (e) {
-            console.error('Error consultando Jikan como respaldo:', e);
+            console.error('Error consultando Jikan para episodios emitidos:', e);
+          }
+        }
+        
+        // Si no está en emisión o Jikan falló, usamos el total oficial si existe
+        if (!epCount) {
+          if (this.anime.episodes) {
+            epCount = this.anime.episodes;
+          } else {
+            try {
+              const epRes = await apiService.providers.jikan.request(`/anime/${this.animeId}/episodes`);
+              if (epRes && epRes.data && epRes.data.length > 0) {
+                const lastPage = epRes.pagination.last_visible_page;
+                if (lastPage > 1) {
+                  const lastPageRes = await apiService.providers.jikan.request(`/anime/${this.animeId}/episodes?page=${lastPage}`);
+                  epCount = lastPageRes.data[lastPageRes.data.length - 1].mal_id;
+                } else {
+                  epCount = epRes.data[epRes.data.length - 1].mal_id;
+                }
+              }
+            } catch (e) {
+              console.error('Error consultando Jikan como respaldo:', e);
+            }
           }
         }
       }

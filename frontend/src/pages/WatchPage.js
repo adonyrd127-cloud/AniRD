@@ -35,14 +35,32 @@ export default class WatchPage {
       // Obtener el título del anime como garantía de búsqueda local
       const urlParams = new URLSearchParams(window.location.search);
       const titleHint = urlParams.get('title');
-      const finalSearchTitle = this.anime ? this.anime.title : titleHint;
+      
+      const titlesToSearch = [];
+      if (this.anime) {
+        titlesToSearch.push(this.anime.title);
+        if (this.anime.title_english) titlesToSearch.push(this.anime.title_english);
+        if (this.anime.title_japanese) titlesToSearch.push(this.anime.title_japanese);
+        if (this.anime.title_synonyms) titlesToSearch.push(...this.anime.title_synonyms);
+      }
+      if (titleHint && !titlesToSearch.includes(titleHint)) {
+        titlesToSearch.push(titleHint);
+      }
 
-      if (finalSearchTitle) {
-        // 2. Buscar en el servidor local de streaming
-        const searchRes = await apiService.searchLocal(finalSearchTitle);
-        if (searchRes.success && searchRes.data.results.length > 0) {
+      if (titlesToSearch.length > 0) {
+        // 2. Buscar en el servidor local de streaming usando títulos alternativos
+        let searchRes = null;
+        for (const title of titlesToSearch) {
+          const res = await apiService.searchLocal(title);
+          if (res && res.success && res.data && res.data.results && res.data.results.length > 0) {
+            searchRes = res;
+            break;
+          }
+        }
+
+        if (searchRes) {
           const localAnime = searchRes.data.results.find(a => 
-            a.title.toLowerCase().includes(finalSearchTitle.toLowerCase())
+            titlesToSearch.some(t => a.title.toLowerCase().includes(t.toLowerCase()))
           ) || searchRes.data.results[0];
 
           // Si Jikan falla en cargar, creamos objeto base para que no se rompa la UI
