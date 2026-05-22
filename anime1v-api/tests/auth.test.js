@@ -3,6 +3,12 @@ const assert = require("node:assert");
 const { requireApiKey } = require("../src/middlewares/auth");
 
 test("auth middleware", async (t) => {
+  const originalJwtSecret = process.env.JWT_SECRET;
+  process.env.JWT_SECRET = "testsecret";
+
+  t.after(() => {
+    process.env.JWT_SECRET = originalJwtSecret;
+  });
   await t.test("fail-open auth bypass vulnerability", () => {
     // Setup
     process.env.API_KEYS = ""; // No configured keys
@@ -32,6 +38,12 @@ test("auth middleware", async (t) => {
 });
 
 test("auth middleware checks", async (t) => {
+  const originalJwtSecret = process.env.JWT_SECRET;
+  process.env.JWT_SECRET = "testsecret";
+
+  t.after(() => {
+    process.env.JWT_SECRET = originalJwtSecret;
+  });
   await t.test("accepts valid api key", () => {
     process.env.API_KEYS = "valid-key,other-key";
     process.env.DISABLE_AUTH = "false";
