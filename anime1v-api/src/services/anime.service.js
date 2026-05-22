@@ -77,29 +77,40 @@ function findProviderForUrl(urlCandidate) {
 }
 
 async function executeProviderSearch(providersToTry, query, isForced) {
-  let lastEmpty = null;
-  const errors = [];
-
-  for (const provider of providersToTry) {
+  const promises = providersToTry.map(async (provider) => {
     try {
       const result = await provider.service.searchAnime(query, provider.domains[0]);
       const count = result?.data?.count ?? 0;
-      if (count > 0 || isForced) {
-        return { ...result, source: result?.source || provider.id };
-      }
-      if (!lastEmpty) {
-        lastEmpty = { ...result, source: result?.source || provider.id };
-      }
-    } catch (error) {
-      errors.push({ provider: provider.id, error: error.message });
-    }
-  }
+      const resWithSource = { ...result, source: result?.source || provider.id };
 
-  if (lastEmpty) return lastEmpty;
-  if (errors.length === providersToTry.length && errors[0]?.error) {
-    throw new ApiError(502, `No se pudo completar la busqueda. Errores: ${errors.map(e => e.provider).join(", ")}`);
+      if (count > 0 || isForced) {
+        return resWithSource;
+      } else {
+        throw { type: 'empty', result: resWithSource };
+      }
+    } catch (err) {
+      if (err && err.type === 'empty') throw err;
+      throw { type: 'error', provider: provider.id, error: err.message };
+    }
+  });
+
+  try {
+    return await Promise.any(promises);
+  } catch (aggregateError) {
+    const reasons = aggregateError.errors;
+
+    // Maintain original fallback logic: use the first empty result encountered in the original array order
+    const firstEmpty = reasons.find(r => r.type === 'empty');
+    if (firstEmpty) {
+      return firstEmpty.result;
+    }
+
+    const errors = reasons.filter(r => r.type === 'error');
+    if (errors.length === providersToTry.length && errors[0]?.error) {
+      throw new ApiError(502, `No se pudo completar la busqueda. Errores: ${errors.map(e => e.provider).join(", ")}`);
+    }
+    throw new ApiError(502, "No se pudo completar la busqueda en proveedores");
   }
-  throw new ApiError(502, "No se pudo completar la busqueda en proveedores");
 }
 
 async function searchAnime(query, domainCandidate) {
