@@ -23,31 +23,22 @@ const PROVIDER_DOMAINS = {
   "monoschinos2.com": "MonosChinos",
 };
 
-const DEFAULT_PROVIDER = "animeav1";
-
 function detectProvider(input) {
-  if (!input || typeof input !== "string") return DEFAULT_PROVIDER;
   const lower = input.toLowerCase();
-
-  if (lower.includes("animeav1.com") || lower.includes("animeav1") || lower.includes("https://animeav1.com")) return "animeav1";
-  if (lower.includes("jkanime.net") || lower.includes("jkanime")) return "jkanime";
-  if (lower.includes("animeflv.net") || lower.includes("animeflv")) return "animeflv";
-  if (lower.includes("hentaila.com") || lower.includes("hentaila")) return "hentaila";
-  if (lower.includes("tioanime.com") || lower.includes("tioanime")) return "tioanime";
-  if (lower.includes("monoschinos2.com") || lower.includes("monoschinos")) return "monoschinos";
-
-  return DEFAULT_PROVIDER; // Fallback
+  for (const [domain, label] of Object.entries(PROVIDER_DOMAINS)) {
+    if (lower.includes(domain)) return label;
+  }
+  return null;
 }
 
-function displayHeader() {
+async function main() {
   const _0xfxx = "\x1b[36m\x5B\x43\x72\x65\x61\x64\x6F\x20\x79\x20\x4D\x61\x6E\x74\x65\x6E\x69\x64\x6F\x20\x70\x6F\x72\x20\x46\x78\x78\x4D\x6F\x72\x67\x61\x6E\x20\x2D\x20\x68\x74\x74\x70\x73\x3A\x2F\x2F\x67\x69\x74\x68\x75\x62\x2E\x63\x6F\x6D\x2F\x46\x78\x78\x4D\x6F\x72\x67\x61\x6E\x2F\x5D\x1b[0m";
   console.log("\n╔══════════════════════════════════╗");
   console.log("║     Descargador Anime1v v2      ║");
   console.log("╚══════════════════════════════════╝");
   console.log(_0xfxx);
-}
 
-async function promptMode() {
+  // 1. Provider selection or direct URL
   const { mode } = await prompts({
     type: "select",
     name: "mode",
@@ -58,53 +49,51 @@ async function promptMode() {
       { title: "📋 Link del anime (lista de episodios)", value: "anime" },
     ],
   });
-  return mode;
-}
 
-async function handleDirectMode() {
-  const { url } = await prompts({
-    type: "text",
-    name: "url",
-    message: "Pega el link del episodio (ej. https://hentaila.com/ver/serie-1):",
-    validate: (v) => (v && v.length > 10) ? true : "URL muy corta",
-  });
-  if (!url) {
-    console.log("Cancelado.");
-    return false;
+  if (!mode) return console.log("Cancelado.");
+
+  let animeUrl = "";
+  let providerDomain = "animeav1.com";
+
+  if (mode === "direct") {
+    const { url } = await prompts({
+      type: "text",
+      name: "url",
+      message: "Pega el link del episodio (ej. https://hentaila.com/ver/serie-1):",
+      validate: (v) => (v && v.length > 10) ? true : "URL muy corta",
+    });
+    if (!url) return console.log("Cancelado.");
+
+    // Descarga directa de un episodio
+    const result = downloadService.createDownload(
+      { url: url.trim(), quality: "1080p", variant: "SUB" },
+      "http://localhost"
+    );
+    console.log(`\nDescarga iniciada: ${result.id.slice(0, 8)}`);
+    console.log(`Status: ${result.statusUrl}\n`);
+
+    const bar = new cliProgress.SingleBar({
+      format: "{bar} {percentage}% | {status}",
+      clearOnComplete: true,
+    }, cliProgress.Presets.shades_classic);
+    bar.start(100, 0, { status: "preparando..." });
+
+    const interval = setInterval(() => {
+      try {
+        const s = downloadService.getDownload(result.id);
+        bar.update(s.progress, { status: s.status });
+        if (s.status === "completed" || s.status === "failed") {
+          bar.stop();
+          clearInterval(interval);
+          if (s.fileName) console.log(`Archivo: ${downloadService.getDownloadsDir()}\\${s.fileName}`);
+        }
+      } catch (_) { clearInterval(interval); }
+    }, 1000);
+    return;
   }
 
-  // Descarga directa de un episodio
-  const result = downloadService.createDownload(
-    { url: url.trim(), quality: "1080p", variant: "SUB" },
-    "http://localhost"
-  );
-  console.log(`\nDescarga iniciada: ${result.id.slice(0, 8)}`);
-  console.log(`Status: ${result.statusUrl}\n`);
-
-  const bar = new cliProgress.SingleBar({
-    format: "{bar} {percentage}% | {status}",
-    clearOnComplete: true,
-  }, cliProgress.Presets.shades_classic);
-  bar.start(100, 0, { status: "preparando..." });
-
-  const interval = setInterval(() => {
-    try {
-      const s = downloadService.getDownload(result.id);
-      bar.update(s.progress, { status: s.status });
-      if (s.status === "completed" || s.status === "failed") {
-        bar.stop();
-        clearInterval(interval);
-        if (s.fileName) console.log(`Archivo: ${downloadService.getDownloadsDir()}\\${s.fileName}`);
-      }
-    } catch (_) { clearInterval(interval); }
-  }, 1000);
-
-  return true;
-}
-
-async function handleSearchMode(mode) {
+  // Search or anime URL flow
   let query;
-  let providerDomain = "animeav1.com";
 
   if (mode === "anime") {
     const { url } = await prompts({
@@ -112,10 +101,7 @@ async function handleSearchMode(mode) {
       name: "url",
       message: "Pega el link del anime (ej. https://animeav1.com/media/dragon-ball):",
     });
-    if (!url) {
-      console.log("Cancelado.");
-      return null;
-    }
+    if (!url) return console.log("Cancelado.");
     query = url.trim();
   } else {
     // Select provider first
@@ -126,10 +112,7 @@ async function handleSearchMode(mode) {
       choices: PROVIDERS,
       initial: 0,
     });
-    if (!prov) {
-      console.log("Cancelado.");
-      return null;
-    }
+    if (!prov) return console.log("Cancelado.");
     providerDomain = prov;
 
     const { q } = await prompts({
@@ -138,10 +121,7 @@ async function handleSearchMode(mode) {
       message: "Nombre del anime:",
       validate: (v) => v && v.length >= 2 ? true : "Mínimo 2 caracteres",
     });
-    if (!q) {
-      console.log("Cancelado.");
-      return null;
-    }
+    if (!q) return console.log("Cancelado.");
     query = q;
   }
 
@@ -152,10 +132,9 @@ async function handleSearchMode(mode) {
   console.log();
 
   if (isLink) {
-    let animeUrl = query.trim();
+    animeUrl = query.trim();
     if (!animeUrl.startsWith("http")) animeUrl = `https://${animeUrl}`;
     console.log(`Usando enlace directo: ${animeUrl}`);
-    return animeUrl;
   } else {
     // Search
     console.log(`Buscando "${query}" en ${PROVIDERS.find((p) => p.value === providerDomain)?.title || providerDomain}...`);
@@ -163,7 +142,7 @@ async function handleSearchMode(mode) {
 
     if (!searchResult.data.results || searchResult.data.results.length === 0) {
       console.log("No se encontraron resultados. Intenta en otro proveedor.");
-      return null;
+      return;
     }
 
     const choices = searchResult.data.results
@@ -181,18 +160,17 @@ async function handleSearchMode(mode) {
       warn: "No encontrado",
     });
 
-    if (!answer.animeUrl) return null;
-    return answer.animeUrl;
+    if (!answer.animeUrl) return;
+    animeUrl = answer.animeUrl;
   }
-}
 
-async function getAnimeInfoAndEpisodes(animeUrl) {
+  // 2. Get anime info and episodes
   console.log("\nObteniendo información del anime...");
   const info = await animeService.getAnimeInfo(animeUrl);
 
   if (!info.data.episodes || info.data.episodes.length === 0) {
     console.log("No se encontraron episodios para este anime.");
-    return null;
+    return;
   }
 
   const episodes = info.data.episodes.sort((a, b) => a.number - b.number);
@@ -204,17 +182,14 @@ async function getAnimeInfoAndEpisodes(animeUrl) {
     console.log(`Sinopsis: ${info.data.description.slice(0, 150)}${info.data.description.length > 150 ? "..." : ""}`);
   }
 
-  return { episodes, source };
-}
-
-async function selectEpisodes(episodes) {
+  // 3. Select episodes
   const { targetEpisodes } = await prompts({
     type: "text",
     name: "targetEpisodes",
     message: "Episodios a descargar (ej: 1,3,5-8, todos):",
     initial: "todos",
   });
-  if (!targetEpisodes) return null;
+  if (!targetEpisodes) return;
 
   let episodesToDownload = [];
   const inputCmd = targetEpisodes.trim().toLowerCase();
@@ -244,13 +219,10 @@ async function selectEpisodes(episodes) {
 
   if (episodesToDownload.length === 0) {
     console.log("Ningún episodio seleccionado.");
-    return null;
+    return;
   }
 
-  return episodesToDownload;
-}
-
-async function selectVariant() {
+  // 4. Select variant and quality
   const { variant } = await prompts({
     type: "select",
     name: "variant",
@@ -260,10 +232,9 @@ async function selectVariant() {
       { title: "DUB (Latino/Español)", value: "DUB" },
     ],
   });
-  return variant;
-}
+  if (!variant) return;
 
-async function confirmDownloads(source, episodesToDownload, variant) {
+  // 5. Confirm
   const epNums = episodesToDownload.map((e) => e.number);
   const range = epNums.length > 1
     ? `Episodios ${epNums[0]}-${epNums[epNums.length - 1]} (${epNums.length} eps)`
@@ -282,15 +253,9 @@ async function confirmDownloads(source, episodesToDownload, variant) {
     message: "¿Iniciar descargas?",
     initial: true,
   });
+  if (!confirm) return console.log("Cancelado.");
 
-  if (!confirm) {
-    console.log("Cancelado.");
-    return false;
-  }
-  return true;
-}
-
-function startAndMonitorDownloads(episodesToDownload, variant) {
+  // 6. Start downloads
   console.log(`\nIniciando ${episodesToDownload.length} descargas...\n`);
 
   const multibar = new cliProgress.MultiBar({
@@ -366,53 +331,7 @@ function startAndMonitorDownloads(episodesToDownload, variant) {
   }, 1000);
 }
 
-async function main() {
-  displayHeader();
-
-  const mode = await promptMode();
-  if (!mode) return console.log("Cancelado.");
-
-  if (mode === "direct") {
-    await handleDirectMode();
-    return;
-  }
-
-  const animeUrl = await handleSearchMode(mode);
-  if (!animeUrl) return;
-
-  const info = await getAnimeInfoAndEpisodes(animeUrl);
-  if (!info) return;
-
-  const episodesToDownload = await selectEpisodes(info.episodes);
-  if (!episodesToDownload) return;
-
-  const variant = await selectVariant();
-  if (!variant) return;
-
-  const confirmed = await confirmDownloads(info.source, episodesToDownload, variant);
-  if (!confirmed) return;
-
-  startAndMonitorDownloads(episodesToDownload, variant);
-}
-
-if (require.main === module) {
-  main().catch((err) => {
-    console.error("\nError inesperado:", err.message);
-    process.exit(1);
-  });
-}
-
-module.exports = {
-  detectProvider,
-  DEFAULT_PROVIDER,
-  displayHeader,
-  promptMode,
-  handleDirectMode,
-  handleSearchMode,
-  getAnimeInfoAndEpisodes,
-  selectEpisodes,
-  selectVariant,
-  confirmDownloads,
-  startAndMonitorDownloads,
-  main
-};
+main().catch((err) => {
+  console.error("\nError inesperado:", err.message);
+  process.exit(1);
+});

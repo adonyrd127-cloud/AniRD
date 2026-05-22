@@ -14,18 +14,16 @@ function requireApiKey(req, _res, next) {
     return next();
   }
 
-  // SOLO header X-API-Key (mas seguro que query param)
-  const apiKey = (req.header("x-api-key") || "").trim();
+  const apiKeyFromHeader = req.header("x-api-key");
+  const apiKeyFromQuery = typeof req.query.apiKey === "string" ? req.query.apiKey : "";
+  const apiKey = (apiKeyFromHeader || apiKeyFromQuery || "").trim();
 
   if (!apiKey) {
-    return next(new ApiError(401, "API Key requerida. Usa el header X-API-Key"));
+    return next(new ApiError(401, "API Key requerida. Usa el header X-API-Key o parametro apiKey"));
   }
 
   const configuredKeys = getConfiguredApiKeys();
-  if (configuredKeys.length === 0) {
-    return next(new ApiError(500, "Servidor mal configurado: API_KEYS no definidas"));
-  }
-  if (!configuredKeys.includes(apiKey)) {
+  if (configuredKeys.length > 0 && !configuredKeys.includes(apiKey)) {
     return next(new ApiError(401, "API Key invalida o expirada"));
   }
 

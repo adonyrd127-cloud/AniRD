@@ -1,44 +1,20 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
-const { safeEvaluate } = require("../utils/safe-eval");
+const vm = require("node:vm");
 const { URL } = require("node:url");
 const { ApiError } = require("../utils/api-error");
 
 let puppeteerBrowser = null;
-let browserIdleTimer = null;
-const BROWSER_IDLE_TIMEOUT = 120000; // 2 minutos
 
 async function getPuppeteerBrowser() {
-  if (browserIdleTimer) {
-    clearTimeout(browserIdleTimer);
-    browserIdleTimer = null;
-  }
-
   if (!puppeteerBrowser) {
     const puppeteer = require("puppeteer");
     puppeteerBrowser = await puppeteer.launch({
       headless: true,
-      args: [
-        "--no-sandbox", 
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage", // Indispensable en entornos Docker
-        "--disable-gpu",           // Reduce consumo de CPU en headless
-        "--disable-software-rasterizer",
-        "--mute-audio"
-      ],
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
   }
   return puppeteerBrowser;
-}
-
-function startBrowserIdleTimer() {
-  if (browserIdleTimer) clearTimeout(browserIdleTimer);
-  browserIdleTimer = setTimeout(async () => {
-    if (puppeteerBrowser) {
-      await puppeteerBrowser.close();
-      puppeteerBrowser = null;
-    }
-  }, BROWSER_IDLE_TIMEOUT);
 }
 
 async function fetchHtmlWithPuppeteer(url) {
@@ -51,7 +27,7 @@ async function fetchHtmlWithPuppeteer(url) {
   
   await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
   
-  // Wait for protection to resolve - Lógica exacta de v3.7
+  // Wait for protection to resolve
   let retries = 0;
   while (retries < 10) {
     const content = await page.content();
@@ -70,11 +46,10 @@ async function fetchHtmlWithPuppeteer(url) {
   const content = await page.content();
   await page.close();
   
-  startBrowserIdleTimer();
   return content;
 }
 
-const DEFAULT_DOMAIN = "www4.animeflv.net";
+const DEFAULT_DOMAIN = "www4.animeflv.io";
 
 const HTTP_HEADERS = {
   "User-Agent":
@@ -280,6 +255,18 @@ function extractBalancedSection(text, startIndex, openChar, closeChar) {
   }
 
   return null;
+}
+
+function safeEvaluate(expression) {
+  try {
+    const context = Object.create(null);
+    return vm.runInNewContext(expression, context, {
+      timeout: 1000,
+      displayErrors: false,
+    });
+  } catch (_error) {
+    return null;
+  }
 }
 
 function extractVarLiteral(html, varName) {

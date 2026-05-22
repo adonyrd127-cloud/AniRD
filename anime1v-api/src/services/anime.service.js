@@ -10,39 +10,61 @@ const monoschinosService = require("./monoschinos.service");
 const DEFAULT_ANIME_DOMAIN = process.env.DEFAULT_ANIME_DOMAIN || "animeav1.com";
 
 const PROVIDERS = [
-  { id: "animeav1", label: "AnimeAV1", domains: [DEFAULT_ANIME_DOMAIN, "animeav1.com", "www.animeav1.com"], service: animeav1Service },
-  { id: "jkanime", label: "JKAnime", domains: ["jkanime.net", "www.jkanime.net"], service: jkanimeService },
-  { id: "animeflv", label: "AnimeFLV", domains: ["animeflv.net", "www.animeflv.net", "www4.animeflv.net"], service: animeflvService },
-  { id: "hentaila", label: "HentaiLA", domains: ["hentaila.com", "www.hentaila.com"], service: hentailaService },
-  { id: "tioanime", label: "TioAnime", domains: ["tioanime.com", "www.tioanime.com"], service: tioanimeService },
-  { id: "monoschinos", label: "MonosChinos", domains: ["monoschinos2.com", "www.monoschinos2.com"], service: monoschinosService },
+  {
+    id: "animeav1",
+    label: "AnimeAV1",
+    domains: [DEFAULT_ANIME_DOMAIN, "animeav1.com", "www.animeav1.com"],
+    service: animeav1Service,
+  },
+  {
+    id: "jkanime",
+    label: "JKAnime",
+    domains: ["jkanime.net", "www.jkanime.net"],
+    service: jkanimeService,
+  },
+  {
+    id: "animeflv",
+    label: "AnimeFLV",
+    domains: ["animeflv.net", "www.animeflv.net", "www4.animeflv.net"],
+    service: animeflvService,
+  },
+  // HentaiLA desactivado permanentemente para asegurar un entorno familiar y libre de contenido inapropiado.
+  /*
+  {
+    id: "hentaila",
+    label: "HentaiLA",
+    domains: ["hentaila.com", "www.hentaila.com"],
+    service: hentailaService,
+  },
+  */
+  {
+    id: "tioanime",
+    label: "TioAnime",
+    domains: ["tioanime.com", "www.tioanime.com"],
+    service: tioanimeService,
+  },
+  {
+    id: "monoschinos",
+    label: "MonosChinos",
+    domains: ["monoschinos2.com", "www.monoschinos2.com"],
+    service: monoschinosService,
+  },
 ];
 
-// Caché en memoria para servicio (adicional al middleware HTTP)
-const serviceCache = new Map();
-const SERVICE_CACHE_TTL = Number(process.env.CACHE_TTL_MINUTES || 15) * 60 * 1000;
-
-function scKey(fn, args) {
-  return `${fn}:${JSON.stringify(args)}`;
-}
-
-async function withServiceCache(fnName, args, fn) {
-  const key = scKey(fnName, args);
-  const cached = serviceCache.get(key);
-  if (cached && cached.expiry > Date.now()) {
-    return cached.data;
-  }
-  const data = await fn();
-  serviceCache.set(key, { data, expiry: Date.now() + SERVICE_CACHE_TTL });
-  return data;
-}
-
 function normalizeDomain(value) {
-  if (!value || typeof value !== "string") return null;
+  if (!value || typeof value !== "string") {
+    return null;
+  }
+
   const trimmed = value.trim().toLowerCase();
-  if (!trimmed) return null;
+  if (!trimmed) {
+    return null;
+  }
+
   try {
-    if (trimmed.includes("://")) return new URL(trimmed).hostname.toLowerCase();
+    if (trimmed.includes("://")) {
+      return new URL(trimmed).hostname.toLowerCase();
+    }
     return new URL(`https://${trimmed}`).hostname.toLowerCase();
   } catch (_error) {
     return trimmed.split("/")[0];
@@ -50,24 +72,42 @@ function normalizeDomain(value) {
 }
 
 function domainMatches(domain, candidate) {
-  if (!domain || !candidate) return false;
-  if (domain === candidate) return true;
+  if (!domain || !candidate) {
+    return false;
+  }
+
+  if (domain === candidate) {
+    return true;
+  }
+
   return domain.endsWith(`.${candidate}`);
 }
 
 function findProviderByDomain(domainCandidate) {
   const domain = normalizeDomain(domainCandidate);
-  if (!domain) return null;
-  return PROVIDERS.find((p) => p.domains.some((c) => domainMatches(domain, c))) || null;
+  if (!domain) {
+    return null;
+  }
+
+  return (
+    PROVIDERS.find((provider) => provider.domains.some((candidate) => domainMatches(domain, candidate))) || null
+  );
 }
 
 function findProviderById(providerId) {
-  if (!providerId || typeof providerId !== "string") return null;
-  return PROVIDERS.find((p) => p.id === providerId.trim().toLowerCase()) || null;
+  if (!providerId || typeof providerId !== "string") {
+    return null;
+  }
+
+  const normalized = providerId.trim().toLowerCase();
+  return PROVIDERS.find((provider) => provider.id === normalized) || null;
 }
 
 function findProviderForUrl(urlCandidate) {
-  if (!urlCandidate || typeof urlCandidate !== "string") return null;
+  if (!urlCandidate || typeof urlCandidate !== "string") {
+    return null;
+  }
+
   try {
     const host = new URL(urlCandidate).hostname;
     return findProviderByDomain(host);
@@ -76,68 +116,74 @@ function findProviderForUrl(urlCandidate) {
   }
 }
 
-async function executeProviderSearch(providersToTry, query, isForced) {
-  const promises = providersToTry.map(async (provider) => {
+async function searchAnime(query, domainCandidate) {
+  const forcedProvider = findProviderByDomain(domainCandidate) || findProviderById(domainCandidate);
+  const providersToTry = forcedProvider ? [forcedProvider] : PROVIDERS;
+
+  let lastEmpty = null;
+  const errors = [];
+
+  for (const provider of providersToTry) {
     try {
       const result = await provider.service.searchAnime(query, provider.domains[0]);
       const count = result?.data?.count ?? 0;
-      const resWithSource = { ...result, source: result?.source || provider.id };
-
-      if (count > 0 || isForced) {
-        return resWithSource;
-      } else {
-        throw { type: 'empty', result: resWithSource };
+      if (count > 0 || forcedProvider) {
+        return {
+          ...result,
+          source: result?.source || provider.id,
+        };
       }
-    } catch (err) {
-      if (err && err.type === 'empty') throw err;
-      throw { type: 'error', provider: provider.id, error: err.message };
-    }
-  });
 
-  try {
-    return await Promise.any(promises);
-  } catch (aggregateError) {
-    const reasons = aggregateError.errors;
-
-    // Maintain original fallback logic: use the first empty result encountered in the original array order
-    const firstEmpty = reasons.find(r => r.type === 'empty');
-    if (firstEmpty) {
-      return firstEmpty.result;
+      if (!lastEmpty) {
+        lastEmpty = {
+          ...result,
+          source: result?.source || provider.id,
+        };
+      }
+    } catch (error) {
+      errors.push({ provider: provider.id, error });
     }
-
-    const errors = reasons.filter(r => r.type === 'error');
-    if (errors.length === providersToTry.length && errors[0]?.error) {
-      throw new ApiError(502, `No se pudo completar la busqueda. Errores: ${errors.map(e => e.provider).join(", ")}`);
-    }
-    throw new ApiError(502, "No se pudo completar la busqueda en proveedores");
   }
-}
 
-async function searchAnime(query, domainCandidate) {
-  return withServiceCache("search", { query, domainCandidate }, async () => {
-    const forcedProvider = findProviderByDomain(domainCandidate) || findProviderById(domainCandidate);
-    const providersToTry = forcedProvider ? [forcedProvider] : PROVIDERS;
+  if (lastEmpty) {
+    return lastEmpty;
+  }
 
-    return executeProviderSearch(providersToTry, query, !!forcedProvider);
-  });
+  if (errors.length === providersToTry.length && errors[0]?.error) {
+    throw errors[0].error;
+  }
+
+  throw new ApiError(502, "No se pudo completar la busqueda en proveedores");
 }
 
 async function getAnimeInfo(urlCandidate) {
-  return withServiceCache("info", { urlCandidate }, async () => {
-    const provider = findProviderForUrl(urlCandidate);
-    if (!provider) throw new ApiError(400, "Proveedor no soportado");
-    const result = await provider.service.getAnimeInfo(urlCandidate);
-    return { ...result, source: result?.source || provider.id };
-  });
+  const provider = findProviderForUrl(urlCandidate) || PROVIDERS[0];
+  if (!provider) {
+    throw new ApiError(400, "Proveedor no soportado");
+  }
+
+  const result = await provider.service.getAnimeInfo(urlCandidate);
+  return {
+    ...result,
+    source: result?.source || provider.id,
+  };
 }
 
 async function getEpisodeLinks(urlCandidate, includeMega, excludeServers) {
-  return withServiceCache("episode", { urlCandidate, includeMega, excludeServers }, async () => {
-    const provider = findProviderForUrl(urlCandidate);
-    if (!provider) throw new ApiError(400, "Proveedor no soportado");
-    const result = await provider.service.getEpisodeLinks(urlCandidate, includeMega, excludeServers);
-    return { ...result, source: result?.source || provider.id };
-  });
+  const provider = findProviderForUrl(urlCandidate) || PROVIDERS[0];
+  if (!provider) {
+    throw new ApiError(400, "Proveedor no soportado");
+  }
+
+  const result = await provider.service.getEpisodeLinks(urlCandidate, includeMega, excludeServers);
+  return {
+    ...result,
+    source: result?.source || provider.id,
+  };
 }
 
-module.exports = { searchAnime, getAnimeInfo, getEpisodeLinks, normalizeDomain };
+module.exports = {
+  searchAnime,
+  getAnimeInfo,
+  getEpisodeLinks,
+};

@@ -1,24 +1,23 @@
 {
-  "name": "anird-api",
-  "version": "3.0.0",
-  "description": "Backend AniRD - API de anime personal",
+  "name": "anime1v-api",
+  "version": "1.0.0",
+  "description": "Backend reconstruido para Anime1v API",
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "JWT_SECRET=testsecret node --test tests/**/*.test.js tests/*.test.js"
+    "check": "node --check src/server.js"
   },
   "keywords": [
     "anime",
     "api",
     "scraper",
-    "personal"
+    "animeav1"
   ],
-  "author": "AniRD",
+  "author": "FxxMorgan",
   "license": "MIT",
   "dependencies": {
-    "acorn": "^8.16.0",
     "axios": "^1.9.0",
     "bcryptjs": "^2.4.3",
     "cheerio": "^1.0.0",
@@ -35,9 +34,6 @@
     "puppeteer": "^24.42.0"
   },
   "devDependencies": {
-    "jest": "^30.4.2",
-    "nodemon": "^3.1.4",
-    "rewire": "^7.0.0",
-    "supertest": "^7.2.2"
+    "nodemon": "^3.1.4"
   }
 }
