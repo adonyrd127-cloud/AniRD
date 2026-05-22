@@ -34,7 +34,7 @@ export default class AuthPage {
             <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
           </div>
           <div id="auth-error" class="auth-error hidden"></div>
-          <button type="submit" class="btn-primary auth-submit" style="width: 100%; padding: 12px; background: var(--accent); color: white; border-radius: 8px; font-weight: bold; cursor: pointer;">
+          <button type="submit" class="auth-submit-btn">
             <span id="submit-text">Iniciar Sesión</span>
             <div class="loader-small hidden" id="auth-loader"></div>
           </button>
