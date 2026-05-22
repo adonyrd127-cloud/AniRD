@@ -82,11 +82,42 @@ header.innerHTML = `
     </div>
   </nav>
 
-  <nav class="mobile-nav">
-     <a href="/" data-link class="mobile-nav-item">🏠<span>Inicio</span></a>
-     <a href="#" class="mobile-nav-item" id="mobile-search-btn">🔍<span>Buscar</span></a>
-     <a href="/calendar" data-link class="mobile-nav-item">📅<span>Emisiones</span></a>
-     <a id="mobile-profile-link" href="/auth" data-link class="mobile-nav-item">👤<span>Entrar</span></a>
+  <nav class="mobile-nav bottom-nav" id="bottomNav">
+     <a href="/" data-link class="nav-item">
+       <div class="nav-icon">
+         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+           <polyline points="9 22 9 12 15 12 15 22"/>
+         </svg>
+       </div>
+       <div class="nav-label">Inicio</div>
+     </a>
+     <a href="#" class="nav-item" id="mobile-search-btn">
+       <div class="nav-icon">
+         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+           <circle cx="11" cy="11" r="8"/>
+           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+         </svg>
+       </div>
+       <div class="nav-label">Buscar</div>
+     </a>
+     <a href="/favorites" data-link class="nav-item">
+       <div class="nav-icon">
+         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+           <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+         </svg>
+       </div>
+       <div class="nav-label">Fav</div>
+     </a>
+     <a id="mobile-profile-link" href="/auth" data-link class="nav-item">
+       <div class="nav-icon">
+         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+           <circle cx="12" cy="7" r="4"/>
+         </svg>
+       </div>
+       <div class="nav-label">Entrar</div>
+     </a>
   </nav>
 `;
 document.body.insertBefore(header, appContainer);
@@ -105,13 +136,45 @@ const updateNavbarAuth = () => {
   }
   if (mobileProfileLink) {
     mobileProfileLink.setAttribute('href', targetPath);
-    const span = mobileProfileLink.querySelector('span:last-child');
-    if (span) span.textContent = targetText;
+    const label = mobileProfileLink.querySelector('.nav-label');
+    if (label) label.textContent = isLoggedIn ? 'Perfil' : 'Entrar';
   }
 };
 
+const updateMobileNavActive = (route) => {
+  const bottomNav = document.getElementById('bottomNav');
+  if (!bottomNav) return;
+  const items = bottomNav.querySelectorAll('.nav-item');
+  items.forEach((item) => {
+    item.classList.remove('active');
+    const svg = item.querySelector('svg');
+    if (svg) svg.setAttribute('stroke-width', '1.8');
+  });
+
+  let activeIndex = -1;
+  if (route === '/' || route.startsWith('/anime/') || route.startsWith('/category/') || route.startsWith('/watch/') || route === '/calendar') {
+    activeIndex = 0; // Inicio (o categorías/reproductor/calendario que pertenecen a la sección de Inicio/Exploración)
+  } else if (route === '/favorites') {
+    activeIndex = 2; // Fav
+  } else if (route === '/profile' || route === '/auth') {
+    activeIndex = 3; // Perfil / Entrar
+  }
+
+  if (activeIndex !== -1 && items[activeIndex]) {
+    items[activeIndex].classList.add('active');
+    const svg = items[activeIndex].querySelector('svg');
+    if (svg) svg.setAttribute('stroke-width', '2.2');
+  }
+};
+
+// Suscribirse a cambios de ruta de Zustand
+useAppStore.subscribe((state) => {
+  updateMobileNavActive(state.currentRoute);
+});
+
 window.updateNavbarAuth = updateNavbarAuth;
 updateNavbarAuth();
+updateMobileNavActive(window.location.pathname);
 
 document.getElementById('open-search-btn').addEventListener('click', () => searchPalette.open());
 document.getElementById('mobile-search-btn').addEventListener('click', (e) => {

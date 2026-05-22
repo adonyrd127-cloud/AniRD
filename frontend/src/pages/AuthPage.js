@@ -12,7 +12,11 @@ export default class AuthPage {
     container.className = 'auth-container';
     
     container.innerHTML = `
-      <div class="auth-card page-enter">
+      <div class="login-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+      </div>
+      <div class="auth-card glass-card page-enter">
         <div class="auth-header">
           <img src="/favicon.ico" alt="AniRD Logo" class="auth-logo">
           <h1>AniRD Cloud</h1>

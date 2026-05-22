@@ -66,6 +66,28 @@ export class AnimeCard extends HTMLElement {
           width: ${isThumbnail ? '320px' : '185px'};
           flex-shrink: 0;
         }
+        @media (max-width: 768px) {
+          :host {
+            width: ${isThumbnail ? '180px' : '135px'} !important;
+          }
+          .img-box {
+            border-radius: 14px !important;
+            margin-bottom: 8px !important;
+          }
+          .title-v4 {
+            font-size: 11px !important;
+          }
+          .meta-v4 {
+            font-size: 8px !important;
+          }
+          .rating-v4 {
+            top: 6px !important;
+            left: 6px !important;
+            padding: 2px 6px !important;
+            font-size: 9px !important;
+            border-radius: 6px !important;
+          }
+        }
         .card-v4 {
           position: relative;
           cursor: pointer;

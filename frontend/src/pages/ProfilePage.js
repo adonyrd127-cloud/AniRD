@@ -116,6 +116,10 @@ export default class ProfilePage {
           padding: 40px;
         }
 
+        .sync-btn-mobile {
+          display: none;
+        }
+
         @media (max-width: 900px) {
           .profile-hero-v5 { height: auto; padding: 100px 5% 40px; }
           .user-meta-v5 { flex-direction: column; text-align: center; }
@@ -147,6 +151,13 @@ export default class ProfilePage {
 
       <div class="tab-content-v5" id="profile-tab-content">
         <!-- Contenido dinámico -->
+      </div>
+      
+      <div class="sync-btn-mobile" id="sync-btn-profile-mobile">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-secondary);">
+            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+        </svg>
+        Sincronizar con Orange Pi
       </div>
     `;
 
@@ -318,6 +329,28 @@ export default class ProfilePage {
     tabs.forEach(tab => {
       tab.addEventListener('click', () => renderTab(tab.dataset.tab));
     });
+
+    // Botón de sincronización móvil
+    const mobileSyncBtn = document.getElementById('sync-btn-profile-mobile');
+    if (mobileSyncBtn) {
+      mobileSyncBtn.addEventListener('click', async () => {
+        const originalHTML = mobileSyncBtn.innerHTML;
+        mobileSyncBtn.innerHTML = `Sincronizando...`;
+        try {
+          const localData = await dbService.getAllData();
+          await authService.syncWithServer(localData);
+          mobileSyncBtn.innerHTML = `¡Sincronizado con éxito!`;
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } catch (err) {
+          mobileSyncBtn.innerHTML = `Error: ${err.message}`;
+          setTimeout(() => {
+            mobileSyncBtn.innerHTML = originalHTML;
+          }, 3000);
+        }
+      });
+    }
 
     // Render inicial
     await renderTab('list');
