@@ -3002,5 +3002,124 @@ body.tv-mode .anime-grid {
   gap: 30px !important;
 }
 
+/* ==========================================================================
+   🌐 ESTILOS PREMIUM PARA LA VERSIÓN WEB CON BARRA LATERAL COLAPSADA
+   ========================================================================== */
+
+/* Contenedor de Categorías en Cabecera */
+.header-categories-v4 {
+  display: none !important;
+  align-items: center;
+  gap: 12px;
+  margin-left: 25px;
+}
+
+@media (min-width: 1024px) {
+  body.sidebar-collapsed .header-categories-v4 {
+    display: flex !important;
+  }
+  
+  /* Mostrar el enlace de Perfil en cabecera sólo cuando la barra lateral está colapsada */
+  body.sidebar-collapsed .nav-v4 #profile-link {
+    display: flex !important;
+  }
+}
+
+.header-cat-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.header-cat-link:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+}
+
+/* Dropdown de Géneros en Cabecera */
+.header-cat-dropdown {
+  position: relative;
+}
+
+.header-cat-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  font-family: var(--font-main);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  display: flex;
+  align-items: center;
+}
+
+.header-cat-btn:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.header-cat-dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  transform: translateY(12px);
+  background: rgba(9, 10, 16, 0.96); /* Mismo tono azul marino profundo premium */
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 20px;
+  width: 320px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2000;
+}
+
+.header-cat-dropdown:hover .header-cat-dropdown-content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(6px);
+}
+
+.header-genre-sublink {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  display: block;
+}
+
+.header-genre-sublink:hover {
+  color: white;
+  background: rgba(255, 0, 85, 0.12);
+  padding-left: 16px;
+}
+
 
 

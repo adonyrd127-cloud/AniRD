@@ -28,6 +28,37 @@ header.innerHTML = `
       <div class="nav-divider-desktop"></div>
     </div>
     
+    <!-- Contenedor de Categorías en Header (visible solo al colapsar barra lateral en PC) -->
+    <div class="header-categories-v4" id="header-categories">
+      <a href="/category/popular" data-link class="header-cat-link">🔥 Populares</a>
+      <a href="/category/movies" data-link class="header-cat-link">🎬 Películas</a>
+      <a href="/category/dub" data-link class="header-cat-link">🎙️ Latino</a>
+      
+      <!-- Dropdown de Géneros en Cabecera -->
+      <div class="header-cat-dropdown">
+        <button class="header-cat-btn" id="header-genres-trigger">
+          Géneros <span style="font-size: 10px; margin-left: 4px;">▼</span>
+        </button>
+        <div class="header-cat-dropdown-content" id="header-genres-dropdown">
+          <a href="/category/action" data-link class="header-genre-sublink">Acción</a>
+          <a href="/category/adventure" data-link class="header-genre-sublink">Aventura</a>
+          <a href="/category/comedy" data-link class="header-genre-sublink">Comedia</a>
+          <a href="/category/drama" data-link class="header-genre-sublink">Drama</a>
+          <a href="/category/fantasy" data-link class="header-genre-sublink">Fantasía</a>
+          <a href="/category/music" data-link class="header-genre-sublink">Musical</a>
+          <a href="/category/romance" data-link class="header-genre-sublink">Romance</a>
+          <a href="/category/sci-fi" data-link class="header-genre-sublink">Ciencia Ficción</a>
+          <a href="/category/seinen" data-link class="header-genre-sublink">Seinen</a>
+          <a href="/category/shoujo" data-link class="header-genre-sublink">Shoujo</a>
+          <a href="/category/shounen" data-link class="header-genre-sublink">Shounen</a>
+          <a href="/category/slice-of-life" data-link class="header-genre-sublink">Recuentos de la Vida</a>
+          <a href="/category/sports" data-link class="header-genre-sublink">Deportes</a>
+          <a href="/category/supernatural" data-link class="header-genre-sublink">Sobrenatural</a>
+          <a href="/category/thriller" data-link class="header-genre-sublink">Thriller</a>
+        </div>
+      </div>
+    </div>
+
     <!-- Contenedor del centro: Barra de búsqueda simulada para escritorio -->
     <div class="nav-center-container">
       <div class="search-bar-desktop" id="desktop-search-trigger">
