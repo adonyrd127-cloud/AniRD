@@ -21,7 +21,7 @@ router.post("/register", async (req, res, next) => {
       throw new ApiError(400, "El usuario ya existe");
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = {
       username,
       password: hashedPassword,
