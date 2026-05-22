@@ -5,6 +5,7 @@ import { dbService, db } from './services/db.js';
 import { SearchPalette } from './components/SearchPalette.js';
 import { getRouter } from './app.js';
 import { authService } from './services/auth.service.js';
+import { spatialNavigation } from './services/spatialNavigation.js';
 
 const appContainer = document.getElementById('app');
 const router = getRouter(appContainer);
@@ -209,6 +210,16 @@ sidebar.innerHTML = `
         </div>
       </div>
     </li>
+    <li>
+      <button class="sidebar-link" id="tv-mode-toggle" style="background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
+        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="13" rx="2" ry="2"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+        </svg>
+        <span id="tv-mode-text">Modo TV: APAGADO</span>
+      </button>
+    </li>
   </ul>
 
   <hr class="sidebar-divider">
@@ -352,6 +363,13 @@ useAppStore.subscribe((state) => {
   updateMobileNavActive(state.currentRoute);
   updateSidebarActive(state.currentRoute);
   renderSidebarFollowing();
+  
+  if (spatialNavigation.isActive) {
+    setTimeout(() => {
+      spatialNavigation.updateFocusables();
+      spatialNavigation.focusFirstAvailable();
+    }, 400); // Allow smooth page mounting
+  }
 });
 
 window.updateNavbarAuth = updateNavbarAuth;
@@ -464,6 +482,51 @@ const initNotifications = async () => {
   await updateUI();
 };
 
+const setupTVMode = () => {
+  const toggleBtn = document.getElementById('tv-mode-toggle');
+  const toggleText = document.getElementById('tv-mode-text');
+  
+  const updateToggleUI = (active) => {
+    if (toggleText) {
+      toggleText.textContent = active ? '📺 Modo TV: ON' : '📺 Modo TV: OFF';
+    }
+    if (toggleBtn) {
+      if (active) {
+        toggleBtn.classList.add('active');
+      } else {
+        toggleBtn.classList.remove('active');
+      }
+    }
+  };
+
+  const toggleTVMode = () => {
+    if (spatialNavigation.isActive) {
+      spatialNavigation.destroy();
+      updateToggleUI(false);
+    } else {
+      spatialNavigation.init();
+      updateToggleUI(true);
+    }
+  };
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleTVMode();
+    });
+  }
+
+  const isSavedTV = localStorage.getItem('tvMode') === 'true';
+  const isSmartTV = /SmartTV|GoogleTV|AppleTV|HbbTV|LG NetCast|Opera TV|Tizen|Web0S|Nexus Player|AndroidTV|Roku/i.test(navigator.userAgent);
+  
+  if (isSavedTV || (localStorage.getItem('tvMode') === null && isSmartTV)) {
+    spatialNavigation.init();
+    updateToggleUI(true);
+  } else {
+    updateToggleUI(false);
+  }
+};
+
 const initApp = async () => {
     const theme = await dbService.getSetting('theme', 'dark');
     if (theme === 'light') document.body.classList.add('light-theme');
@@ -474,6 +537,9 @@ const initApp = async () => {
       } catch (err) { console.error('Sync fail'); }
     }
     await initNotifications();
+    
+    // Initialize TV mode toggle and auto-detection
+    setTimeout(setupTVMode, 200);
 };
 
 initApp();
