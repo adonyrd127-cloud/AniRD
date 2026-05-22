@@ -101,6 +101,7 @@ class SpatialNavigationService {
       '.sidebar-link',
       '.search-bar-desktop',
       '.header-profile-btn',
+      '#header-tv-toggle',
       '.server-btn',
       '.player-control-btn',
       '.category-item',
@@ -123,8 +124,8 @@ class SpatialNavigationService {
       // Basic disabled check
       if (el.disabled || el.getAttribute('aria-disabled') === 'true') return false;
 
-      // TV Mode Toggle button itself should always be focusable
-      if (el.id === 'tv-mode-toggle') return true;
+      // TV Mode Toggle buttons should always be focusable
+      if (el.id === 'tv-mode-toggle' || el.id === 'header-tv-toggle') return true;
 
       // Visibility and size check
       const rect = el.getBoundingClientRect();

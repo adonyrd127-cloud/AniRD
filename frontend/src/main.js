@@ -34,6 +34,11 @@ header.innerHTML = `
 
     <!-- Contenedor derecho: Notificaciones y perfil dinámico -->
     <div class="nav-right" style="display: flex; align-items: center;">
+      <!-- Botón de Modo TV Global Premium (para fácil activación en TVs/móviles) -->
+      <button id="header-tv-toggle" class="header-tv-toggle" title="Activar Modo TV" style="margin-right: 20px; background: rgba(255,255,255,0.05); border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 18px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+        📺
+      </button>
+
       <!-- Campana de Notificaciones original intacta -->
       <div class="nav-notifications" id="nav-notifications" style="position: relative; margin-right: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.05); transition: all 0.3s ease;">
         <span style="font-size: 18px; filter: grayscale(1) contrast(2);">🔔</span>
@@ -485,6 +490,7 @@ const initNotifications = async () => {
 const setupTVMode = () => {
   const toggleBtn = document.getElementById('tv-mode-toggle');
   const toggleText = document.getElementById('tv-mode-text');
+  const headerToggleBtn = document.getElementById('header-tv-toggle');
   
   const updateToggleUI = (active) => {
     if (toggleText) {
@@ -495,6 +501,19 @@ const setupTVMode = () => {
         toggleBtn.classList.add('active');
       } else {
         toggleBtn.classList.remove('active');
+      }
+    }
+    if (headerToggleBtn) {
+      if (active) {
+        headerToggleBtn.classList.add('active');
+        headerToggleBtn.style.background = 'rgba(255, 0, 85, 0.2)';
+        headerToggleBtn.style.boxShadow = '0 0 15px rgba(255, 0, 85, 0.4)';
+        headerToggleBtn.style.border = '1px solid rgba(255, 0, 85, 0.4)';
+      } else {
+        headerToggleBtn.classList.remove('active');
+        headerToggleBtn.style.background = 'rgba(255,255,255,0.05)';
+        headerToggleBtn.style.boxShadow = 'none';
+        headerToggleBtn.style.border = 'none';
       }
     }
   };
@@ -516,8 +535,15 @@ const setupTVMode = () => {
     });
   }
 
+  if (headerToggleBtn) {
+    headerToggleBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleTVMode();
+    });
+  }
+
   const isSavedTV = localStorage.getItem('tvMode') === 'true';
-  const isSmartTV = /SmartTV|GoogleTV|AppleTV|HbbTV|LG NetCast|Opera TV|Tizen|Web0S|Nexus Player|AndroidTV|Roku/i.test(navigator.userAgent);
+  const isSmartTV = /SmartTV|GoogleTV|AppleTV|HbbTV|LG NetCast|Opera TV|Tizen|Web0S|Nexus Player|AndroidTV|Roku|AFT|Silk|FireTV|Amazon/i.test(navigator.userAgent);
   
   if (isSavedTV || (localStorage.getItem('tvMode') === null && isSmartTV)) {
     spatialNavigation.init();

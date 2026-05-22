@@ -2160,6 +2160,7 @@ body {
     background: rgba(255,255,255,0.05);
     border-radius: 2px;
   }
+}
 
   /* Logo en barra lateral */
   .sidebar-logo {
@@ -2318,6 +2319,7 @@ body {
     line-height: 1.4;
   }
 
+@media (min-width: 1024px) {
   /* --- Modificaciones del Layout de Escritorio --- */
   
   /* Ajustar contenedor principal */
@@ -2625,23 +2627,82 @@ body.tv-mode .mobile-nav.bottom-nav {
   display: none !important;
 }
 
-/* Agrandar barra lateral para pantallas grandes */
+/* Forzar y adaptar la barra lateral en TV a cualquier resolución */
 body.tv-mode .desktop-sidebar {
+  display: flex !important;
+  flex-direction: column !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
   width: 320px !important;
   background: rgba(10, 10, 15, 0.95) !important;
   backdrop-filter: blur(30px) !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+  z-index: 1001 !important;
+  padding-top: 30px !important;
+  padding-bottom: 20px !important;
+  overflow-y: auto !important;
 }
 
 body.tv-mode #app {
+  display: block !important;
   margin-left: 320px !important;
   padding: 40px !important;
+  min-height: 100vh !important;
 }
 
 body.tv-mode .nav-v4 {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  height: 70px !important;
   left: 320px !important;
   padding: 20px 40px !important;
   background: rgba(5, 5, 8, 0.8) !important;
+  backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
+  z-index: 1000 !important;
+}
+
+/* Forzar la cabecera a mostrar controles tipo desktop en TV */
+body.tv-mode .nav-divider-desktop,
+body.tv-mode .nav-center-container,
+body.tv-mode .header-profile-btn {
+  display: flex !important;
+}
+
+body.tv-mode .nav-divider-desktop {
+  display: block !important;
+}
+
+body.tv-mode .nav-v4 .nav-links,
+body.tv-mode .nav-v4 .search-pill,
+body.tv-mode .nav-v4 .btn-profile,
+body.tv-mode .nav-v4 #profile-link {
+  display: none !important;
+}
+
+body.tv-mode .page-container {
+  padding-top: 90px !important;
+}
+
+/* Botón de Modo TV Global en el Header */
+.header-tv-toggle {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.header-tv-toggle:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: scale(1.1);
+}
+
+.tv-mode .header-tv-toggle.focused {
+  outline: none !important;
+  transform: scale(1.15) !important;
+  background: var(--accent) !important;
+  box-shadow: 0 0 20px var(--accent-glow) !important;
+  border: 1px solid var(--accent) !important;
 }
 
 /* Reproductor en Modo TV */
