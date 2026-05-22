@@ -235,14 +235,41 @@ export default class HomePage {
 
         await Promise.all(cardSlots.map(async ({ card, item }) => {
           try {
-            const animeRes = await apiService.getAnimeInfo(item.animeId);
-            if (animeRes && animeRes.data) {
-              card.data = { 
-                ...animeRes.data, 
+            // Check if we have cached metadata in history item
+            if (item.animeTitle && item.animeCover) {
+              card.data = {
+                mal_id: item.animeId,
+                title: item.animeTitle,
+                images: { jpg: { large_image_url: item.animeCover } },
+                type: item.animeType || '',
+                score: item.animeScore || '',
                 currentEpisode: item.episodeId,
                 progress: item.progress || 0,
                 duration_watched: item.duration || 0
               };
+
+              // Still fetch in background to populate cache if needed
+              apiService.getAnimeInfo(item.animeId).then(animeRes => {
+                if (animeRes && animeRes.data) {
+                  card.data = {
+                    ...animeRes.data,
+                    currentEpisode: item.episodeId,
+                    progress: item.progress || 0,
+                    duration_watched: item.duration || 0
+                  };
+                }
+              }).catch(e => {});
+            } else {
+              // Fallback to direct fetch
+              const animeRes = await apiService.getAnimeInfo(item.animeId);
+              if (animeRes && animeRes.data) {
+                card.data = {
+                  ...animeRes.data,
+                  currentEpisode: item.episodeId,
+                  progress: item.progress || 0,
+                  duration_watched: item.duration || 0
+                };
+              }
             }
           } catch (e) { }
         }));

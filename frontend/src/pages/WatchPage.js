@@ -362,11 +362,18 @@ export default class WatchPage {
               window.activeWatchInterval = null;
               console.log("[WatchTimer] 2 minutos cumplidos. Marcando como visto automáticamente.");
 
+              const meta = this.anime ? {
+                animeTitle: this.anime.title,
+                animeCover: this.anime.images?.jpg?.large_image_url || this.anime.cover || '',
+                animeType: this.anime.type || '',
+                animeScore: this.anime.score || ''
+              } : {};
               await dbService.addToHistory(
                 String(this.animeId),
                 this.episodeNum,
                 120,
-                120
+                120,
+                meta
               );
               this.watchedEpisodes.add(this.episodeNum);
 
@@ -688,7 +695,13 @@ export default class WatchPage {
           await dbService.triggerSync();
         } else {
           // Marcar: agregar a IndexedDB
-          await dbService.addToHistory(String(this.animeId), this.episodeNum, 120, 120);
+          const meta = this.anime ? {
+            animeTitle: this.anime.title,
+            animeCover: this.anime.images?.jpg?.large_image_url || this.anime.cover || '',
+            animeType: this.anime.type || '',
+            animeScore: this.anime.score || ''
+          } : {};
+          await dbService.addToHistory(String(this.animeId), this.episodeNum, 120, 120, meta);
           this.watchedEpisodes.add(this.episodeNum);
           btnWatchedStatus.classList.add('active');
           if (watchedStatusText) watchedStatusText.textContent = 'Visto';
