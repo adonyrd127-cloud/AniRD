@@ -27,6 +27,9 @@ class SpatialNavigationService {
     // Setup mutation observer to automatically re-scan when DOM changes
     this.setupMutationObserver();
 
+    // Lock window scroll to prevent layout shifting on Smart TVs
+    this.lockWindowScroll();
+
     // Perform initial scan and focus
     setTimeout(() => {
       this.updateFocusables();
@@ -47,6 +50,9 @@ class SpatialNavigationService {
     // Remove keydown listener
     window.removeEventListener('keydown', this.handleKeyDownBound, { capture: true });
 
+    // Unlock window scroll
+    this.unlockWindowScroll();
+
     // Disconnect mutation observer
     if (this.mutationObserver) {
       this.mutationObserver.disconnect();
@@ -64,6 +70,29 @@ class SpatialNavigationService {
     allFocused.forEach(el => el.classList.remove('focused'));
 
     console.log("📺 AniRD Spatial Navigation (Smart TV Mode) destroyed.");
+  }
+
+  lockWindowScroll() {
+    this.scrollListener = () => {
+      if (window.scrollY !== 0 || window.scrollX !== 0 || document.documentElement.scrollTop !== 0 || document.body.scrollTop !== 0) {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }
+    };
+    window.addEventListener('scroll', this.scrollListener, { passive: true });
+    
+    // Snap scroll to top immediately upon initialization
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
+
+  unlockWindowScroll() {
+    if (this.scrollListener) {
+      window.removeEventListener('scroll', this.scrollListener, { passive: true });
+      this.scrollListener = null;
+    }
   }
 
   setupMutationObserver() {
@@ -183,9 +212,13 @@ class SpatialNavigationService {
     this.focusedElement = element;
     this.focusedElement.classList.add('focused');
 
-    // Call native focus so browser keyboard events work seamlessly (especially for inputs)
+    // Call native focus with preventScroll option so the browser doesn't automatically scroll
     if (typeof this.focusedElement.focus === 'function') {
-      this.focusedElement.focus();
+      try {
+        this.focusedElement.focus({ preventScroll: true });
+      } catch (err) {
+        this.focusedElement.focus();
+      }
     }
 
     // Scroll centered or in nearest viewport space smoothly

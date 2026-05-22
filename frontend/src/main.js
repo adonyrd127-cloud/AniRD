@@ -15,8 +15,15 @@ const searchPalette = new SearchPalette(router);
 const header = document.createElement('header');
 header.innerHTML = `
   <nav class="nav-v4" id="main-navbar">
-    <!-- Contenedor izquierdo: Logo y divisor para escritorio -->
-    <div class="nav-left-container">
+    <!-- Contenedor izquierdo: Botón de colapsar, Logo y divisor para escritorio -->
+    <div class="nav-left-container" style="display: flex; align-items: center; gap: 15px;">
+      <button id="sidebar-collapse-btn" class="sidebar-collapse-btn" title="Colapsar Barra Lateral">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
       <a href="/" data-link class="nav-logo">AniRD <span class="logo-cloud">☁️</span></a>
       <div class="nav-divider-desktop"></div>
     </div>
@@ -34,10 +41,6 @@ header.innerHTML = `
 
     <!-- Contenedor derecho: Notificaciones y perfil dinámico -->
     <div class="nav-right" style="display: flex; align-items: center;">
-      <!-- Botón de Modo TV Global Premium (para fácil activación en TVs/móviles) -->
-      <button id="header-tv-toggle" class="header-tv-toggle" title="Activar Modo TV" style="margin-right: 20px; background: rgba(255,255,255,0.05); border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 18px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
-        📺
-      </button>
 
       <!-- Campana de Notificaciones original intacta -->
       <div class="nav-notifications" id="nav-notifications" style="position: relative; margin-right: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.05); transition: all 0.3s ease;">
@@ -404,6 +407,21 @@ if (categoriesTrigger && categoriesDropdown) {
     e.preventDefault();
     categoriesTrigger.classList.toggle('expanded');
     categoriesDropdown.classList.toggle('expanded');
+  });
+}
+
+// Lógica para colapsar y ocultar la barra lateral en PC con persistencia
+const sidebarCollapseBtn = document.getElementById('sidebar-collapse-btn');
+if (sidebarCollapseBtn) {
+  const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+  if (isCollapsed) {
+    document.body.classList.add('sidebar-collapsed');
+  }
+
+  sidebarCollapseBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const currentlyCollapsed = document.body.classList.toggle('sidebar-collapsed');
+    localStorage.setItem('sidebarCollapsed', currentlyCollapsed ? 'true' : 'false');
   });
 }
 

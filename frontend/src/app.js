@@ -124,6 +124,11 @@ export class AppRouter {
       this.root.appendChild(await page.render());
 
       if(page.afterRender) page.afterRender();
+
+      // Reset scroll position on route change to start clean at the top
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
     } catch(e) {
       console.error("Error loading route", e);
       this.root.innerHTML = '<div style="padding: 50px; text-align: center; color: red;">Error al cargar la página</div>';

@@ -1,5 +1,6 @@
 import { apiService } from '../services/api.js';
 import { dbService, db } from '../services/db.js';
+import { getRouter } from '../app.js';
 
 export default class WatchPage {
   constructor(params) {
@@ -431,6 +432,17 @@ export default class WatchPage {
 
     // MODO CINE
     const updateTheaterDOM = (active) => {
+      // En modo TV, el reproductor debe estar SIEMPRE en la raíz del grid (no metido en mainColumn)
+      // para evitar que se desplace al hacer scroll o al enfocar otros elementos de detalles
+      const isTV = document.body.classList.contains('tv-mode') || localStorage.getItem('tvMode') === 'true';
+      if (isTV) {
+        layout.classList.remove('theater-active');
+        if (playerSection.parentElement !== layout) {
+          layout.insertBefore(playerSection, layout.firstChild);
+        }
+        return;
+      }
+
       if (active) {
         layout.classList.add('theater-active');
         layout.insertBefore(playerSection, layout.firstChild);
@@ -442,7 +454,8 @@ export default class WatchPage {
       }
     };
 
-    if (this.isTheater) updateTheaterDOM(true);
+    // Llamar siempre para aplicar la lógica del modo TV inicialmente
+    updateTheaterDOM(this.isTheater);
 
     if (btnTheater) {
       btnTheater.addEventListener('click', () => {
@@ -537,8 +550,15 @@ export default class WatchPage {
     langPills.forEach(pill => {
       pill.addEventListener('click', (e) => {
         const selectedLang = pill.getAttribute('data-lang');
-        const titleParam = this.anime ? `&title=${encodeURIComponent(this.anime.title)}` : '';
-        window.location.href = `/watch/${this.animeId}/${this.episodeNum}/${selectedLang}?title=${encodeURIComponent(this.anime.title)}`;
+        const watchPath = `/watch/${this.animeId}/${this.episodeNum}/${selectedLang}?title=${this.anime ? encodeURIComponent(this.anime.title) : ''}`;
+        
+        // Usar navegación SPA fluida por router para evitar recargas completas y problemas de restauración de scroll
+        const router = getRouter();
+        if (router) {
+          router.navigate(watchPath);
+        } else {
+          window.location.href = watchPath;
+        }
       });
     });
   }
