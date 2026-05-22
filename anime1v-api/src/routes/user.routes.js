@@ -25,6 +25,11 @@ const authMiddleware = (req, res, next) => {
 // Obtener datos de sincronización
 router.get("/sync", authMiddleware, async (req, res, next) => {
   try {
+    const targetUsername = req.query.username || req.body?.username;
+    if (targetUsername && targetUsername !== req.username) {
+      throw new ApiError(403, "No tienes permiso para acceder a los datos de otro usuario");
+    }
+
     const user = await dataService.findUserByUsername(req.username);
     if (!user) throw new ApiError(404, "Usuario no encontrado");
 
@@ -40,6 +45,11 @@ router.get("/sync", authMiddleware, async (req, res, next) => {
 // Guardar/Actualizar datos de sincronización
 router.post("/sync", authMiddleware, async (req, res, next) => {
   try {
+    const targetUsername = req.query.username || req.body?.username;
+    if (targetUsername && targetUsername !== req.username) {
+      throw new ApiError(403, "No tienes permiso para modificar los datos de otro usuario");
+    }
+
     const { favorites, following, history } = req.body;
     
     const updatedUser = await dataService.updateUserSyncData(req.username, {
