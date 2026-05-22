@@ -171,7 +171,7 @@ export default class WatchPage {
         <div class="player-section-v5" id="player-section">
           
           <!-- Reproductor de Video -->
-          <div class="video-wrapper-v5" id="video-container">
+          <div class="video-wrapper-v5" id="video-container" tabindex="0">
             ${this.episodeData && this.episodeData.activeServers && this.episodeData.activeServers.length > 0 
               ? `<iframe src="${this.episodeData.activeServers[0].url}" allowfullscreen allow="autoplay; encrypted-media" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>` 
               : `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#111; gap: 15px; padding: 20px; text-align: center;">

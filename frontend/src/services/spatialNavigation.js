@@ -114,6 +114,7 @@ class SpatialNavigationService {
       '.sidebar-icon-btn',
       '.ep-item-horizontal-v5',
       '.related-card-v5',
+      '.video-wrapper-v5',
       '[role="button"]'
     ].join(', ');
 
@@ -237,6 +238,13 @@ class SpatialNavigationService {
             innerLink.click();
           } else {
             this.focusedElement.click();
+          }
+        } else if (this.focusedElement.classList.contains('video-wrapper-v5')) {
+          const iframe = this.focusedElement.querySelector('iframe');
+          if (iframe) {
+            console.log("📺 TV D-pad: Transferring focus to video iframe.");
+            iframe.focus();
+            return;
           }
         } else {
           // Standard HTML click
