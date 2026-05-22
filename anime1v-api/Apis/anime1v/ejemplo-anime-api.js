@@ -150,11 +150,11 @@ async function ejemploCompleto() {
     // 3. Obtener enlaces del primer episodio (sin Mega por defecto)
     console.log('\n' + '='.repeat(50));
     const firstEpisode = animeInfo.episodes[0];
-    const episodeLinks = await getEpisodeLinks(firstEpisode.url);
+    await getEpisodeLinks(firstEpisode.url);
     
     // 4. Obtener enlaces incluyendo Mega
     console.log('\n' + '='.repeat(50));
-    const episodeLinksWithMega = await getEpisodeLinksWithMega(firstEpisode.url);
+    await getEpisodeLinksWithMega(firstEpisode.url);
     
     // 5. Obtener enlaces con filtro personalizado
     console.log('\n' + '='.repeat(50));
