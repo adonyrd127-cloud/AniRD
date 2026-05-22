@@ -10,57 +10,30 @@ const appContainer = document.getElementById('app');
 const router = getRouter(appContainer);
 const searchPalette = new SearchPalette(router);
 
-// Navbar Premium UI v3.5
+// Navbar Premium UI v3.10
 const header = document.createElement('header');
 header.innerHTML = `
   <nav class="nav-v4" id="main-navbar">
-    <a href="/" data-link class="nav-logo">AniRD ☁️</a>
+    <!-- Contenedor izquierdo: Logo y divisor para escritorio -->
+    <div class="nav-left-container">
+      <a href="/" data-link class="nav-logo">AniRD <span class="logo-cloud">☁️</span></a>
+      <div class="nav-divider-desktop"></div>
+    </div>
     
-    <ul class="nav-links">
-      <li><a href="/" data-link>Inicio</a></li>
-      <li><a href="/category/popular" data-link>Populares</a></li>
-      <li><a href="/category/movies" data-link>Películas</a></li>
-      <li><a href="/category/dub" data-link>Latino</a></li>
-      <li class="nav-dropdown">
-        <a>
-          Categorías <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 2px;"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-        <div class="nav-dropdown-content">
-          <div class="dropdown-grid">
-            <div class="dropdown-column">
-              <span class="dropdown-title">GÉNEROS</span>
-              <a href="/category/action" data-link>Acción</a>
-              <a href="/category/adventure" data-link>Aventura</a>
-              <a href="/category/comedy" data-link>Comedia</a>
-              <a href="/category/drama" data-link>Drama</a>
-              <a href="/category/fantasy" data-link>Fantasía</a>
-            </div>
-            <div class="dropdown-column" style="padding-top:28px">
-              <a href="/category/music" data-link>Musical</a>
-              <a href="/category/romance" data-link>Romance</a>
-              <a href="/category/sci-fi" data-link>Ciencia Ficción</a>
-              <a href="/category/seinen" data-link>Seinen</a>
-              <a href="/category/shoujo" data-link>Shoujo</a>
-            </div>
-            <div class="dropdown-column" style="padding-top:28px">
-              <a href="/category/shounen" data-link>Shounen</a>
-              <a href="/category/slice-of-life" data-link>Recuentos de la Vida</a>
-              <a href="/category/sports" data-link>Deportes</a>
-              <a href="/category/supernatural" data-link>Sobrenatural</a>
-              <a href="/category/thriller" data-link>Thriller</a>
-            </div>
-          </div>
-        </div>
-      </li>
-      <li><a href="/calendar" data-link>Calendario</a></li>
-    </ul>
-
-    <div class="nav-right" style="display: flex; align-items: center;">
-      <div class="search-pill" id="open-search-btn">
-        <span>🔍 Buscar...</span>
-        <kbd style="opacity:0.5; font-size:9px; margin-left:5px">Ctrl K</kbd>
+    <!-- Contenedor del centro: Barra de búsqueda simulada para escritorio -->
+    <div class="nav-center-container">
+      <div class="search-bar-desktop" id="desktop-search-trigger">
+        <svg class="search-icon-desktop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span>Buscar anime...</span>
       </div>
-      
+    </div>
+
+    <!-- Contenedor derecho: Notificaciones y perfil dinámico -->
+    <div class="nav-right" style="display: flex; align-items: center;">
+      <!-- Campana de Notificaciones original intacta -->
       <div class="nav-notifications" id="nav-notifications" style="position: relative; margin-right: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.05); transition: all 0.3s ease;">
         <span style="font-size: 18px; filter: grayscale(1) contrast(2);">🔔</span>
         <span id="notif-badge" style="display:none; position: absolute; top: 8px; right: 8px; background: #ff0000; width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 10px #ff0000;"></span>
@@ -76,12 +49,25 @@ header.innerHTML = `
         </div>
       </div>
 
-      <a id="profile-link" href="/auth" data-link class="btn-profile">
-        Entrar
+      <!-- Barra de búsqueda clásica pill para móvil/compatibilidad -->
+      <div class="search-pill" id="open-search-btn" style="display: none;">
+        <span>🔍 Buscar...</span>
+      </div>
+
+      <!-- Botón de Perfil Premium (Escritorio y adaptado) -->
+      <a id="profile-link" href="/auth" data-link class="header-profile-btn">
+        <div class="header-profile-avatar-container" id="profile-avatar-container">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <span class="header-profile-username" id="profile-username-text">Entrar</span>
       </a>
     </div>
   </nav>
 
+  <!-- Navegación móvil bottom-nav intacta -->
   <nav class="mobile-nav bottom-nav" id="bottomNav">
      <a href="/" data-link class="nav-item">
        <div class="nav-icon">
@@ -127,7 +113,7 @@ const sidebar = document.createElement('aside');
 sidebar.className = 'desktop-sidebar';
 sidebar.innerHTML = `
   <div class="sidebar-logo">
-    <a href="/" data-link class="sidebar-logo-link">AniRD ☁️</a>
+    <a href="/" data-link class="sidebar-logo-link">AniRD <span class="logo-cloud">☁️</span></a>
   </div>
   
   <ul class="sidebar-menu">
@@ -167,6 +153,17 @@ sidebar.innerHTML = `
       </a>
     </li>
     <li>
+      <a href="/calendar" data-link class="sidebar-link" data-route="/calendar">
+        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <span>Calendario</span>
+      </a>
+    </li>
+    <li>
       <a id="sidebar-profile-link" href="/auth" data-link class="sidebar-link" data-route="/profile">
         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -174,6 +171,43 @@ sidebar.innerHTML = `
         </svg>
         <span>Mi Perfil</span>
       </a>
+    </li>
+    <li class="sidebar-dropdown">
+      <button class="sidebar-link sidebar-dropdown-trigger" id="sidebar-categories-trigger">
+        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="9"></rect>
+          <rect x="14" y="3" width="7" height="5"></rect>
+          <rect x="14" y="12" width="7" height="9"></rect>
+          <rect x="3" y="16" width="7" height="5"></rect>
+        </svg>
+        <span>Categorías</span>
+        <svg class="dropdown-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="sidebar-dropdown-content" id="sidebar-categories-dropdown">
+        <div class="sidebar-dropdown-inner">
+          <a href="/category/popular" data-link class="sidebar-sublink">🔥 Populares</a>
+          <a href="/category/movies" data-link class="sidebar-sublink">🎬 Películas</a>
+          <a href="/category/dub" data-link class="sidebar-sublink">🎙️ Latino</a>
+          <div class="sidebar-sublink-divider">GÉNEROS</div>
+          <a href="/category/action" data-link class="sidebar-sublink">Acción</a>
+          <a href="/category/adventure" data-link class="sidebar-sublink">Aventura</a>
+          <a href="/category/comedy" data-link class="sidebar-sublink">Comedia</a>
+          <a href="/category/drama" data-link class="sidebar-sublink">Drama</a>
+          <a href="/category/fantasy" data-link class="sidebar-sublink">Fantasía</a>
+          <a href="/category/music" data-link class="sidebar-sublink">Musical</a>
+          <a href="/category/romance" data-link class="sidebar-sublink">Romance</a>
+          <a href="/category/sci-fi" data-link class="sidebar-sublink">Ciencia Ficción</a>
+          <a href="/category/seinen" data-link class="sidebar-sublink">Seinen</a>
+          <a href="/category/shoujo" data-link class="sidebar-sublink">Shoujo</a>
+          <a href="/category/shounen" data-link class="sidebar-sublink">Shounen</a>
+          <a href="/category/slice-of-life" data-link class="sidebar-sublink">Recuentos de la Vida</a>
+          <a href="/category/sports" data-link class="sidebar-sublink">Deportes</a>
+          <a href="/category/supernatural" data-link class="sidebar-sublink">Sobrenatural</a>
+          <a href="/category/thriller" data-link class="sidebar-sublink">Thriller</a>
+        </div>
+      </div>
     </li>
   </ul>
 
@@ -190,14 +224,24 @@ const updateNavbarAuth = () => {
   const profileLink = document.getElementById('profile-link');
   const mobileProfileLink = document.getElementById('mobile-profile-link');
   const sidebarProfileLink = document.getElementById('sidebar-profile-link');
+  const profileAvatarContainer = document.getElementById('profile-avatar-container');
+  const profileUsernameText = document.getElementById('profile-username-text');
+  
   const isLoggedIn = authService.isLoggedIn();
+  const user = authService.getUser();
   
   const targetPath = isLoggedIn ? '/profile' : '/auth';
   const targetText = isLoggedIn ? 'Mi Perfil' : 'Entrar';
 
   if (profileLink) {
     profileLink.setAttribute('href', targetPath);
-    profileLink.textContent = targetText;
+    if (isLoggedIn) {
+      if (profileAvatarContainer) profileAvatarContainer.classList.add('active-border');
+      if (profileUsernameText) profileUsernameText.textContent = user?.username || 'Perfil';
+    } else {
+      if (profileAvatarContainer) profileAvatarContainer.classList.remove('active-border');
+      if (profileUsernameText) profileUsernameText.textContent = 'Entrar';
+    }
   }
   if (mobileProfileLink) {
     mobileProfileLink.setAttribute('href', targetPath);
@@ -316,15 +360,39 @@ updateMobileNavActive(window.location.pathname);
 updateSidebarActive(window.location.pathname);
 renderSidebarFollowing();
 
-document.getElementById('open-search-btn').addEventListener('click', () => searchPalette.open());
-document.getElementById('mobile-search-btn').addEventListener('click', (e) => {
-  e.preventDefault();
+// Listeners de búsqueda simulada e interactiva
+const triggerSearch = (e) => {
+  if (e) e.preventDefault();
   searchPalette.open();
-});
-document.getElementById('sidebar-search-btn').addEventListener('click', (e) => {
-  e.preventDefault();
-  searchPalette.open();
-});
+};
+
+const desktopSearchTrigger = document.getElementById('desktop-search-trigger');
+if (desktopSearchTrigger) {
+  desktopSearchTrigger.addEventListener('click', triggerSearch);
+}
+const openSearchBtn = document.getElementById('open-search-btn');
+if (openSearchBtn) {
+  openSearchBtn.addEventListener('click', triggerSearch);
+}
+const mobileSearchBtn = document.getElementById('mobile-search-btn');
+if (mobileSearchBtn) {
+  mobileSearchBtn.addEventListener('click', triggerSearch);
+}
+const sidebarSearchBtn = document.getElementById('sidebar-search-btn');
+if (sidebarSearchBtn) {
+  sidebarSearchBtn.addEventListener('click', triggerSearch);
+}
+
+// Lógica interactiva para el acordeón de categorías colapsable de la barra lateral
+const categoriesTrigger = document.getElementById('sidebar-categories-trigger');
+const categoriesDropdown = document.getElementById('sidebar-categories-dropdown');
+if (categoriesTrigger && categoriesDropdown) {
+  categoriesTrigger.addEventListener('click', (e) => {
+    e.preventDefault();
+    categoriesTrigger.classList.toggle('expanded');
+    categoriesDropdown.classList.toggle('expanded');
+  });
+}
 
 import { notificationService } from './services/notifications.js';
 

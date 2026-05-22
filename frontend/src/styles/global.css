@@ -2327,18 +2327,225 @@ body {
     transition: margin-left 0.3s ease;
   }
 
-  /* Ajustar el navbar superior de escritorio */
+  /* Ajustes para el Header Premium de Escritorio (AniRD v3.10) */
   .nav-v4 {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    height: 70px !important;
     left: 260px !important;
-    padding: 0 4% !important;
-    background: rgba(5, 5, 5, 0.5) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.02) !important;
+    padding: 0 30px !important;
+    background: rgba(9, 10, 16, 0.75) !important; /* Mismo azul profundo que la barra lateral pero translúcido */
+    backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
+    z-index: 1000 !important;
   }
 
-  /* Ocultar elementos duplicados del navbar superior */
-  .nav-v4 .nav-logo,
-  .nav-v4 .nav-links {
+  .nav-left-container {
+    display: flex !important;
+    align-items: center;
+    gap: 15px;
+  }
+
+  /* Logo en Header de escritorio */
+  .nav-v4 .nav-logo {
+    display: block !important;
+    font-family: var(--font-display) !important;
+    font-weight: 900 !important;
+    font-size: 24px !important;
+    color: var(--accent) !important; /* Rojo coral brillante */
+    text-decoration: none !important;
+    letter-spacing: -0.05em !important;
+    transition: transform 0.2s ease !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .nav-v4 .nav-logo:hover {
+    transform: scale(1.03);
+  }
+
+  .nav-v4 .nav-logo .logo-cloud {
     display: none !important;
+  }
+
+  /* Divisor vertical sutil a la derecha del logo */
+  .nav-divider-desktop {
+    width: 1px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    display: block !important;
+  }
+
+  /* Contenedor del Buscador del Centro */
+  .nav-center-container {
+    display: flex !important;
+    justify-content: center;
+    flex: 1;
+    max-width: 500px;
+    margin: 0 20px;
+  }
+
+  /* Barra de búsqueda simulada rectangular redondeada */
+  .search-bar-desktop {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 40px;
+    background: #131520 !important; /* Fondo azul marino premium oscuro de la captura */
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 10px !important;
+    padding: 0 16px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .search-bar-desktop:hover {
+    background: #191c2c !important;
+    border-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .search-icon-desktop {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+  }
+
+  /* Sección Perfil Premium a la derecha */
+  .header-profile-btn {
+    display: flex !important;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none !important;
+    padding: 6px 12px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .header-profile-btn:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  /* Avatar circular de perfil */
+  .header-profile-avatar-container {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+
+  .header-profile-avatar-container svg {
+    width: 18px;
+    height: 18px;
+    stroke: rgba(255, 255, 255, 0.6);
+  }
+
+  /* Borde rojo/coral brillante al estar autenticado */
+  .header-profile-avatar-container.active-border {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+  }
+
+  .header-profile-username {
+    color: #ffffff !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    letter-spacing: -0.01em;
+  }
+
+  /* Ocultar links viejos y botones duplicados en escritorio */
+  .nav-v4 .nav-links,
+  .nav-v4 .search-pill,
+  .nav-v4 .btn-profile,
+  .nav-v4 #profile-link {
+    display: none !important;
+  }
+
+  /* --- Categorías Colapsables en Barra Lateral --- */
+  .sidebar-dropdown {
+    list-style: none;
+  }
+
+  .sidebar-dropdown-trigger {
+    width: calc(100% - 30px);
+    border: none;
+    background: none;
+    text-align: left;
+    outline: none;
+  }
+
+  /* Icono de chevron de despliegue */
+  .dropdown-chevron {
+    width: 10px;
+    height: 6px;
+    margin-left: auto;
+    stroke: currentColor;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebar-dropdown-trigger.expanded .dropdown-chevron {
+    transform: rotate(180deg);
+  }
+
+  /* Contenedor del Acordeón Desplegable */
+  .sidebar-dropdown-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 0 15px;
+    padding-left: 15px;
+    border-left: 1px dashed rgba(255, 255, 255, 0.05);
+  }
+
+  .sidebar-dropdown-content.expanded {
+    max-height: 520px; /* Suficiente espacio para todos los links */
+    overflow-y: auto;
+  }
+
+  /* Estilos para los links internos de categorías */
+  .sidebar-sublink {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    color: rgba(255, 255, 255, 0.45) !important;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .sidebar-sublink:hover {
+    color: white !important;
+    background: rgba(255, 255, 255, 0.02);
+    padding-left: 16px; /* Efecto micro-animado de deslizamiento */
+  }
+
+  /* Encabezado divisor de géneros */
+  .sidebar-sublink-divider {
+    font-family: var(--font-display);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.2);
+    padding: 12px 12px 6px;
+    text-transform: uppercase;
   }
 
   /* Ajustar margen superior de páginas */
@@ -2346,4 +2553,12 @@ body {
     padding-top: 90px !important;
   }
 }
+
+/* Ocultación global de elementos de escritorio por defecto (para móvil) */
+.nav-divider-desktop,
+.nav-center-container,
+.header-profile-btn {
+  display: none !important;
+}
+
 
