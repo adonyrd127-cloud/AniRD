@@ -2694,6 +2694,7 @@ body.tv-mode {
   font-size: 1.15rem !important;
   letter-spacing: 0.02em;
   background-color: #050508 !important; /* Más profundo */
+  position: relative !important;
   height: 100vh !important;
   overflow: hidden !important;
 }
@@ -2738,10 +2739,13 @@ body.tv-mode .desktop-sidebar {
 
 body.tv-mode #app {
   display: block !important;
-  margin-left: 320px !important;
+  position: absolute !important;
+  top: 70px !important;
+  bottom: 0 !important;
+  left: 320px !important;
+  right: 0 !important;
+  margin: 0 !important;
   padding: 40px !important;
-  height: calc(100vh - 70px) !important;
-  margin-top: 70px !important;
   overflow-y: auto !important;
   box-sizing: border-box !important;
 }
@@ -2885,7 +2889,7 @@ body.tv-mode.route-anime .nav-v4 {
 }
 
 body.tv-mode.route-anime #app {
-  margin-left: 0 !important;
+  left: 0 !important;
   padding: 30px !important;
 }
 
@@ -2896,11 +2900,13 @@ body.tv-mode.route-watch {
 }
 
 body.tv-mode.route-watch #app {
-  margin-left: 0 !important;
-  margin-top: 0 !important;
+  position: absolute !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  margin: 0 !important;
   padding: 20px !important;
-  height: 100vh !important;
-  max-height: 100vh !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
 }
