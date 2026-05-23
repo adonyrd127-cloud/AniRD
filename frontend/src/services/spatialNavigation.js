@@ -284,72 +284,35 @@ class SpatialNavigationService {
 
   /**
    * ✅ FIX: Detectar cuando el foco se va al iframe (window pierde foco)
+   * En caso de que el iframe obtenga foco por click accidental, lo recuperamos.
    */
   _onWindowBlur() {
-    // Cuando window pierde foco, es probable que un iframe lo haya capturado
     setTimeout(() => {
       if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
-        console.log('📺 [AniRD] Foco capturado por iframe del reproductor');
-        this.iframeFocused = true;
-        // Agregar indicador visual de que el video está activo
-        const wrapper = document.querySelector('.video-wrapper-v5');
-        if (wrapper) wrapper.classList.add('iframe-active');
-        // Iniciar monitor de escape del iframe
-        this._startIframeEscapeMonitor();
+        console.log('📺 [AniRD] Foco capturado por iframe — recuperando...');
+        // Inmediatamente sacar el foco del iframe
+        document.activeElement.blur();
+        // Devolver foco a los controles del reproductor
+        const firstControl = document.querySelector('.player-controls-v5 .control-btn-v5');
+        if (firstControl) {
+          this.focusElement(firstControl);
+        }
       }
-    }, 100);
+    }, 150);
   }
 
   /**
    * ✅ FIX: Detectar cuando el foco vuelve del iframe al window
    */
   _onWindowFocus() {
-    if (this.iframeFocused) {
-      console.log('📺 [AniRD] Foco devuelto al window principal');
-      this._exitIframeFocus();
-    }
-  }
-
-  /**
-   * ✅ FIX: Monitorear periódicamente si el foco salió del iframe.
-   * Necesario porque en Android TV WebView no siempre se dispara el evento 'focus'.
-   */
-  _startIframeEscapeMonitor() {
-    if (this._iframeEscapeInterval) clearInterval(this._iframeEscapeInterval);
-    this._iframeEscapeInterval = setInterval(() => {
-      if (!this.iframeFocused) {
-        clearInterval(this._iframeEscapeInterval);
-        this._iframeEscapeInterval = null;
-        return;
+    // Si de alguna forma el iframe tenía foco, asegurarse de restaurar navegación
+    if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+      document.activeElement.blur();
+      const firstControl = document.querySelector('.player-controls-v5 .control-btn-v5');
+      if (firstControl) {
+        this.focusElement(firstControl);
       }
-      // Si el activeElement ya no es un iframe, el foco salió
-      if (document.activeElement && document.activeElement.tagName !== 'IFRAME') {
-        this._exitIframeFocus();
-      }
-    }, 500);
-  }
-
-  /**
-   * ✅ FIX: Salir del foco del iframe y volver a la navegación espacial
-   */
-  _exitIframeFocus() {
-    this.iframeFocused = false;
-    if (this._iframeEscapeInterval) {
-      clearInterval(this._iframeEscapeInterval);
-      this._iframeEscapeInterval = null;
     }
-    // Quitar indicador visual
-    const wrapper = document.querySelector('.video-wrapper-v5');
-    if (wrapper) wrapper.classList.remove('iframe-active');
-    // Devolver foco al primer botón de control debajo del reproductor
-    const firstControl = document.querySelector('.player-controls-v5 .control-btn-v5');
-    if (firstControl) {
-      this.focusElement(firstControl);
-    } else {
-      // Fallback: foco al video-wrapper
-      if (wrapper) this.focusElement(wrapper);
-    }
-    console.log('📺 [AniRD] Navegación espacial restaurada');
   }
 
   handleKeyDown(e) {
@@ -358,18 +321,13 @@ class SpatialNavigationService {
     const activeTagName = document.activeElement ? document.activeElement.tagName : '';
     const isTyping = activeTagName === 'INPUT' || activeTagName === 'TEXTAREA';
 
-    // ✅ FIX: Si el iframe tiene el foco, solo interceptar Escape/Back para salir
-    if (this.iframeFocused) {
-      if (e.key === 'Escape' || e.key === 'Backspace') {
-        e.preventDefault();
-        e.stopPropagation();
-        // Sacar foco del iframe
-        const iframe = document.querySelector('.video-wrapper-v5 iframe');
-        if (iframe) iframe.blur();
-        this._exitIframeFocus();
-        return;
-      }
-      // Dejar que el iframe maneje todas las demás teclas
+    // ✅ FIX: Si por algún motivo un iframe tiene foco, sacarlo inmediatamente
+    if (activeTagName === 'IFRAME') {
+      document.activeElement.blur();
+      const firstControl = document.querySelector('.player-controls-v5 .control-btn-v5');
+      if (firstControl) this.focusElement(firstControl);
+      e.preventDefault();
+      e.stopPropagation();
       return;
     }
 
@@ -393,16 +351,15 @@ class SpatialNavigationService {
           const innerLink = this.focusedElement.shadowRoot?.querySelector('a');
           if (innerLink) { innerLink.click(); } else { this.focusedElement.click(); }
         } else if (this.focusedElement.classList.contains('video-wrapper-v5')) {
-          // ✅ FIX: Transferir foco al iframe del reproductor
-          const iframe = this.focusedElement.querySelector('iframe');
-          if (iframe) {
-            console.log('📺 [AniRD] Transfiriendo foco al reproductor. Presiona BACK/ESCAPE para salir.');
-            iframe.focus();
-            this.iframeFocused = true;
-            this.focusedElement.classList.add('iframe-active');
-            this._startIframeEscapeMonitor();
-            return;
+          // ✅ FIX: NO dar foco al iframe. En vez de eso, mover al primer
+          // botón de control del reproductor (Pantalla Completa, Volver, etc.)
+          // El video ya se auto-reproduce en el iframe.
+          console.log('📺 [AniRD] Video seleccionado → moviendo foco a controles del reproductor');
+          const firstControl = document.querySelector('.player-controls-v5 .control-btn-v5');
+          if (firstControl) {
+            this.focusElement(firstControl);
           }
+          return;
         } else {
           this.focusedElement.click();
         }
