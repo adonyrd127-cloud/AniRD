@@ -3338,3 +3338,65 @@ body.tv-mode .horizontal-scroll-v4 {
   -webkit-overflow-scrolling: touch !important;
 }
 
+/* ==========================================================================
+   🔧 TV MODE — SIDEBAR COLAPSABLE (Ocultar/Mostrar con botón hamburguesa)
+   ========================================================================== */
+
+/* Asegurar que el botón de colapsar sea visible en TV mode */
+body.tv-mode .sidebar-collapse-btn {
+  display: flex !important;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+body.tv-mode .sidebar-collapse-btn:hover,
+body.tv-mode .sidebar-collapse-btn.focused {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 20px var(--accent-glow) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Transiciones suaves para la sidebar, #app y nav en TV mode */
+body.tv-mode .desktop-sidebar {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+body.tv-mode #app {
+  transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+body.tv-mode .nav-v4 {
+  transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* === Estado Colapsado en TV Mode === */
+
+/* Ocultar la sidebar deslizándola hacia la izquierda */
+body.tv-mode.sidebar-collapsed .desktop-sidebar {
+  transform: translateX(-320px) !important;
+}
+
+/* Expandir #app a todo el ancho */
+body.tv-mode.sidebar-collapsed #app {
+  left: 0 !important;
+}
+
+/* Expandir la nav a todo el ancho */
+body.tv-mode.sidebar-collapsed .nav-v4 {
+  left: 0 !important;
+}
+
+/* Mostrar categorías en header cuando sidebar está colapsada en TV */
+body.tv-mode.sidebar-collapsed .header-categories-v4 {
+  display: flex !important;
+}
+
+/* Mostrar perfil en header cuando sidebar está colapsada en TV */
+body.tv-mode.sidebar-collapsed .nav-v4 #profile-link {
+  display: flex !important;
+}
