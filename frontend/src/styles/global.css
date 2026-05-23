@@ -3170,5 +3170,46 @@ body.tv-mode .anime-grid {
   padding-left: 16px;
 }
 
+/* --- Responsive Mobile Player Controls --- */
+@media (max-width: 768px) {
+  .player-controls-v5 {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-top: 15px !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
 
+  .player-controls-left, .player-controls-right {
+    display: contents !important;
+  }
 
+  /* Ocultar botones redundantes en pantallas móviles */
+  #btn-theater {
+    display: none !important;
+  }
+
+  .control-btn-v5.social-link-v5 {
+    display: none !important;
+  }
+
+  /* Estilo premium de botones para móviles */
+  .control-btn-v5 {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 10px 8px !important;
+    font-size: 11px !important;
+    border-radius: 14px !important;
+    white-space: nowrap !important;
+    gap: 6px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  /* Hacer que el botón "Favorito" ocupe las dos columnas completas para simetría */
+  #btn-favorite {
+    grid-column: span 2 !important;
+  }
+}
