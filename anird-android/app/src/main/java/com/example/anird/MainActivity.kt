@@ -42,11 +42,13 @@ class MainActivity : ComponentActivity() {
                         WebView(context).apply {
                             webView = this
                             webViewClient = WebViewClient()
+                            clearCache(true)
                             settings.apply {
                                 javaScriptEnabled = true
                                 domStorageEnabled = true
                                 databaseEnabled = true
                                 mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                                cacheMode = WebSettings.LOAD_NO_CACHE
                                 useWideViewPort = true
                                 loadWithOverviewMode = true
                                 mediaPlaybackRequiresUserGesture = false
