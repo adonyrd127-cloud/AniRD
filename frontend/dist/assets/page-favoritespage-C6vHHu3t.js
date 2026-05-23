@@ -1,5 +1,5 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/page-homepage-HfrhAw2J.js","assets/vendor-DIPEJTOH.js"])))=>i.map(i=>d[i]);
-import{_ as s}from"./page-watchpage-BEyhp2v9.js";import{d}from"./page-homepage-HfrhAw2J.js";import"./vendor-DIPEJTOH.js";class g{async render(){const a=document.createElement("div");return a.innerHTML=`
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/page-homepage-BCn5ETVD.js","assets/vendor-DIPEJTOH.js"])))=>i.map(i=>d[i]);
+import{_ as s}from"./page-watchpage-6S4sO16b.js";import{d}from"./page-homepage-BCn5ETVD.js";import"./vendor-DIPEJTOH.js";class g{async render(){const a=document.createElement("div");return a.innerHTML=`
       <style>
         .page-container {
           padding: 40px 4%;
@@ -34,4 +34,4 @@ import{_ as s}from"./page-watchpage-BEyhp2v9.js";import{d}from"./page-homepage-H
           <p style="color: var(--text-secondary);">Explora el catálogo y guarda los animes que más te gusten.</p>
           <a href="/" data-link class="btn-play" style="margin-top:20px; display:inline-block; background:var(--accent); color:black; padding:12px 25px; border-radius:8px; font-weight:700; text-decoration:none;">Explorar Inicio</a>
         </div>
-      `;return}a.innerHTML="",o.forEach(t=>{const i=document.createElement("anime-card"),n={mal_id:t.animeId,title:t.title,images:{jpg:{large_image_url:t.cover}},type:t.type,score:t.score,episodes:t.episodes,status:t.status,broadcast:t.broadcast};i.data=n,a.appendChild(i),s(async()=>{const{apiService:r}=await import("./page-homepage-HfrhAw2J.js").then(e=>e.f);return{apiService:r}},__vite__mapDeps([0,1])).then(({apiService:r})=>{r.getAnimeInfo(t.animeId).then(e=>{e&&e.data&&(i.data={...n,status:e.data.status,broadcast:e.data.broadcast,episodes:e.data.episodes,score:e.data.score})})})})}}export{g as default};
+      `;return}a.innerHTML="",o.forEach(t=>{const i=document.createElement("anime-card"),n={mal_id:t.animeId,title:t.title,images:{jpg:{large_image_url:t.cover}},type:t.type,score:t.score,episodes:t.episodes,status:t.status,broadcast:t.broadcast};i.data=n,a.appendChild(i),s(async()=>{const{apiService:r}=await import("./page-homepage-BCn5ETVD.js").then(e=>e.f);return{apiService:r}},__vite__mapDeps([0,1])).then(({apiService:r})=>{r.getAnimeInfo(t.animeId).then(e=>{e&&e.data&&(i.data={...n,status:e.data.status,broadcast:e.data.broadcast,episodes:e.data.episodes,score:e.data.score})})})})}}export{g as default};

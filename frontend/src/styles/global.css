@@ -3185,4 +3185,156 @@ body.tv-mode .anime-grid {
 }
 
 
+/* ==========================================================================
+   🔧 AniRD PATCH v4.2 - LAYOUT FIX CRÍTICO
+   Pegar ANTES del cierre </style> en global.css,
+   o importar DESPUÉS de global.css
+   ========================================================================== */
+
+/* ============================================================
+   FIX #1: SIDEBAR OVERLAP — garantiza que #app nunca quede
+   detrás de la sidebar, independientemente del viewport.
+   Aplica tanto en TV mode como en desktop normal.
+   ============================================================ */
+
+/* En desktop regular (no TV mode): offset por el ancho del sidebar */
+@media (min-width: 768px) {
+  body:not(.tv-mode) #app {
+    margin-left: 260px !important;
+  }
+  body:not(.tv-mode) .nav-v4 {
+    left: 260px !important;
+  }
+}
+
+/* En TV mode: usar position absolute con left explícito */
+body.tv-mode #app {
+  display: block !important;
+  position: fixed !important;       /* ✅ fixed en vez de absolute para mayor estabilidad */
+  top: 70px !important;
+  left: 320px !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  padding: 0 !important;            /* ✅ FIX: padding 0 aquí (el contenido tiene el suyo propio) */
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important; /* smooth scroll en WebView Android */
+  box-sizing: border-box !important;
+  z-index: 1 !important;
+  margin-left: 0 !important;        /* ✅ cancelar cualquier margin-left heredado */
+}
+
+/* ============================================================
+   FIX #2: HERO SECTION — visible completo en cualquier modo
+   ============================================================ */
+
+/* Hero en desktop sin TV mode: necesita padding-top para no quedar detrás del nav */
+body:not(.tv-mode) .hero-v4 {
+  /* Ya lo maneja .home-page-wrapper con padding-top: 70px */
+  min-height: 60vh;
+}
+
+/* Hero en TV mode: altura fija, sin depender de vh */
+body.tv-mode .hero-v4,
+body.tv-mode .skeleton-hero {
+  height: 480px !important;
+  min-height: 480px !important;
+}
+
+body.tv-mode .skeleton-hero {
+  height: 480px !important;
+}
+
+/* ============================================================
+   FIX #3: SCROLL EN TV MODE — #app scrollable correctamente
+   ============================================================ */
+
+/* Prevenir que el body interfiera con el scroll de #app */
+body.tv-mode {
+  height: 100vh !important;
+  overflow: hidden !important;
+  position: fixed !important;       /* ✅ evita bounce/overscroll en WebView */
+  width: 100% !important;
+}
+
+/* Sidebar fijo en TV mode */
+body.tv-mode .desktop-sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  width: 320px !important;
+  z-index: 1001 !important;
+  overflow-y: auto !important;
+}
+
+/* Nav fijo en TV mode */
+body.tv-mode .nav-v4 {
+  position: fixed !important;
+  top: 0 !important;
+  left: 320px !important;
+  right: 0 !important;
+  height: 70px !important;
+  z-index: 1000 !important;
+}
+
+/* ============================================================
+   FIX #4: SECCIONES HOME — visibles dentro del #app scrollable
+   ============================================================ */
+
+body.tv-mode .home-sections-v4 {
+  padding: 40px 5% 120px !important;
+  max-width: 100% !important;
+}
+
+body.tv-mode .home-page-wrapper {
+  padding-top: 0 !important; /* En TV mode #app ya comienza en top: 70px */
+  min-height: auto !important;
+}
+
+/* ============================================================
+   FIX #5: ANDROID WEBVIEW — compatibilidad con useWideViewPort
+   ============================================================ */
+
+/* Viewport meta override para WebView Android (no afecta browsers normales) */
+@media screen and (min-device-width: 1280px) {
+  body.tv-mode #app {
+    /* En pantallas grandes de TV, asegurar que el contenido sea legible */
+    font-size: 16px;
+  }
+}
+
+/* ============================================================
+   FIX #6: BANNER DE ERROR — siempre visible
+   ============================================================ */
+
+.home-error-banner {
+  position: relative;
+  z-index: 10;
+  margin: 0 0 20px 0;
+}
+
+/* ============================================================
+   FIX #7: HERO SKELETON — siempre visible mientras carga
+   ============================================================ */
+
+.skeleton-hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0a0a14 0%, #12121e 100%);
+}
+
+/* ============================================================
+   FIX #8: SCROLL SUAVE EN ANDROID WEBVIEW
+   ============================================================ */
+
+body.tv-mode * {
+  -webkit-overflow-scrolling: touch;
+}
+
+body.tv-mode .ep-list-v5,
+body.tv-mode .horizontal-scroll-v4 {
+  overflow: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
 

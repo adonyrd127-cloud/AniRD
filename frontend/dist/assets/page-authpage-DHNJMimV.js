@@ -1,4 +1,4 @@
-import{c as r,d as c}from"./page-homepage-HfrhAw2J.js";import"./vendor-DIPEJTOH.js";class g{constructor(e){this.params=e,this.mode="login"}async render(){const e=document.createElement("div");return e.className="auth-container",e.innerHTML=`
+import{c as r,d as c}from"./page-homepage-BCn5ETVD.js";import"./vendor-DIPEJTOH.js";class g{constructor(e){this.params=e,this.mode="login"}async render(){const e=document.createElement("div");return e.className="auth-container",e.innerHTML=`
       <div class="login-bg">
         <div class="blob blob-1"></div>
         <div class="blob blob-2"></div>
