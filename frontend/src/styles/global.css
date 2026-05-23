@@ -1634,6 +1634,10 @@ body {
     color: var(--text-primary);
   }
 
+  .page-container {
+    padding-top: 60px !important;
+  }
+
   /* --- Blobs Animados de Fondo --- */
   .login-bg {
     position: absolute;
@@ -1818,55 +1822,69 @@ body {
   /* --- Compact Hero Móvil v4.0 --- */
   .hero-v4 {
     margin: 0 16px 20px !important;
-    border-radius: 16px !important;
+    border-radius: 20px !important;
     overflow: hidden !important;
-    height: 200px !important;
-    background: linear-gradient(135deg, #1e1e3f 0%, #2d2d5a 100%) !important;
+    height: 310px !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    background: linear-gradient(135deg, #090a10 0%, #151622 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
   }
 
   .hero-backdrop-v4 {
     height: 100% !important;
-    background-position: center center !important;
+    background-position: center 15% !important;
   }
 
   .hero-backdrop-v4::after {
-    background: linear-gradient(transparent, rgba(15, 15, 26, 0.95)) !important;
+    background: linear-gradient(to top, rgba(9, 10, 16, 0.98) 0%, rgba(9, 10, 16, 0.5) 50%, transparent 100%) !important;
   }
 
   .hero-content-v4 {
-    padding: 12px 16px !important;
+    padding: 20px 16px !important;
     border-radius: 0 !important;
     text-align: left !important;
     width: 100% !important;
     max-width: 100% !important;
     background: none !important;
+    z-index: 10 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
   }
 
   .hero-title-v4 {
-    font-size: 16px !important;
-    font-weight: 700 !important;
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
     margin-bottom: 2px !important;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8) !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
   .hero-subtitle-v4 {
-    font-size: 12px !important;
-    color: var(--text-secondary) !important;
-    margin-bottom: 8px !important;
-    -webkit-line-clamp: 1 !important;
+    font-size: 11px !important;
+    color: rgba(255, 255, 255, 0.75) !important;
+    margin-bottom: 12px !important;
+    line-height: 1.4 !important;
+    -webkit-line-clamp: 2 !important;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.8) !important;
   }
 
   .hero-actions-v4 {
     justify-content: flex-start !important;
-    gap: 8px !important;
+    gap: 10px !important;
   }
 
   .hero-actions-v4 a {
-    padding: 6px 14px !important;
+    padding: 8px 18px !important;
     font-size: 11px !important;
+    font-weight: 700 !important;
     border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
   }
 
   /* --- Perfil Móvil Premium --- */
