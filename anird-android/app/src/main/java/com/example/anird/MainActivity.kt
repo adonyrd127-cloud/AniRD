@@ -49,6 +49,7 @@ class MainActivity : ComponentActivity() {
                                 databaseEnabled = true
                                 mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                                 cacheMode = WebSettings.LOAD_NO_CACHE
+                                userAgentString = userAgentString + " AniRD-AndroidTV"
                                 useWideViewPort = true
                                 loadWithOverviewMode = true
                                 mediaPlaybackRequiresUserGesture = false
