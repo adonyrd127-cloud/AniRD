@@ -14,6 +14,10 @@ class SpatialNavigationService {
     this.mutationObserver = null;
     // ✅ FIX: referencia al contenedor scrollable real (#app en TV mode)
     this.scrollContainer = null;
+    // ✅ FIX: tracking de foco en iframe del reproductor
+    this.iframeFocused = false;
+    this._onWindowBlur = this._onWindowBlur.bind(this);
+    this._onWindowFocus = this._onWindowFocus.bind(this);
   }
 
   /**
@@ -48,6 +52,10 @@ class SpatialNavigationService {
     // ✅ FIX: lockWindowScroll ahora NO resetea scroll de #app
     this.lockWindowScroll();
 
+    // ✅ FIX: Monitorear foco del iframe para escapar del focus trap
+    window.addEventListener('blur', this._onWindowBlur);
+    window.addEventListener('focus', this._onWindowFocus);
+
     setTimeout(() => {
       this.updateFocusables();
       this.focusFirstAvailable();
@@ -69,7 +77,14 @@ class SpatialNavigationService {
     localStorage.setItem('tvMode', 'false');
 
     window.removeEventListener('keydown', this.handleKeyDownBound, { capture: true });
+    window.removeEventListener('blur', this._onWindowBlur);
+    window.removeEventListener('focus', this._onWindowFocus);
     this.unlockWindowScroll();
+
+    if (this._iframeEscapeInterval) {
+      clearInterval(this._iframeEscapeInterval);
+      this._iframeEscapeInterval = null;
+    }
 
     if (this.mutationObserver) {
       this.mutationObserver.disconnect();
@@ -83,6 +98,7 @@ class SpatialNavigationService {
 
     document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
     this.scrollContainer = null;
+    this.iframeFocused = false;
 
     console.log('📺 AniRD Spatial Navigation (Smart TV Mode) destroyed.');
   }
@@ -266,11 +282,96 @@ class SpatialNavigationService {
     // Si está visible, no hacer nada
   }
 
+  /**
+   * ✅ FIX: Detectar cuando el foco se va al iframe (window pierde foco)
+   */
+  _onWindowBlur() {
+    // Cuando window pierde foco, es probable que un iframe lo haya capturado
+    setTimeout(() => {
+      if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+        console.log('📺 [AniRD] Foco capturado por iframe del reproductor');
+        this.iframeFocused = true;
+        // Agregar indicador visual de que el video está activo
+        const wrapper = document.querySelector('.video-wrapper-v5');
+        if (wrapper) wrapper.classList.add('iframe-active');
+        // Iniciar monitor de escape del iframe
+        this._startIframeEscapeMonitor();
+      }
+    }, 100);
+  }
+
+  /**
+   * ✅ FIX: Detectar cuando el foco vuelve del iframe al window
+   */
+  _onWindowFocus() {
+    if (this.iframeFocused) {
+      console.log('📺 [AniRD] Foco devuelto al window principal');
+      this._exitIframeFocus();
+    }
+  }
+
+  /**
+   * ✅ FIX: Monitorear periódicamente si el foco salió del iframe.
+   * Necesario porque en Android TV WebView no siempre se dispara el evento 'focus'.
+   */
+  _startIframeEscapeMonitor() {
+    if (this._iframeEscapeInterval) clearInterval(this._iframeEscapeInterval);
+    this._iframeEscapeInterval = setInterval(() => {
+      if (!this.iframeFocused) {
+        clearInterval(this._iframeEscapeInterval);
+        this._iframeEscapeInterval = null;
+        return;
+      }
+      // Si el activeElement ya no es un iframe, el foco salió
+      if (document.activeElement && document.activeElement.tagName !== 'IFRAME') {
+        this._exitIframeFocus();
+      }
+    }, 500);
+  }
+
+  /**
+   * ✅ FIX: Salir del foco del iframe y volver a la navegación espacial
+   */
+  _exitIframeFocus() {
+    this.iframeFocused = false;
+    if (this._iframeEscapeInterval) {
+      clearInterval(this._iframeEscapeInterval);
+      this._iframeEscapeInterval = null;
+    }
+    // Quitar indicador visual
+    const wrapper = document.querySelector('.video-wrapper-v5');
+    if (wrapper) wrapper.classList.remove('iframe-active');
+    // Devolver foco al primer botón de control debajo del reproductor
+    const firstControl = document.querySelector('.player-controls-v5 .control-btn-v5');
+    if (firstControl) {
+      this.focusElement(firstControl);
+    } else {
+      // Fallback: foco al video-wrapper
+      if (wrapper) this.focusElement(wrapper);
+    }
+    console.log('📺 [AniRD] Navegación espacial restaurada');
+  }
+
   handleKeyDown(e) {
     if (!this.isActive) return;
 
     const activeTagName = document.activeElement ? document.activeElement.tagName : '';
     const isTyping = activeTagName === 'INPUT' || activeTagName === 'TEXTAREA';
+
+    // ✅ FIX: Si el iframe tiene el foco, solo interceptar Escape/Back para salir
+    if (this.iframeFocused) {
+      if (e.key === 'Escape' || e.key === 'Backspace') {
+        e.preventDefault();
+        e.stopPropagation();
+        // Sacar foco del iframe
+        const iframe = document.querySelector('.video-wrapper-v5 iframe');
+        if (iframe) iframe.blur();
+        this._exitIframeFocus();
+        return;
+      }
+      // Dejar que el iframe maneje todas las demás teclas
+      return;
+    }
 
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
       if (isTyping && ['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
@@ -292,8 +393,16 @@ class SpatialNavigationService {
           const innerLink = this.focusedElement.shadowRoot?.querySelector('a');
           if (innerLink) { innerLink.click(); } else { this.focusedElement.click(); }
         } else if (this.focusedElement.classList.contains('video-wrapper-v5')) {
+          // ✅ FIX: Transferir foco al iframe del reproductor
           const iframe = this.focusedElement.querySelector('iframe');
-          if (iframe) { iframe.focus(); return; }
+          if (iframe) {
+            console.log('📺 [AniRD] Transfiriendo foco al reproductor. Presiona BACK/ESCAPE para salir.');
+            iframe.focus();
+            this.iframeFocused = true;
+            this.focusedElement.classList.add('iframe-active');
+            this._startIframeEscapeMonitor();
+            return;
+          }
         } else {
           this.focusedElement.click();
         }
