@@ -174,7 +174,7 @@ export default class WatchPage {
           <!-- Reproductor de Video -->
           <div class="video-wrapper-v5" id="video-container" tabindex="0">
             ${this.episodeData && this.episodeData.activeServers && this.episodeData.activeServers.length > 0 
-              ? `<iframe src="${this.episodeData.activeServers[0].url}" allowfullscreen allow="autoplay; encrypted-media"></iframe>` 
+              ? `<iframe src="${this._getAutoplayUrl(this.episodeData.activeServers[0].url)}" allowfullscreen allow="autoplay; encrypted-media"></iframe>` 
               : `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#111; gap: 15px; padding: 20px; text-align: center;">
                   <span style="font-size: 40px;">⚠️</span>
                   <h3 style="font-family:'Outfit'; font-size:18px;">Video no disponible</h3>
@@ -415,6 +415,28 @@ export default class WatchPage {
     }
   }
 
+  _getAutoplayUrl(url) {
+    if (!url) return '';
+    const isTV = document.body.classList.contains('tv-mode') || localStorage.getItem('tvMode') === 'true';
+    if (!isTV) return url;
+
+    try {
+      const hasDoubleSlash = url.startsWith('//');
+      const parseUrl = hasDoubleSlash ? 'https:' + url : url;
+      const urlObj = new URL(parseUrl);
+      urlObj.searchParams.set('autoplay', '1');
+      urlObj.searchParams.set('auto', '1');
+      let res = urlObj.toString();
+      if (hasDoubleSlash) {
+        res = res.replace(/^https:/, '');
+      }
+      return res;
+    } catch (e) {
+      const separator = url.includes('?') ? '&' : '?';
+      return `${url}${separator}autoplay=1&auto=1`;
+    }
+  }
+
   // 1. Controles de Visualización (Modo Cine, Luces, Favoritos)
   _initPlayerControls() {
     const layout = document.getElementById('watch-layout');
@@ -507,16 +529,30 @@ export default class WatchPage {
     if (btnFullscreen) {
       btnFullscreen.addEventListener('click', (e) => {
         e.preventDefault();
-        const iframe = document.querySelector('.video-wrapper-v5 iframe');
-        if (iframe) {
-          if (iframe.requestFullscreen) {
-            iframe.requestFullscreen();
-          } else if (iframe.webkitRequestFullscreen) {
-            iframe.webkitRequestFullscreen();
-          } else if (iframe.mozRequestFullScreen) {
-            iframe.mozRequestFullScreen();
-          } else if (iframe.msRequestFullscreen) {
-            iframe.msRequestFullscreen();
+        
+        const isTV = document.body.classList.contains('tv-mode') || localStorage.getItem('tvMode') === 'true';
+        if (isTV) {
+          const videoContainer = document.getElementById('video-container');
+          if (videoContainer) {
+            videoContainer.classList.toggle('tv-fullscreen-active');
+            const isFullscreen = videoContainer.classList.contains('tv-fullscreen-active');
+            const btnText = btnFullscreen.querySelector('span');
+            if (btnText) {
+              btnText.textContent = isFullscreen ? 'Salir Pantalla' : 'Pantalla Completa';
+            }
+          }
+        } else {
+          const iframe = document.querySelector('.video-wrapper-v5 iframe');
+          if (iframe) {
+            if (iframe.requestFullscreen) {
+              iframe.requestFullscreen();
+            } else if (iframe.webkitRequestFullscreen) {
+              iframe.webkitRequestFullscreen();
+            } else if (iframe.mozRequestFullScreen) {
+              iframe.mozRequestFullScreen();
+            } else if (iframe.msRequestFullscreen) {
+              iframe.msRequestFullscreen();
+            }
           }
         }
       });
@@ -535,7 +571,7 @@ export default class WatchPage {
         
         const videoUrl = pill.getAttribute('data-url');
         if (iframe && videoUrl) {
-          iframe.src = videoUrl;
+          iframe.src = this._getAutoplayUrl(videoUrl);
           
           // Micro-animación de carga en el reproductor
           const container = document.getElementById('video-container');

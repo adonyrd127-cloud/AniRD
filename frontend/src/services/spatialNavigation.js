@@ -351,13 +351,15 @@ class SpatialNavigationService {
           const innerLink = this.focusedElement.shadowRoot?.querySelector('a');
           if (innerLink) { innerLink.click(); } else { this.focusedElement.click(); }
         } else if (this.focusedElement.classList.contains('video-wrapper-v5')) {
-          // ✅ FIX: NO dar foco al iframe. En vez de eso, mover al primer
-          // botón de control del reproductor (Pantalla Completa, Volver, etc.)
-          // El video ya se auto-reproduce en el iframe.
-          console.log('📺 [AniRD] Video seleccionado → moviendo foco a controles del reproductor');
-          const firstControl = document.querySelector('.player-controls-v5 .control-btn-v5');
-          if (firstControl) {
-            this.focusElement(firstControl);
+          console.log('📺 [AniRD] Video seleccionado → Activando pantalla completa CSS');
+          const videoContainer = document.getElementById('video-container');
+          if (videoContainer) {
+            videoContainer.classList.toggle('tv-fullscreen-active');
+            const isFullscreen = videoContainer.classList.contains('tv-fullscreen-active');
+            const btnText = document.querySelector('#btn-fullscreen-watch span');
+            if (btnText) {
+              btnText.textContent = isFullscreen ? 'Salir Pantalla' : 'Pantalla Completa';
+            }
           }
           return;
         } else {
@@ -372,6 +374,17 @@ class SpatialNavigationService {
 
       const searchOverlay = document.getElementById('searchOverlay');
       if (searchOverlay && searchOverlay.classList.contains('active')) return;
+
+      // ✅ FIX: Si estamos en pantalla completa CSS en TV, salir de ella en vez de ir atrás
+      const videoContainer = document.getElementById('video-container');
+      if (videoContainer && videoContainer.classList.contains('tv-fullscreen-active')) {
+        videoContainer.classList.remove('tv-fullscreen-active');
+        const btnText = document.querySelector('#btn-fullscreen-watch span');
+        if (btnText) btnText.textContent = 'Pantalla Completa';
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
 
       e.preventDefault();
       e.stopPropagation();
