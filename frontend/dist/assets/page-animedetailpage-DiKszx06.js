@@ -102,8 +102,8 @@ import{a as r,d as c,b as f}from"./page-homepage-HfrhAw2J.js";import"./vendor-DI
       </div>
 
       <nav class="animex-tabs">
-        <div class="tab-item active" data-tab="episodes">EPISODIOS</div>
-        <div class="tab-item" data-tab="characters">PERSONAJES</div>
+        <div class="tab-item active" data-tab="episodes" tabindex="0">EPISODIOS</div>
+        <div class="tab-item" data-tab="characters" tabindex="0">PERSONAJES</div>
       </nav>
 
       <div class="tab-panel-animex" id="tab-panel-content"></div>

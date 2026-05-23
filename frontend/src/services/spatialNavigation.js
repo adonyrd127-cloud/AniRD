@@ -144,6 +144,7 @@ class SpatialNavigationService {
       '.ep-item-horizontal-v5',
       '.related-card-v5',
       '.video-wrapper-v5',
+      '.tab-item',
       '[role="button"]'
     ].join(', ');
 
