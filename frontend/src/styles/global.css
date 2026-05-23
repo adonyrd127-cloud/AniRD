@@ -3463,3 +3463,44 @@ body.tv-mode #video-container.tv-fullscreen-active iframe {
   border: none !important;
   border-radius: 0 !important;
 }
+
+/* ==========================================================================
+   🔧 MOBILE ROUTE WATCH — CONTROLES DEL REPRODUCTOR
+   Alineación y distribución elegante de botones en móvil para evitar desbordes
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .player-controls-v5 {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    margin-top: 15px !important;
+    padding: 0 5px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .player-controls-left, 
+  .player-controls-right {
+    display: contents !important;
+  }
+
+  .control-btn-v5 {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 10px 8px !important;
+    font-size: 11px !important;
+    border-radius: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+  }
+
+  /* Ajustar la visualización del reproductor y márgenes generales en móvil */
+  .watch-layout-v5 {
+    padding-top: 80px !important;
+    gap: 20px !important;
+  }
+}

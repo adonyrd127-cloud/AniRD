@@ -12,6 +12,7 @@ export default class AnimeDetailPage {
   }
 
   async render() {
+    const userLang = await dbService.getSetting('audio_pref', 'sub');
     this.anime = (await apiService.getAnimeInfo(this.animeId)).data;
     this.isFavorite = await dbService.isFavorite(this.animeId);
     this.isFollowing = await dbService.isFollowing(this.animeId);
@@ -118,7 +119,7 @@ export default class AnimeDetailPage {
             </div>
             <p class="animex-synopsis">${this.anime.synopsis || 'Sin descripción disponible.'}</p>
             <div class="animex-actions">
-              <a href="/watch/${this.animeId}/1/sub?title=${encodeURIComponent(this.anime.title)}" data-link class="btn-v4-primary" style="padding: 15px 40px; font-size: 15px;">▶ VER AHORA</a>
+              <a href="/watch/${this.animeId}/1/${userLang}?title=${encodeURIComponent(this.anime.title)}" data-link class="btn-v4-primary" style="padding: 15px 40px; font-size: 15px;">▶ VER AHORA</a>
               <button id="fav-btn" class="btn-v4-secondary" style="width:50px; height:50px; border-radius:15px; padding:0">${this.isFavorite ? '❤️' : '🤍'}</button>
               <button id="follow-btn" class="btn-v4-secondary" style="width:50px; height:50px; border-radius:15px; padding:0">${this.isFollowing ? '🔔' : '🔕'}</button>
             </div>
@@ -143,6 +144,7 @@ export default class AnimeDetailPage {
   }
 
   async afterRender() {
+    const userLang = await dbService.getSetting('audio_pref', 'sub');
     const tabPanel = document.getElementById('tab-panel-content');
     const tabs = document.querySelectorAll('.tab-item');
     const relContainer = document.getElementById('relations-container');
@@ -159,7 +161,7 @@ export default class AnimeDetailPage {
             const isWatched = watchedSet ? watchedSet.has(num) : false;
             const badgeHtml = isWatched ? `<div class="ep-watched-badge-animex">✓ Visto</div>` : '';
             return `
-              <a href="/watch/${this.animeId}/${num}/sub${titleParam}" data-link class="ep-card-animex page-enter ${isWatched ? 'watched' : ''}">
+              <a href="/watch/${this.animeId}/${num}/${userLang}${titleParam}" data-link class="ep-card-animex page-enter ${isWatched ? 'watched' : ''}">
                 <div class="ep-thumb">
                   <img src="${thumb}" loading="lazy">
                   ${badgeHtml}

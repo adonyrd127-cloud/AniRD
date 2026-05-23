@@ -1,4 +1,4 @@
-import{a as r,d as c,b as f}from"./page-homepage-BCn5ETVD.js";import"./vendor-DIPEJTOH.js";class y{constructor(o){this.params=o,this.animeId=o.id,this.anime=null,this.isFavorite=!1,this.isFollowing=!1}async render(){this.anime=(await r.getAnimeInfo(this.animeId)).data,this.isFavorite=await c.isFavorite(this.animeId),this.isFollowing=await c.isFollowing(this.animeId);const o=await r.getAnilistBanner(this.animeId)||this.anime.images.jpg.large_image_url;document.title=`${this.anime.title} — AniRD`;const d=document.createElement("div");return d.className="page-enter",d.innerHTML=`
+import{d as c,a as o,b as u}from"./page-homepage-BCn5ETVD.js";import"./vendor-DIPEJTOH.js";class ${constructor(d){this.params=d,this.animeId=d.id,this.anime=null,this.isFavorite=!1,this.isFollowing=!1}async render(){const d=await c.getSetting("audio_pref","sub");this.anime=(await o.getAnimeInfo(this.animeId)).data,this.isFavorite=await c.isFavorite(this.animeId),this.isFollowing=await c.isFollowing(this.animeId);const r=await o.getAnilistBanner(this.animeId)||this.anime.images.jpg.large_image_url;document.title=`${this.anime.title} — AniRD`;const l=document.createElement("div");return l.className="page-enter",l.innerHTML=`
       <style>
         .animex-hero {
           position: relative;
@@ -12,7 +12,7 @@ import{a as r,d as c,b as f}from"./page-homepage-BCn5ETVD.js";import"./vendor-DI
         .animex-banner {
           position: absolute;
           inset: 0;
-          background: url('${o}') center/cover no-repeat;
+          background: url('${r}') center/cover no-repeat;
           filter: brightness(0.3) blur(5px);
           z-index: 0;
         }
@@ -89,11 +89,11 @@ import{a as r,d as c,b as f}from"./page-homepage-BCn5ETVD.js";import"./vendor-DI
             </div>
             <h1 class="animex-title">${this.anime.title}</h1>
             <div class="animex-genres">
-              ${this.anime.genres.map(p=>`<span class="genre-pill">${p.name}</span>`).join("")}
+              ${this.anime.genres.map(m=>`<span class="genre-pill">${m.name}</span>`).join("")}
             </div>
             <p class="animex-synopsis">${this.anime.synopsis||"Sin descripción disponible."}</p>
             <div class="animex-actions">
-              <a href="/watch/${this.animeId}/1/sub?title=${encodeURIComponent(this.anime.title)}" data-link class="btn-v4-primary" style="padding: 15px 40px; font-size: 15px;">▶ VER AHORA</a>
+              <a href="/watch/${this.animeId}/1/${d}?title=${encodeURIComponent(this.anime.title)}" data-link class="btn-v4-primary" style="padding: 15px 40px; font-size: 15px;">▶ VER AHORA</a>
               <button id="fav-btn" class="btn-v4-secondary" style="width:50px; height:50px; border-radius:15px; padding:0">${this.isFavorite?"❤️":"🤍"}</button>
               <button id="follow-btn" class="btn-v4-secondary" style="width:50px; height:50px; border-radius:15px; padding:0">${this.isFollowing?"🔔":"🔕"}</button>
             </div>
@@ -112,20 +112,20 @@ import{a as r,d as c,b as f}from"./page-homepage-BCn5ETVD.js";import"./vendor-DI
         <h2 class="section-title">PRECUELAS & SECUELAS</h2>
         <div class="horizontal-scroll-v5" id="relations-container"></div>
       </div>
-    `,d}async afterRender(){const o=document.getElementById("tab-panel-content"),d=document.querySelectorAll(".tab-item"),p=document.getElementById("relations-container");let l=null;const g=(a,i)=>{const e=this.anime.images.jpg.large_image_url,s=`?title=${encodeURIComponent(this.anime.title)}`;o.innerHTML=`
+    `,l}async afterRender(){const d=await c.getSetting("audio_pref","sub"),r=document.getElementById("tab-panel-content"),l=document.querySelectorAll(".tab-item"),m=document.getElementById("relations-container");let p=null;const h=(a,i)=>{const e=this.anime.images.jpg.large_image_url,s=`?title=${encodeURIComponent(this.anime.title)}`;r.innerHTML=`
         <div class="ep-grid-animex">
-          ${Array.from({length:a},(t,n)=>n+1).map(t=>{const n=i?i.has(t):!1,m=n?'<div class="ep-watched-badge-animex">✓ Visto</div>':"";return`
-              <a href="/watch/${this.animeId}/${t}/sub${s}" data-link class="ep-card-animex page-enter ${n?"watched":""}">
+          ${Array.from({length:a},(t,n)=>n+1).map(t=>{const n=i?i.has(t):!1,g=n?'<div class="ep-watched-badge-animex">✓ Visto</div>':"";return`
+              <a href="/watch/${this.animeId}/${t}/${d}${s}" data-link class="ep-card-animex page-enter ${n?"watched":""}">
                 <div class="ep-thumb">
                   <img src="${e}" loading="lazy">
-                  ${m}
+                  ${g}
                   <div class="ep-num">EPISODIO ${t}</div>
                 </div>
                 <div class="ep-info">Episodio ${t}</div>
               </a>
             `}).join("")}
         </div>
-      `},h=async()=>{let a=new Set;try{const e=await f.history.where({animeId:String(this.animeId)}).toArray();a=new Set(e.map(s=>Number(s.episodeId)))}catch(e){console.error("Error consultando el historial de episodios vistos:",e)}if(l){g(l,a);return}let i=null;o.innerHTML='<div style="color:white;text-align:center;padding:40px;">Cargando episodios...</div>';try{const e=[this.anime.title,this.anime.title_english,this.anime.title_japanese,...this.anime.title_synonyms||[]].filter(Boolean);let s=null;for(const t of e){const n=await r.searchLocal(t);if(n&&n.success&&n.data&&n.data.results&&n.data.results.length>0){s=n;break}}if(s){const t=s.data.results.find(m=>e.some(b=>m.title.toLowerCase().includes(b.toLowerCase())))||s.data.results[0],n=await r.getAnimeInfo(t.url);n&&n.success&&n.data&&n.data.episodes&&(i=n.data.episodes.length)}}catch(e){console.error("Error al buscar episodios locales:",e)}if(!i){if(this.anime.status==="Currently Airing")try{const e=await r.providers.jikan.request(`/anime/${this.animeId}/episodes`);if(e&&e.data&&e.data.length>0){const s=e.pagination.last_visible_page;if(s>1){const t=await r.providers.jikan.request(`/anime/${this.animeId}/episodes?page=${s}`);i=t.data[t.data.length-1].mal_id}else i=e.data[e.data.length-1].mal_id}}catch(e){console.error("Error consultando Jikan para episodios emitidos:",e)}if(!i)if(this.anime.episodes)i=this.anime.episodes;else try{const e=await r.providers.jikan.request(`/anime/${this.animeId}/episodes`);if(e&&e.data&&e.data.length>0){const s=e.pagination.last_visible_page;if(s>1){const t=await r.providers.jikan.request(`/anime/${this.animeId}/episodes?page=${s}`);i=t.data[t.data.length-1].mal_id}else i=e.data[e.data.length-1].mal_id}}catch(e){console.error("Error consultando Jikan como respaldo:",e)}}l=i||12,g(l,a)},x=async()=>{o.innerHTML='<p style="color:white">Cargando personajes...</p>';try{const a=await r.getAnimeCharacters(this.animeId);a&&a.data&&(o.innerHTML=`<div class="char-grid-animex" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:20px;">
+      `},x=async()=>{let a=new Set;try{const e=await u.history.where({animeId:String(this.animeId)}).toArray();a=new Set(e.map(s=>Number(s.episodeId)))}catch(e){console.error("Error consultando el historial de episodios vistos:",e)}if(p){h(p,a);return}let i=null;r.innerHTML='<div style="color:white;text-align:center;padding:40px;">Cargando episodios...</div>';try{const e=[this.anime.title,this.anime.title_english,this.anime.title_japanese,...this.anime.title_synonyms||[]].filter(Boolean);let s=null;for(const t of e){const n=await o.searchLocal(t);if(n&&n.success&&n.data&&n.data.results&&n.data.results.length>0){s=n;break}}if(s){const t=s.data.results.find(g=>e.some(f=>g.title.toLowerCase().includes(f.toLowerCase())))||s.data.results[0],n=await o.getAnimeInfo(t.url);n&&n.success&&n.data&&n.data.episodes&&(i=n.data.episodes.length)}}catch(e){console.error("Error al buscar episodios locales:",e)}if(!i){if(this.anime.status==="Currently Airing")try{const e=await o.providers.jikan.request(`/anime/${this.animeId}/episodes`);if(e&&e.data&&e.data.length>0){const s=e.pagination.last_visible_page;if(s>1){const t=await o.providers.jikan.request(`/anime/${this.animeId}/episodes?page=${s}`);i=t.data[t.data.length-1].mal_id}else i=e.data[e.data.length-1].mal_id}}catch(e){console.error("Error consultando Jikan para episodios emitidos:",e)}if(!i)if(this.anime.episodes)i=this.anime.episodes;else try{const e=await o.providers.jikan.request(`/anime/${this.animeId}/episodes`);if(e&&e.data&&e.data.length>0){const s=e.pagination.last_visible_page;if(s>1){const t=await o.providers.jikan.request(`/anime/${this.animeId}/episodes?page=${s}`);i=t.data[t.data.length-1].mal_id}else i=e.data[e.data.length-1].mal_id}}catch(e){console.error("Error consultando Jikan como respaldo:",e)}}p=i||12,h(p,a)},b=async()=>{r.innerHTML='<p style="color:white">Cargando personajes...</p>';try{const a=await o.getAnimeCharacters(this.animeId);a&&a.data&&(r.innerHTML=`<div class="char-grid-animex" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:20px;">
             ${a.data.slice(0,18).map(i=>`
               <div class="char-card-animex page-enter" style="text-align:center">
                 <div class="char-img" style="width:100%; aspect-ratio:1/1; border-radius:20px; overflow:hidden; margin-bottom:10px; border:1px solid rgba(255,255,255,0.1)"><img src="${i.character.images.jpg.image_url}" style="width:100%; height:100%; object-fit:cover"></div>
@@ -133,4 +133,4 @@ import{a as r,d as c,b as f}from"./page-homepage-BCn5ETVD.js";import"./vendor-DI
                 <div class="char-role" style="font-size:10px; color:var(--text-muted); text-transform:uppercase">${i.role==="Main"?"Principal":"Secundario"}</div>
               </div>
             `).join("")}
-          </div>`)}catch{o.innerHTML='<p style="color:white">Error al cargar personajes.</p>'}};d.forEach(a=>{a.addEventListener("click",async()=>{d.forEach(i=>i.classList.remove("active")),a.classList.add("active"),a.dataset.tab==="episodes"?h():await x()})}),h();try{const a=await r.getAnimeRelations(this.animeId);a&&a.data&&a.data.forEach(i=>{const e=i.relation==="Prequel"?"Precuela":i.relation==="Sequel"?"Secuela":i.relation;i.entry.forEach(s=>{if(s.type==="anime"){const t=document.createElement("div");t.innerHTML=`<span class="rel-label">${e}</span><anime-card></anime-card>`;const n=t.querySelector("anime-card");n.data={mal_id:s.mal_id,title:s.name,images:this.anime.images},p.appendChild(t)}})})}catch{}document.getElementById("fav-btn").addEventListener("click",async a=>{this.isFavorite=!this.isFavorite,a.target.textContent=this.isFavorite?"❤️":"🤍",await c.toggleFavorite(this.anime)}),document.getElementById("follow-btn").addEventListener("click",async a=>{this.isFollowing=!this.isFollowing,a.target.textContent=this.isFollowing?"🔔":"🔕",await c.toggleFollowing(this.anime)})}}export{y as default};
+          </div>`)}catch{r.innerHTML='<p style="color:white">Error al cargar personajes.</p>'}};l.forEach(a=>{a.addEventListener("click",async()=>{l.forEach(i=>i.classList.remove("active")),a.classList.add("active"),a.dataset.tab==="episodes"?x():await b()})}),x();try{const a=await o.getAnimeRelations(this.animeId);a&&a.data&&a.data.forEach(i=>{const e=i.relation==="Prequel"?"Precuela":i.relation==="Sequel"?"Secuela":i.relation;i.entry.forEach(s=>{if(s.type==="anime"){const t=document.createElement("div");t.innerHTML=`<span class="rel-label">${e}</span><anime-card></anime-card>`;const n=t.querySelector("anime-card");n.data={mal_id:s.mal_id,title:s.name,images:this.anime.images},m.appendChild(t)}})})}catch{}document.getElementById("fav-btn").addEventListener("click",async a=>{this.isFavorite=!this.isFavorite,a.target.textContent=this.isFavorite?"❤️":"🤍",await c.toggleFavorite(this.anime)}),document.getElementById("follow-btn").addEventListener("click",async a=>{this.isFollowing=!this.isFollowing,a.target.textContent=this.isFollowing?"🔔":"🔕",await c.toggleFollowing(this.anime)})}}export{$ as default};
