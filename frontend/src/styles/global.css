@@ -2040,6 +2040,7 @@ body {
   }
 
   .ep-thumb {
+    position: relative !important;
     width: 80px !important;
     height: 50px !important;
     aspect-ratio: auto !important;
@@ -2068,13 +2069,13 @@ body {
   }
 
   .ep-watched-badge-animex {
-    position: relative !important;
-    top: auto !important;
-    right: auto !important;
+    position: absolute !important;
+    top: 4px !important;
+    right: 4px !important;
     background: var(--accent-secondary) !important;
     border-radius: 50% !important;
-    width: 28px !important;
-    height: 28px !important;
+    width: 20px !important;
+    height: 20px !important;
     padding: 0 !important;
     display: flex !important;
     align-items: center !important;
@@ -2082,15 +2083,16 @@ body {
     font-size: 0 !important;
     animation: none !important;
     border: none !important;
-    box-shadow: none !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
     flex-shrink: 0 !important;
+    z-index: 5 !important;
   }
 
   .ep-watched-badge-animex::after {
     content: '' !important;
     display: block !important;
-    width: 12px !important;
-    height: 12px !important;
+    width: 10px !important;
+    height: 10px !important;
     background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>') center/contain no-repeat !important;
   }
 
