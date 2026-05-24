@@ -3201,10 +3201,10 @@ body.tv-mode .anime-grid {
 
 /* En desktop regular (no TV mode): offset por el ancho del sidebar */
 @media (min-width: 768px) {
-  body:not(.tv-mode) #app {
+  body:not(.tv-mode):not(.sidebar-collapsed) #app {
     margin-left: 260px !important;
   }
-  body:not(.tv-mode) .nav-v4 {
+  body:not(.tv-mode):not(.sidebar-collapsed) .nav-v4 {
     left: 260px !important;
   }
 }
