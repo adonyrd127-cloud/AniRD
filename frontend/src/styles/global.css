@@ -3444,11 +3444,28 @@ body.tv-mode .video-wrapper-v5.iframe-active::after {
    Hace que el reproductor ocupe el 100% de la WebView de forma limpia y fluida
    ========================================================================== */
 
-/* Anular transformaciones en contenedores padres al activar pantalla completa */
+/* Anular transformaciones y apilamientos en todos los contenedores padres al activar pantalla completa */
+body.tv-fullscreen-active #app,
+body.mobile-fullscreen-active #app,
 body.tv-fullscreen-active .page-enter,
-body.mobile-fullscreen-active .page-enter {
+body.mobile-fullscreen-active .page-enter,
+body.tv-fullscreen-active .watch-layout-v5,
+body.mobile-fullscreen-active .watch-layout-v5,
+body.tv-fullscreen-active .player-section-v5,
+body.mobile-fullscreen-active .player-section-v5 {
   transform: none !important;
   animation: none !important;
+  transition: none !important;
+  will-change: auto !important;
+  perspective: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  clip-path: none !important;
+  mask: none !important;
+  contain: none !important;
+  position: static !important; /* ✅ Evita que actúen como contenedor de coordenadas para position: fixed */
+  overflow: visible !important; /* ✅ Evita que recorten el reproductor */
+  z-index: auto !important; /* ✅ Disuelve el contexto de apilamiento local */
 }
 
 body.tv-fullscreen-active #video-container,
@@ -3458,6 +3475,8 @@ body.mobile-fullscreen-active #video-container {
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
+  min-width: 100vw !important;
+  min-height: 100vh !important;
   z-index: 999999 !important;
   background: #000000 !important;
   margin: 0 !important;
@@ -3465,6 +3484,8 @@ body.mobile-fullscreen-active #video-container {
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
+  aspect-ratio: auto !important; /* ✅ Evitar conflictos de relación de aspecto en WebView */
+  transition: none !important; /* ✅ Evitar transiciones del reproductor */
 }
 
 body.tv-fullscreen-active #video-container iframe,
