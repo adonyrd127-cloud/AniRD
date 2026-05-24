@@ -374,6 +374,8 @@ export default class WatchPage {
           // Autocleanup si el layout ya no está en el DOM (navegación SPA)
           const isStillInDOM = document.getElementById('watch-layout');
           if (!isStillInDOM) {
+            document.body.classList.remove('tv-fullscreen-active');
+            document.body.classList.remove('mobile-fullscreen-active');
             clearInterval(window.activeWatchInterval);
             window.activeWatchInterval = null;
             return;
@@ -424,6 +426,7 @@ export default class WatchPage {
         const videoContainer = document.getElementById('video-container');
         if (videoContainer) {
           videoContainer.classList.remove('mobile-fullscreen-active');
+          document.body.classList.remove('mobile-fullscreen-active');
           const btnFullscreen = document.getElementById('btn-fullscreen-watch');
           const btnText = btnFullscreen ? btnFullscreen.querySelector('span') : null;
           if (btnText) btnText.textContent = 'Pantalla Completa';
@@ -435,6 +438,8 @@ export default class WatchPage {
     this._globalKeyHandler = (e) => {
       const isStillInDOM = document.getElementById('watch-layout');
       if (!isStillInDOM) {
+        document.body.classList.remove('tv-fullscreen-active');
+        document.body.classList.remove('mobile-fullscreen-active');
         window.removeEventListener('keydown', this._globalKeyHandler, { capture: true });
         return;
       }
@@ -443,6 +448,7 @@ export default class WatchPage {
         const videoContainer = document.getElementById('video-container');
         if (videoContainer && videoContainer.classList.contains('mobile-fullscreen-active')) {
           videoContainer.classList.remove('mobile-fullscreen-active');
+          document.body.classList.remove('mobile-fullscreen-active');
           const btnFullscreen = document.getElementById('btn-fullscreen-watch');
           const btnText = btnFullscreen ? btnFullscreen.querySelector('span') : null;
           if (btnText) btnText.textContent = 'Pantalla Completa';
@@ -575,15 +581,17 @@ export default class WatchPage {
         const videoContainer = document.getElementById('video-container');
         if (videoContainer) {
           if (isTV) {
-            videoContainer.classList.toggle('tv-fullscreen-active');
-            const isFullscreen = videoContainer.classList.contains('tv-fullscreen-active');
+            document.body.classList.toggle('tv-fullscreen-active');
+            const isFullscreen = document.body.classList.contains('tv-fullscreen-active');
+            videoContainer.classList.toggle('tv-fullscreen-active', isFullscreen);
             const btnText = btnFullscreen.querySelector('span');
             if (btnText) {
               btnText.textContent = isFullscreen ? 'Salir Pantalla' : 'Pantalla Completa';
             }
           } else if (isMobile) {
-            videoContainer.classList.toggle('mobile-fullscreen-active');
-            const isFullscreen = videoContainer.classList.contains('mobile-fullscreen-active');
+            document.body.classList.toggle('mobile-fullscreen-active');
+            const isFullscreen = document.body.classList.contains('mobile-fullscreen-active');
+            videoContainer.classList.toggle('mobile-fullscreen-active', isFullscreen);
             const btnText = btnFullscreen.querySelector('span');
             if (btnText) {
               btnText.textContent = isFullscreen ? 'Salir Pantalla' : 'Pantalla Completa';

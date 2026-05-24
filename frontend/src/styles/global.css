@@ -3444,8 +3444,15 @@ body.tv-mode .video-wrapper-v5.iframe-active::after {
    Hace que el reproductor ocupe el 100% de la WebView de forma limpia y fluida
    ========================================================================== */
 
-body.tv-mode #video-container.tv-fullscreen-active,
-#video-container.mobile-fullscreen-active {
+/* Anular transformaciones en contenedores padres al activar pantalla completa */
+body.tv-fullscreen-active .page-enter,
+body.mobile-fullscreen-active .page-enter {
+  transform: none !important;
+  animation: none !important;
+}
+
+body.tv-fullscreen-active #video-container,
+body.mobile-fullscreen-active #video-container {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
@@ -3460,8 +3467,8 @@ body.tv-mode #video-container.tv-fullscreen-active,
   box-shadow: none !important;
 }
 
-body.tv-mode #video-container.tv-fullscreen-active iframe,
-#video-container.mobile-fullscreen-active iframe {
+body.tv-fullscreen-active #video-container iframe,
+body.mobile-fullscreen-active #video-container iframe {
   width: 100% !important;
   height: 100% !important;
   border: none !important;

@@ -354,8 +354,9 @@ class SpatialNavigationService {
           console.log('📺 [AniRD] Video seleccionado → Activando pantalla completa CSS');
           const videoContainer = document.getElementById('video-container');
           if (videoContainer) {
-            videoContainer.classList.toggle('tv-fullscreen-active');
-            const isFullscreen = videoContainer.classList.contains('tv-fullscreen-active');
+            document.body.classList.toggle('tv-fullscreen-active');
+            const isFullscreen = document.body.classList.contains('tv-fullscreen-active');
+            videoContainer.classList.toggle('tv-fullscreen-active', isFullscreen);
             const btnText = document.querySelector('#btn-fullscreen-watch span');
             if (btnText) {
               btnText.textContent = isFullscreen ? 'Salir Pantalla' : 'Pantalla Completa';
@@ -379,6 +380,7 @@ class SpatialNavigationService {
       const videoContainer = document.getElementById('video-container');
       if (videoContainer && videoContainer.classList.contains('tv-fullscreen-active')) {
         videoContainer.classList.remove('tv-fullscreen-active');
+        document.body.classList.remove('tv-fullscreen-active');
         const btnText = document.querySelector('#btn-fullscreen-watch span');
         if (btnText) btnText.textContent = 'Pantalla Completa';
         e.preventDefault();
