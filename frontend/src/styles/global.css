@@ -3567,3 +3567,28 @@ body.mobile-fullscreen-active #video-container iframe {
     gap: 20px !important;
   }
 }
+
+/* ==========================================================================
+   ♿ ACCESIBILIDAD & UX (v5.0.0)
+   Mejoras de navegación por teclado y reducción de movimiento para sensibilidad
+   ========================================================================== */
+
+/* Indicador de foco por teclado premium y limpio para todo el sitio */
+:focus-visible {
+  outline: 3px solid var(--accent) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 15px var(--accent-glow) !important;
+  border-radius: inherit !important;
+}
+
+/* Desactivar o ralentizar drásticamente las transiciones a petición del sistema del usuario */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

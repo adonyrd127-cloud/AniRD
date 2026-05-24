@@ -8,7 +8,7 @@ class JikanClient {
     this.cacheTTL = 10 * 60 * 1000; // 10 minutes
   }
 
-  async request(endpoint, params = {}) {
+  async request(endpoint, params = {}, options = {}) {
     const url = new URL(`${this.baseUrl}${endpoint}`);
     Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
     const cacheKey = url.toString();
@@ -26,10 +26,10 @@ class JikanClient {
       if (wait > 0) await new Promise(r => setTimeout(r, wait));
       this.lastRequest = Date.now();
 
-      let res = await fetch(cacheKey);
+      let res = await fetch(cacheKey, { signal: options.signal });
       if (res.status === 429) {
         await new Promise(r => setTimeout(r, 2000));
-        res = await fetch(cacheKey);
+        res = await fetch(cacheKey, { signal: options.signal });
       }
       if (!res.ok) throw new Error(`Jikan error: ${res.status}`);
       const data = await res.json();
@@ -96,8 +96,8 @@ export class AnimeAPI {
     this.cache = new Map();
   }
 
-  async getAnimeSearch(query) {
-    return await this.providers.jikan.request('/anime', { q: query, limit: 20 });
+  async getAnimeSearch(query, options = {}) {
+    return await this.providers.jikan.request('/anime', { q: query, limit: 20 }, options);
   }
 
   async searchLocal(query) {

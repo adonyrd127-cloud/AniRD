@@ -4,6 +4,7 @@ export class SearchPalette {
   constructor(router) {
     this.router = router;
     this.timeout = null;
+    this.abortController = null; // ✅ Controlador para cancelar peticiones de búsqueda obsoletas
     this.render();
     this.bindEvents();
   }
@@ -203,7 +204,12 @@ export class SearchPalette {
     this.input.addEventListener('input', (e) => {
       const query = e.target.value.trim();
 
-      clearTimeout(this.timeout);
+      // Cancelar petición anterior activa si existe
+      if (this.abortController) {
+        this.abortController.abort();
+      }
+      this.abortController = new AbortController();
+      const signal = this.abortController.signal;
 
       if (query.length < 3) {
         this.resultsContainer.innerHTML = `
@@ -226,7 +232,8 @@ export class SearchPalette {
 
       this.timeout = setTimeout(async () => {
         try {
-          const res = await apiService.getAnimeSearch(query);
+          const res = await apiService.getAnimeSearch(query, { signal });
+          if (signal.aborted) return; // ✅ Salir si fue abortado
           const results = (res.data || []).slice(0, 8);
 
           if (results.length > 0) {
@@ -269,6 +276,7 @@ export class SearchPalette {
             `;
           }
         } catch (e) {
+          if (e.name === 'AbortError') return; // ✅ Ignorar error por cancelación de petición
           console.error("Search error:", e);
           this.resultsContainer.innerHTML = `
             <div class="result-group">

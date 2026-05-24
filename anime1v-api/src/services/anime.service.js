@@ -116,7 +116,34 @@ function findProviderForUrl(urlCandidate) {
   }
 }
 
+// --- Caché Ultra-rápida en Memoria para Scraping ---
+const scrapingCache = new Map();
+
+function getFromCache(key) {
+  const cached = scrapingCache.get(key);
+  if (cached) {
+    if (cached.expires > Date.now()) {
+      return cached.data;
+    }
+    scrapingCache.delete(key);
+  }
+  return null;
+}
+
+function setToCache(key, data, ttlMs) {
+  scrapingCache.set(key, {
+    data,
+    expires: Date.now() + ttlMs,
+  });
+}
+
 async function searchAnime(query, domainCandidate) {
+  const cacheKey = `search:${query}:${domainCandidate || ""}`;
+  const cachedData = getFromCache(cacheKey);
+  if (cachedData) {
+    return cachedData;
+  }
+
   const forcedProvider = findProviderByDomain(domainCandidate) || findProviderById(domainCandidate);
   const providersToTry = forcedProvider ? [forcedProvider] : PROVIDERS;
 
@@ -128,10 +155,12 @@ async function searchAnime(query, domainCandidate) {
       const result = await provider.service.searchAnime(query, provider.domains[0]);
       const count = result?.data?.count ?? 0;
       if (count > 0 || forcedProvider) {
-        return {
+        const finalResult = {
           ...result,
           source: result?.source || provider.id,
         };
+        setToCache(cacheKey, finalResult, 3600 * 1000); // 1 hora de caché para búsquedas
+        return finalResult;
       }
 
       if (!lastEmpty) {
@@ -146,6 +175,7 @@ async function searchAnime(query, domainCandidate) {
   }
 
   if (lastEmpty) {
+    setToCache(cacheKey, lastEmpty, 300 * 1000); // 5 minutos de caché para búsquedas vacías
     return lastEmpty;
   }
 
@@ -157,29 +187,45 @@ async function searchAnime(query, domainCandidate) {
 }
 
 async function getAnimeInfo(urlCandidate) {
+  const cacheKey = `info:${urlCandidate}`;
+  const cachedData = getFromCache(cacheKey);
+  if (cachedData) {
+    return cachedData;
+  }
+
   const provider = findProviderForUrl(urlCandidate) || PROVIDERS[0];
   if (!provider) {
     throw new ApiError(400, "Proveedor no soportado");
   }
 
   const result = await provider.service.getAnimeInfo(urlCandidate);
-  return {
+  const finalResult = {
     ...result,
     source: result?.source || provider.id,
   };
+  setToCache(cacheKey, finalResult, 15 * 60 * 1000); // 15 minutos de caché para info detallada
+  return finalResult;
 }
 
 async function getEpisodeLinks(urlCandidate, includeMega, excludeServers) {
+  const cacheKey = `episode:${urlCandidate}:${includeMega || ""}:${excludeServers || ""}`;
+  const cachedData = getFromCache(cacheKey);
+  if (cachedData) {
+    return cachedData;
+  }
+
   const provider = findProviderForUrl(urlCandidate) || PROVIDERS[0];
   if (!provider) {
     throw new ApiError(400, "Proveedor no soportado");
   }
 
   const result = await provider.service.getEpisodeLinks(urlCandidate, includeMega, excludeServers);
-  return {
+  const finalResult = {
     ...result,
     source: result?.source || provider.id,
   };
+  setToCache(cacheKey, finalResult, 5 * 60 * 1000); // 5 minutos de caché para enlaces del reproductor
+  return finalResult;
 }
 
 module.exports = {

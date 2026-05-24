@@ -608,8 +608,13 @@ const setupTVMode = () => {
 };
 
 const initApp = async () => {
-    const theme = await dbService.getSetting('theme', 'dark');
+    let theme = await dbService.getSetting('theme', null);
+    if (!theme) {
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      theme = systemDark ? 'dark' : 'light';
+    }
     if (theme === 'light') document.body.classList.add('light-theme');
+    else document.body.classList.remove('light-theme');
     if (authService.isLoggedIn()) {
       try {
         const serverData = await authService.fetchFromServer();

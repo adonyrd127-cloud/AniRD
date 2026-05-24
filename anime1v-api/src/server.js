@@ -45,15 +45,37 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
+    // Validar contra whitelist exacta en producción
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else if (allowedOrigins.includes("*")) {
+      // Advertencia en logs de producción
+      console.warn("⚠️ ALERTA DE SEGURIDAD: CORS está configurado para permitir todos los orígenes '*' en producción.");
       callback(null, true);
     } else {
-      callback(new Error("Not allowed by CORS"));
+      callback(new Error("Origen no permitido por las políticas de seguridad de CORS de AniRD"));
     }
   },
 };
 
 app.use(cors(corsOptions));
+
+// Inyectar protección de Rate Limiting por IP para proteger el hardware de la Orange Pi
+const rateLimit = require("express-rate-limit");
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 150, // Límite de 150 peticiones por ventana de 15 min por IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Demasiadas peticiones desde esta dirección IP. Por favor intenta de nuevo en 15 minutos.",
+  },
+  skip: () => process.env.DISABLE_RATE_LIMIT === "true",
+});
+
+app.use("/api/", apiLimiter);
+
 app.use(express.json({ limit: "1mb" }));
 app.use(morgan("dev"));
 
