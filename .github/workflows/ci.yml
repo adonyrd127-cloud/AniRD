@@ -1,0 +1,52 @@
+name: CI — AniRD
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  lint-backend:
+    name: Lint Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: anime1v-api/package-lock.json
+      - run: cd anime1v-api && npm ci
+      - run: cd anime1v-api && npm run lint --if-present
+
+  docker-build-check:
+    name: Verificar Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend image
+        run: docker build ./anime1v-api -t anird-api:ci-test
+      - name: Build frontend image
+        run: docker build ./frontend -t anird-web:ci-test
+      - name: Verificar healthcheck del backend
+        run: |
+          docker run -d --name api-test -p 3000:3000 \
+            -e JWT_SECRET=ci-test-secret-only \
+            -e NODE_ENV=test \
+            anird-api:ci-test
+          sleep 10
+          curl -f http://localhost:3000/health || exit 1
+          docker stop api-test && docker rm api-test
+
+  apk-release:
+    name: Publicar APK en Release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [lint-backend, docker-build-check]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload APK to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "*.apk"

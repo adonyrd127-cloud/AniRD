@@ -104,7 +104,7 @@ app.get("/", (_req, res) => {
 });
 
 app.get("/health", (_req, res) => {
-  res.status(200).json({ success: true, status: "ok" });
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 const authRoutes = require("./routes/auth.routes");

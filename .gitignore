@@ -1,10 +1,21 @@
-node_modules/
-coverage/
+# Runtime data — generado automáticamente, no va en Git
+anime1v-api/data/rate-limit.json
+anime1v-api/data/sessions/
+anime1v-api/data/*.tmp
+anime1v-api/downloads/
+
+# Binarios
+*.apk
+*.aab
 
 # Entorno
 .env
 .env.local
 
-# Binarios
-*.apk
-*.aab
+# Node
+node_modules/
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
