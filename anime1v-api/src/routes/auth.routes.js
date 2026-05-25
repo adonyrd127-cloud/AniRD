@@ -4,11 +4,22 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const dataService = require("../services/data.service");
 const { ApiError } = require("../utils/api-error");
+const rateLimit = require("express-rate-limit");
 
 const JWT_SECRET = process.env.JWT_SECRET || "anird-secret-key-premium-default-fallback-key-2026";
 if (!process.env.JWT_SECRET) {
   console.warn("WARNING: JWT_SECRET environment variable is not defined. Using secure default fallback key.");
 }
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 20,                   // 20 intentos por ventana
+  message: { error: "Demasiados intentos. Intenta en 15 minutos." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.use(authLimiter);
 
 // Registro
 router.post("/register", async (req, res, next) => {
