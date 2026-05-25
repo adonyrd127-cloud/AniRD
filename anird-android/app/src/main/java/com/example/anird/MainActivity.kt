@@ -30,9 +30,14 @@ class MainActivity : ComponentActivity() {
     // ✅ FIX #1: Variables para manejar la vista fullscreen del video
     private var customView: View? = null
     private var customViewCallback: WebChromeClient.CustomViewCallback? = null
+    private var isTV: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Inicializar si es TV de manera dinámica
+        val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
+        isTV = uiModeManager?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
 
         // ✅ FIX #2: Reemplazar enableEdgeToEdge() por esto.
         // Hace que las system bars sean opacas y el contenido NO se incruste en ellas.
@@ -98,6 +103,11 @@ class MainActivity : ComponentActivity() {
                                         )
                                     )
 
+                                    // Si no es TV (es móvil/tablet), rotar pantalla a horizontal (Landscape)
+                                    if (!isTV) {
+                                        requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                                    }
+
                                     // Activar modo inmersivo (ocultar status bar + nav bar)
                                     hideSystemBars()
                                 }
@@ -118,9 +128,7 @@ class MainActivity : ComponentActivity() {
                                 mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                                 cacheMode = WebSettings.LOAD_DEFAULT
                                 
-                                // Detectar dinámicamente si es Android TV o Celular
-                                val uiModeManager = context.getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
-                                val isTV = uiModeManager?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
+                                // Usar la variable miembro de clase para configurar el User-Agent
                                 userAgentString = if (isTV) {
                                     "$userAgentString AniRD-AndroidTV"
                                 } else {
@@ -154,6 +162,11 @@ class MainActivity : ComponentActivity() {
         customView = null
         customViewCallback?.onCustomViewHidden()
         customViewCallback = null
+
+        // Si no es TV (es móvil/tablet), restaurar orientación normal
+        if (!isTV) {
+            requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
 
         // Restaurar las barras del sistema
         showSystemBars()
