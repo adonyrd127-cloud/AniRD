@@ -597,7 +597,7 @@ const setupTVMode = () => {
   }
 
   const isSavedTV = localStorage.getItem('tvMode') === 'true';
-  const isSmartTV = /AniRD-AndroidTV|SmartTV|GoogleTV|AppleTV|HbbTV|LG NetCast|Opera TV|Tizen|Web0S|Nexus Player|AndroidTV|Roku|AFT|Silk|FireTV|Amazon|Chromecast|DroidTV|TV\s+Box|Smart_TV|MiBox|Shield/i.test(navigator.userAgent) || navigator.userAgent.toLowerCase().includes('tv');
+  const isSmartTV = (/AniRD-AndroidTV|SmartTV|GoogleTV|AppleTV|HbbTV|LG NetCast|Opera TV|Tizen|Web0S|Nexus Player|AndroidTV|Roku|AFT|Silk|FireTV|Amazon|Chromecast|DroidTV|TV\s+Box|Smart_TV|MiBox|Shield/i.test(navigator.userAgent) || navigator.userAgent.toLowerCase().includes('tv')) && !navigator.userAgent.includes('AniRD-AndroidMobile');
   
   if (isSavedTV || (localStorage.getItem('tvMode') === null && isSmartTV)) {
     spatialNavigation.init();

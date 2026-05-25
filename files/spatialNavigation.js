@@ -22,6 +22,15 @@ class SpatialNavigationService {
    */
   autoDetect() {
     const ua = navigator.userAgent || '';
+    
+    // Si es explícitamente la app móvil de Android, forzar desactivación de modo TV
+    if (ua.includes('AniRD-AndroidMobile')) {
+      console.log('📱 [AniRD] App móvil de Android detectada, asegurando modo móvil...');
+      localStorage.setItem('tvMode', 'false');
+      this.destroy();
+      return;
+    }
+
     const isAndroidTV = ua.includes('AniRD-AndroidTV');
     const wasActive = localStorage.getItem('tvMode') === 'true';
     

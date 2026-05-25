@@ -2,6 +2,9 @@ package com.example.anird
 
 import android.os.Build
 import android.os.Bundle
+import android.content.Context
+import android.app.UiModeManager
+import android.content.res.Configuration
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
@@ -114,8 +117,16 @@ class MainActivity : ComponentActivity() {
                                 databaseEnabled = true
                                 mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                                 cacheMode = WebSettings.LOAD_DEFAULT
-                                // User-agent con identificador AniRD para auto-detección TV mode
-                                userAgentString = "$userAgentString AniRD-AndroidTV"
+                                
+                                // Detectar dinámicamente si es Android TV o Celular
+                                val uiModeManager = context.getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
+                                val isTV = uiModeManager?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
+                                userAgentString = if (isTV) {
+                                    "$userAgentString AniRD-AndroidTV"
+                                } else {
+                                    "$userAgentString AniRD-AndroidMobile"
+                                }
+
                                 useWideViewPort = true
                                 loadWithOverviewMode = true
                                 mediaPlaybackRequiresUserGesture = false
