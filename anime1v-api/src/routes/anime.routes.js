@@ -4,6 +4,7 @@ const { dailyRateLimit } = require("../middlewares/rate-limit");
 const animeService = require("../services/anime.service");
 const downloadService = require("../services/download.service");
 const { ApiError } = require("../utils/api-error");
+const { searchSchema, validate } = require("../validators");
 
 const router = express.Router();
 
@@ -59,12 +60,9 @@ router.use(requireApiKey, dailyRateLimit);
 
 router.get(
   "/search",
+  validate(searchSchema, "query"),
   asyncHandler(async (req, res) => {
-    const sanitizedQuery = sanitizeQuery(req.query.q);
-    if (!sanitizedQuery) {
-      throw new ApiError(400, "Se requiere un término de búsqueda válido");
-    }
-    const response = await animeService.searchAnime(sanitizedQuery, req.query.domain);
+    const response = await animeService.searchAnime(req.query.q, req.query.domain);
     res.status(200).json(response);
   })
 );

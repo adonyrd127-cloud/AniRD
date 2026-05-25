@@ -5,9 +5,18 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const pino = require("pino");
+const pinoHttp = require("pino-http");
 const animeRoutes = require("./routes/anime.routes");
 const downloadService = require("./services/download.service");
 const { ApiError } = require("./utils/api-error");
+
+const logger = pino({
+  level: process.env.LOG_LEVEL || "info",
+  transport: process.env.NODE_ENV !== "production"
+    ? { target: "pino-pretty" }
+    : undefined
+});
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
@@ -77,7 +86,7 @@ const apiLimiter = rateLimit({
 app.use("/api/", apiLimiter);
 
 app.use(express.json({ limit: "1mb" }));
-app.use(morgan("dev"));
+app.use(pinoHttp({ logger }));
 
 const downloadsDir = downloadService.getDownloadsDir();
 const staticDownloadOptions = {
@@ -103,8 +112,14 @@ app.get("/", (_req, res) => {
   });
 });
 
+const { cache } = require("./cache");
+
 app.get("/health", (_req, res) => {
-  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  res.status(200).json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    cache: cache.getStats(),
+  });
 });
 
 const authRoutes = require("./routes/auth.routes");
@@ -136,6 +151,5 @@ app.use((error, _req, res, _next) => {
 });
 
 app.listen(port, "0.0.0.0", () => {
-  // eslint-disable-next-line no-console
-  console.log(`AniRD API listening on port ${port} (All interfaces)`);
+  logger.info(`AniRD API listening on port ${port} (All interfaces)`);
 });

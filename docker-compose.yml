@@ -12,6 +12,7 @@ services:
       - API_KEYS=${API_KEYS:-dev-anime1v-key}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:8090}
       - JWT_SECRET=${JWT_SECRET:?ERROR: Define JWT_SECRET en tu archivo .env}
+      - LOG_LEVEL=${LOG_LEVEL:-warn}
     volumes:
       - ./anime1v-api/downloads:/app/downloads
       - ./anime1v-api/data:/app/data
