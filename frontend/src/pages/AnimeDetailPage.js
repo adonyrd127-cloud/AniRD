@@ -105,7 +105,7 @@ export default class AnimeDetailPage {
       <div class="animex-hero">
         <div class="animex-banner"></div>
         <div class="animex-content">
-          <div class="animex-poster"><img src="${this.anime.images.jpg.large_image_url}"></div>
+          <div class="animex-poster"><img src="${this.anime.images.jpg.large_image_url}" loading="lazy" decoding="async"></div>
           <div class="animex-info">
             <div class="animex-badges">
               <span class="animex-badge" style="background:var(--accent)">${this.anime.episodes || '?'} EP</span>
@@ -283,7 +283,7 @@ export default class AnimeDetailPage {
           tabPanel.innerHTML = `<div class="char-grid-animex" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:20px;">
             ${res.data.slice(0, 18).map(char => `
               <div class="char-card-animex page-enter" style="text-align:center">
-                <div class="char-img" style="width:100%; aspect-ratio:1/1; border-radius:20px; overflow:hidden; margin-bottom:10px; border:1px solid rgba(255,255,255,0.1)"><img src="${char.character.images.jpg.image_url}" style="width:100%; height:100%; object-fit:cover"></div>
+                <div class="char-img" style="width:100%; aspect-ratio:1/1; border-radius:20px; overflow:hidden; margin-bottom:10px; border:1px solid rgba(255,255,255,0.1)"><img src="${char.character.images.jpg.image_url}" style="width:100%; height:100%; object-fit:cover" loading="lazy" decoding="async"></div>
                 <div class="char-name" style="font-size:12px; font-weight:800; color:white">${char.character.name}</div>
                 <div class="char-role" style="font-size:10px; color:var(--text-muted); text-transform:uppercase">${char.role === 'Main' ? 'Principal' : 'Secundario'}</div>
               </div>

@@ -1,19 +1,6 @@
 import './styles/global.css';
 
 // Desactivar y desinstalar cualquier Service Worker previo para evitar bloqueos agresivos de caché
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then((registrations) => {
-    for (let registration of registrations) {
-      registration.unregister().then((success) => {
-        if (success) {
-          console.log('🗑️ Service Worker desinstalado con éxito.');
-          window.location.reload();
-        }
-      });
-    }
-  });
-}
-
 import { AppRouter } from './app.js';
 import { useAppStore } from './stores/appStore.js';
 import { dbService, db } from './services/db.js';
@@ -628,3 +615,7 @@ const initApp = async () => {
 };
 
 initApp();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(console.warn);
+}
