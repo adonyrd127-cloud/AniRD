@@ -138,6 +138,12 @@ app.use((_req, _res, next) => {
 app.use((error, _req, res, _next) => {
   const statusCode = error.statusCode || 500;
 
+  if (_req.log) {
+    _req.log.error(error);
+  } else {
+    logger.error(error);
+  }
+
   const response = {
     success: false,
     message: error.message || "Error interno del servidor",
