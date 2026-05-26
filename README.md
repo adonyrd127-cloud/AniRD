@@ -1,6 +1,6 @@
 # AniRD - Anime Streaming Platform
 
-![AniRD Premium Interface](./files/anird_screenshot.png)
+![AniRD Premium Interface](./files/home_hero.png)
 
 AniRD es una plataforma moderna y minimalista para ver anime online, diseñada para ofrecer una experiencia premium con un enfoque en la legibilidad y la facilidad de uso.
 
@@ -51,6 +51,18 @@ docker compose up -d --build
 - **APIs:** Integración con Jikan API (MyAnimeList) y AniList para metadatos.
 - **Backend:** Node.js (Anime1v API) sirviendo con caché en memoria y validación robusta.
 
+## 🎨 Galería de la Interfaz Premium
+
+### 🏠 Inicio (Sección Principal y Carruseles)
+![Inicio - Héroe](./files/home_hero.png)
+![Inicio - Catálogo](./files/home_body.png)
+
+### 📋 Detalle de Anime (Episodios y Personajes)
+![Ficha Técnica](./files/detail_page.png)
+
+### 🎬 Reproductor Inmersivo (Modo Ambiente)
+![Reproductor Premium](./files/player_page.png)
+
 ## 📝 Changelog
 Ver [CHANGELOG.md](./CHANGELOG.md) para el historial completo de versiones.
 
@@ -63,10 +75,6 @@ Este proyecto es posible gracias a las increíbles APIs abiertas de la comunidad
 
 - **[Jikan API](https://jikan.moe/):** API oficial de MyAnimeList que utilizamos para la búsqueda global y datos generales.
 - **[AniList API](https://anilist.gitbook.io/):** Utilizada para metadatos enriquecidos, puntuaciones y estados de emisión.
-- **[Anime1v API](https://github.com/FxxMorgan/anime1v-api):** El motor original del backend adaptado para el streaming de contenidos.
-
----
-*Desarrollado con ❤️ por adonyrd127* estados de emisión.
 - **[Anime1v API](https://github.com/FxxMorgan/anime1v-api):** El motor original del backend adaptado para el streaming de contenidos.
 
 ---
