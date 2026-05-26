@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Base Theme -->
+    <style name="Theme.AniRD" parent="android:Theme.Material.NoActionBar" />
 
-    <style name="Theme.AniRD" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Splash Screen Theme -->
+    <style name="Theme.AniRD.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#0f0f0f</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="windowSplashScreenAnimationDuration">500</item>
+        <item name="postSplashScreenTheme">@style/Theme.AniRD</item>
+    </style>
 </resources>

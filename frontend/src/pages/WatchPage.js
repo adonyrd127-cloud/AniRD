@@ -577,10 +577,25 @@ export default class WatchPage {
         
         const isTV = document.body.classList.contains('tv-mode') || localStorage.getItem('tvMode') === 'true';
         const isMobile = window.innerWidth <= 900 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isAndroidApk = window.Android !== undefined;
         
         const videoContainer = document.getElementById('video-container');
         if (videoContainer) {
-          if (isTV) {
+          if (isAndroidApk) {
+            // FASE A.3: Activar fullscreen nativo de Android mediante la API de Fullscreen HTML5 en el iframe
+            const iframe = document.querySelector('.video-wrapper-v5 iframe, iframe');
+            if (iframe) {
+              if (iframe.requestFullscreen) {
+                iframe.requestFullscreen();
+              } else if (iframe.webkitRequestFullscreen) {
+                iframe.webkitRequestFullscreen();
+              } else if (iframe.mozRequestFullScreen) {
+                iframe.mozRequestFullScreen();
+              } else if (iframe.msRequestFullscreen) {
+                iframe.msRequestFullscreen();
+              }
+            }
+          } else if (isTV) {
             document.body.classList.toggle('tv-fullscreen-active');
             const isFullscreen = document.body.classList.contains('tv-fullscreen-active');
             videoContainer.classList.toggle('tv-fullscreen-active', isFullscreen);

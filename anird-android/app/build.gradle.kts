@@ -15,6 +15,29 @@ android {
         versionName = "1.0"
     }
 
+    flavorDimensions += "environment"
+
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.0.9:8090\"")
+            buildConfigField("Boolean", "ENABLE_WEBVIEW_DEBUG", "true")
+        }
+        create("prod") {
+            dimension = "environment"
+            buildConfigField("String", "API_BASE_URL", "\"http://100.101.132.92:3005\"")
+            buildConfigField("Boolean", "ENABLE_WEBVIEW_DEBUG", "false")
+        }
+        create("tv") {
+            dimension = "environment"
+            applicationIdSuffix = ".tv"
+            buildConfigField("String", "API_BASE_URL", "\"http://100.101.132.92:3005\"")
+            buildConfigField("Boolean", "ENABLE_WEBVIEW_DEBUG", "false")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -28,7 +51,7 @@ android {
     buildFeatures {
       compose = true
       aidl = false
-      buildConfig = false
+      buildConfig = true
       shaders = false
     }
 
@@ -81,4 +104,11 @@ dependencies {
   implementation(libs.androidx.navigation3.ui)
   implementation(libs.androidx.navigation3.runtime)
   implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+
+  // Media Session & Native Features
+  implementation(libs.androidx.media)
+  implementation(libs.androidx.core.splashscreen)
+  implementation(libs.androidx.biometric)
+  implementation(libs.androidx.security.crypto)
+  implementation(libs.androidx.fragment)
 }

@@ -18,7 +18,7 @@ export default class AuthPage {
       </div>
       <div class="auth-card glass-card page-enter">
         <div class="auth-header">
-          <img src="/favicon.ico" alt="AniRD Logo" class="auth-logo">
+          <img src="/favicon.png" alt="AniRD Logo" class="auth-logo" style="width: 80px; height: 80px; margin-bottom: 15px; filter: drop-shadow(0 0 15px rgba(255, 0, 85, 0.5)); animation: pulseLogo 3s infinite ease-in-out;">
           <h1>AniRD Cloud</h1>
           <p>Sincroniza tus animes en todos tus dispositivos</p>
         </div>

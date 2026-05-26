@@ -1,60 +1,90 @@
 package com.example.anird
 
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PictureInPictureParams
+import android.app.UiModeManager
+import android.content.Context
+import android.content.Intent
+import android.content.res.Configuration
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.content.Context
-import android.app.UiModeManager
-import android.content.res.Configuration
+import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Rational
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
-import android.webkit.WebChromeClient
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.webkit.*
 import android.widget.FrameLayout
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.example.anird.theme.AniRDTheme
+import java.util.concurrent.Executor
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     private var webView: WebView? = null
-
-    // ✅ FIX #1: Variables para manejar la vista fullscreen del video
     private var customView: View? = null
     private var customViewCallback: WebChromeClient.CustomViewCallback? = null
+    
     private var isTV: Boolean = false
+    private var isWebViewReady = false
+    private val baseUrl = BuildConfig.API_BASE_URL
+
+    private lateinit var mediaSession: MediaSessionCompat
+    private lateinit var executor: Executor
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // FASE E.1: Inicializar Splash Screen nativa antes de onCreate
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        // Mantener el splash screen visible hasta que el WebView cargue
+        splashScreen.setKeepOnScreenCondition { !isWebViewReady }
 
         // Inicializar si es TV de manera dinámica
         val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
         isTV = uiModeManager?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
 
-        // ✅ FIX #2: Reemplazar enableEdgeToEdge() por esto.
-        // Hace que las system bars sean opacas y el contenido NO se incruste en ellas.
-        WindowCompat.setDecorFitsSystemWindows(window, true)
+        // FASE B.5 & E.1: Edge-to-edge e insets
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         // Mantener pantalla encendida mientras la app está abierta
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        // FASE B.2: Configurar Media Session
+        setupMediaSession()
+
+        // FASE E.2: Crear canales de notificación
+        createNotificationChannels()
+
+        executor = ContextCompat.getMainExecutor(this)
 
         // Botón Atrás: salir de fullscreen primero, luego navegar en WebView
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 when {
-                    // Si hay un video en fullscreen, cerrarlo primero
                     customView != null -> hideCustomView()
-                    // Si el WebView tiene historial, navegar atrás
                     webView?.canGoBack() == true -> webView?.goBack()
-                    // Si no, cerrar la app normalmente
                     else -> {
                         isEnabled = false
                         onBackPressedDispatcher.onBackPressed()
@@ -64,6 +94,9 @@ class MainActivity : ComponentActivity() {
             }
         })
 
+        // Manejar deep link inicial si existe
+        handleDeepLink(intent)
+
         setContent {
             AniRDTheme {
                 AndroidView(
@@ -71,20 +104,94 @@ class MainActivity : ComponentActivity() {
                     factory = { context ->
                         WebView(context).apply {
                             webView = this
-                            webViewClient = WebViewClient()
+                            
+                            // WebView Remote Debugging en base a BuildConfig
+                            if (BuildConfig.ENABLE_WEBVIEW_DEBUG) {
+                                WebView.setWebContentsDebuggingEnabled(true)
+                            }
 
-                            // ✅ FIX #1: WebChromeClient con soporte completo de fullscreen
+                            // FASE B.5: Edge-to-Edge display con padding inteligente
+                            ViewCompat.setOnApplyWindowInsetsListener(this) { view, insets ->
+                                val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                                // Si está en fullscreen (reproduciendo), no aplicar padding
+                                if (customView != null) {
+                                    view.setPadding(0, 0, 0, 0)
+                                } else {
+                                    view.setPadding(0, bars.top, 0, bars.bottom)
+                                }
+                                insets
+                            }
+
+                            // FASE A.4: WebViewClient
+                            webViewClient = object : WebViewClient() {
+                                override fun shouldOverrideUrlLoading(
+                                    view: WebView,
+                                    request: WebResourceRequest
+                                ): Boolean {
+                                    val url = request.url.toString()
+                                    return if (url.startsWith("http://100.") ||
+                                        url.startsWith("http://10.0.0") ||
+                                        url.startsWith("http://localhost") ||
+                                        url.startsWith("anird://")
+                                    ) {
+                                        if (url.startsWith("anird://")) {
+                                            handleDeepLink(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                                            true
+                                        } else {
+                                            false
+                                        }
+                                    } else {
+                                        try {
+                                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                                        } catch (e: Exception) {
+                                            e.printStackTrace()
+                                        }
+                                        true
+                                    }
+                                }
+
+                                override fun onReceivedError(
+                                    view: WebView,
+                                    request: WebResourceRequest,
+                                    error: WebResourceError
+                                ) {
+                                    if (request.isForMainFrame) {
+                                        isWebViewReady = true
+                                        view.loadData(
+                                            """
+                                            <html><body style="background:#0f0f0f;color:#f1f1f1;font-family:sans-serif;
+                                              display:flex;flex-direction:column;align-items:center;justify-content:center;
+                                              height:100vh;margin:0;text-align:center;gap:16px;padding:24px;">
+                                              <h2 style="color:#e63946;margin-bottom:8px;">Sin conexión</h2>
+                                              <p style="color:#aaa;line-height:1.6;">No se pudo conectar al servidor de AniRD.<br>Verifica que tu conexión o Tailscale estén activos.</p>
+                                              <button onclick="location.reload()"
+                                                style="background:#e63946;color:#fff;border:none;padding:12px 28px;
+                                                border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;margin-top:8px;
+                                                box-shadow: 0 4px 6px rgba(0,0,0,0.2);">Reintentar</button>
+                                            </body></html>
+                                            """.trimIndent(),
+                                            "text/html", "UTF-8"
+                                        )
+                                    }
+                                }
+
+                                override fun onPageFinished(view: WebView, url: String) {
+                                    isWebViewReady = true
+                                    // FASE C.4: Si es Android TV, inyectar tv-mode al body
+                                    if (isTV) {
+                                        view.evaluateJavascript(
+                                            "document.body.classList.add('tv-mode');", null
+                                        )
+                                    }
+                                }
+                            }
+
+                            // FASE A.3: WebChromeClient
                             webChromeClient = object : WebChromeClient() {
-
-                                /**
-                                 * Se llama cuando el player pide ir a pantalla completa.
-                                 * Agrega la vista del video encima de TODO el layout.
-                                 */
                                 override fun onShowCustomView(
                                     view: View,
                                     callback: CustomViewCallback
                                 ) {
-                                    // Si ya hay un video en fullscreen, rechazar
                                     if (customView != null) {
                                         callback.onCustomViewHidden()
                                         return
@@ -93,7 +200,6 @@ class MainActivity : ComponentActivity() {
                                     customView = view
                                     customViewCallback = callback
 
-                                    // Agregar el video encima de todo el decorView
                                     val decorView = window.decorView as FrameLayout
                                     decorView.addView(
                                         customView,
@@ -103,32 +209,33 @@ class MainActivity : ComponentActivity() {
                                         )
                                     )
 
-                                    // Si no es TV (es móvil/tablet), rotar pantalla a horizontal (Landscape)
                                     if (!isTV) {
                                         requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                                     }
 
-                                    // Activar modo inmersivo (ocultar status bar + nav bar)
                                     hideSystemBars()
                                 }
 
-                                /**
-                                 * Se llama cuando el usuario sale del fullscreen
-                                 * (botón de salir fullscreen del player o botón Atrás).
-                                 */
                                 override fun onHideCustomView() {
                                     hideCustomView()
                                 }
+
+                                override fun onPermissionRequest(request: PermissionRequest) {
+                                    request.grant(request.resources)
+                                }
                             }
 
+                            // FASE A.1: Configuración de Settings
                             settings.apply {
                                 javaScriptEnabled = true
                                 domStorageEnabled = true
                                 databaseEnabled = true
-                                mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                                 cacheMode = WebSettings.LOAD_DEFAULT
+                                mediaPlaybackRequiresUserGesture = false
+                                allowFileAccess = false
+                                allowContentAccess = false
+                                mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
                                 
-                                // Usar la variable miembro de clase para configurar el User-Agent
                                 userAgentString = if (isTV) {
                                     "$userAgentString AniRD-AndroidTV"
                                 } else {
@@ -137,13 +244,15 @@ class MainActivity : ComponentActivity() {
 
                                 useWideViewPort = true
                                 loadWithOverviewMode = true
-                                mediaPlaybackRequiresUserGesture = false
-                                // Permitir zoom manual si el usuario lo necesita
                                 setSupportZoom(false)
                                 builtInZoomControls = false
+                                displayZoomControls = false
                             }
 
-                            loadUrl("http://10.0.0.9:8090")
+                            // FASE B.1, B.2, E.3: Agregar JS Bridge nativo
+                            addJavascriptInterface(JsBridge(), "Android")
+
+                            loadUrl(baseUrl)
                         }
                     }
                 )
@@ -151,9 +260,28 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /**
-     * Quita la vista fullscreen del video y restaura las barras del sistema.
-     */
+    private fun handleDeepLink(intent: Intent?) {
+        val data = intent?.data ?: return
+        val path = data.toString()
+        webView?.let { view ->
+            when {
+                path.startsWith("anird://history") -> view.loadUrl("$baseUrl/#/history")
+                path.startsWith("anird://favorites") -> view.loadUrl("$baseUrl/#/favorites")
+                path.contains("/anime/") -> {
+                    val id = data.lastPathSegment
+                    view.loadUrl("$baseUrl/#/anime/$id")
+                }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleDeepLink(intent)
+    }
+
+    // FASE A.3: Ocultar vista fullscreen del video
     private fun hideCustomView() {
         customView?.let { view ->
             val decorView = window.decorView as FrameLayout
@@ -163,31 +291,21 @@ class MainActivity : ComponentActivity() {
         customViewCallback?.onCustomViewHidden()
         customViewCallback = null
 
-        // Si no es TV (es móvil/tablet), restaurar orientación normal
         if (!isTV) {
             requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
 
-        // Restaurar las barras del sistema
         showSystemBars()
     }
 
-    /**
-     * Oculta status bar y navigation bar para fullscreen inmersivo.
-     * Compatible con Android 11+ (API 30) y versiones anteriores.
-     */
     @Suppress("DEPRECATION")
     private fun hideSystemBars() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Android 11+ — API moderna
             window.insetsController?.apply {
                 hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
-                systemBarsBehavior =
-                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
         } else {
-            // Android 10 y anteriores — API legacy
-            @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility = (
                 View.SYSTEM_UI_FLAG_FULLSCREEN
                 or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
@@ -199,9 +317,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /**
-     * Restaura status bar y navigation bar después del fullscreen.
-     */
     @Suppress("DEPRECATION")
     private fun showSystemBars() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -209,8 +324,244 @@ class MainActivity : ComponentActivity() {
                 WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars()
             )
         } else {
-            @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+        }
+    }
+
+    // FASE B.1: Picture-in-Picture (PiP)
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        enterPipIfWatching()
+    }
+
+    private fun enterPipIfWatching() {
+        webView?.evaluateJavascript(
+            "window.AniRDBridge?.isPlaying() || false"
+        ) { result ->
+            if (result == "true" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val params = PictureInPictureParams.Builder()
+                    .setAspectRatio(Rational(16, 9))
+                    .build()
+                enterPictureInPictureMode(params)
+            }
+        }
+    }
+
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration
+    ) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        webView?.evaluateJavascript(
+            if (isInPictureInPictureMode)
+                "window.AniRDBridge?.enterPip()"
+            else
+                "window.AniRDBridge?.exitPip()"
+            , null
+        )
+    }
+
+    // FASE B.2: Media Session
+    private fun setupMediaSession() {
+        mediaSession = MediaSessionCompat(this, "AniRD").apply {
+            setCallback(object : MediaSessionCompat.Callback() {
+                override fun onPlay() {
+                    webView?.evaluateJavascript("window.AniRDBridge?.play()", null)
+                }
+
+                override fun onPause() {
+                    webView?.evaluateJavascript("window.AniRDBridge?.pause()", null)
+                }
+
+                override fun onSkipToNext() {
+                    webView?.evaluateJavascript("window.AniRDBridge?.nextEpisode()", null)
+                }
+
+                override fun onSkipToPrevious() {
+                    webView?.evaluateJavascript("window.AniRDBridge?.prevEpisode()", null)
+                }
+            })
+            isActive = true
+        }
+    }
+
+    fun updateMediaSession(title: String, isPlaying: Boolean) {
+        val state = PlaybackStateCompat.Builder()
+            .setState(
+                if (isPlaying) PlaybackStateCompat.STATE_PLAYING
+                else PlaybackStateCompat.STATE_PAUSED,
+                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                1f
+            )
+            .setActions(
+                PlaybackStateCompat.ACTION_PLAY or
+                PlaybackStateCompat.ACTION_PAUSE or
+                PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+            )
+            .build()
+
+        mediaSession.setPlaybackState(state)
+        mediaSession.setMetadata(
+            MediaMetadataCompat.Builder()
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, "AniRD")
+                .build()
+        )
+    }
+
+    // FASE C.3: HDMI CEC / Control Remoto TV
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        return when (keyCode) {
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
+                webView?.evaluateJavascript("window.AniRDBridge?.togglePlayPause();", null)
+                true
+            }
+            KeyEvent.KEYCODE_MEDIA_PLAY -> {
+                webView?.evaluateJavascript("window.AniRDBridge?.play();", null)
+                true
+            }
+            KeyEvent.KEYCODE_MEDIA_PAUSE -> {
+                webView?.evaluateJavascript("window.AniRDBridge?.pause();", null)
+                true
+            }
+            KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                webView?.evaluateJavascript("window.AniRDBridge?.nextEpisode();", null)
+                true
+            }
+            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                webView?.evaluateJavascript("window.AniRDBridge?.prevEpisode();", null)
+                true
+            }
+            KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
+                webView?.evaluateJavascript("window.AniRDBridge?.seekForward(30);", null)
+                true
+            }
+            KeyEvent.KEYCODE_MEDIA_REWIND -> {
+                webView?.evaluateJavascript("window.AniRDBridge?.seekBack(10);", null)
+                true
+            }
+            KeyEvent.KEYCODE_BACK -> {
+                // Si estamos en TV, permitir al JS controlar el retroceso antes de salir
+                if (isTV) {
+                    webView?.evaluateJavascript(
+                        "window.AniRDBridge?.handleBack() || false"
+                    ) { result ->
+                        if (result != "true") {
+                            finish()
+                        }
+                    }
+                    true
+                } else {
+                    super.onKeyDown(keyCode, event)
+                }
+            }
+            else -> super.onKeyDown(keyCode, event)
+        }
+    }
+
+    // FASE E.2: Canales de Notificación
+    private fun createNotificationChannels() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channelNewEps = NotificationChannel(
+                "new_episodes",
+                "Nuevos episodios",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Aviso cuando sale un nuevo episodio de tus animes seguidos"
+                setShowBadge(true)
+            }
+
+            val channelSync = NotificationChannel(
+                "sync_status",
+                "Sincronización",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Estado de sincronización con el servidor"
+            }
+
+            val manager = getSystemService(NotificationManager::class.java)
+            manager?.createNotificationChannels(listOf(channelNewEps, channelSync))
+        }
+    }
+
+    // FASE E.3: Autenticación Biométrica
+    fun authenticateWithBiometrics() {
+        val biometricManager = BiometricManager.from(this)
+        if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) != BiometricManager.BIOMETRIC_SUCCESS) {
+            return
+        }
+
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Acceder a AniRD")
+            .setSubtitle("Usa tu huella o Face Unlock")
+            .setNegativeButtonText("Usar contraseña")
+            .build()
+
+        val biometricPrompt = BiometricPrompt(this, executor, object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                super.onAuthenticationSucceeded(result)
+                try {
+                    val masterKey = MasterKey.Builder(this@MainActivity)
+                        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                        .build()
+                    val prefs = EncryptedSharedPreferences.create(
+                        this@MainActivity,
+                        "anird_secure_prefs",
+                        masterKey,
+                        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                    )
+                    val token = prefs.getString("jwt_token", null)
+                    if (token != null) {
+                        webView?.evaluateJavascript(
+                            "window.AniRDBridge?.loginWithToken('$token')", null
+                        )
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        })
+
+        biometricPrompt.authenticate(promptInfo)
+    }
+
+    // JS Bridge para interactuar con el Frontend Vite
+    inner class JsBridge {
+        @JavascriptInterface
+        fun onPlaybackChanged(title: String, isPlaying: Boolean) {
+            runOnUiThread {
+                updateMediaSession(title, isPlaying)
+            }
+        }
+
+        @JavascriptInterface
+        fun saveToken(token: String) {
+            runOnUiThread {
+                try {
+                    val masterKey = MasterKey.Builder(this@MainActivity)
+                        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                        .build()
+                    val prefs = EncryptedSharedPreferences.create(
+                        this@MainActivity,
+                        "anird_secure_prefs",
+                        masterKey,
+                        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                    )
+                    prefs.edit().putString("jwt_token", token).apply()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun requestBiometricAuth() {
+            runOnUiThread {
+                authenticateWithBiometrics()
+            }
         }
     }
 }

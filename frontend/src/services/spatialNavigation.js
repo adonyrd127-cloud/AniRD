@@ -160,6 +160,23 @@ class SpatialNavigationService {
     // ✅ Actualizar referencia al scroll container si cambió
     this._updateScrollContainer();
 
+    // Dinámicamente asignar tabindex="0" a elementos interactivos para TV
+    const TV_FOCUSABLE = [
+      '.server-pill',
+      '.lang-pill',
+      '.carousel-btn',
+      '.genre-item',
+      '.tab-item',
+      '.ep-card-animex',
+      '.settings-option',
+      '.auth-btn'
+    ];
+    TV_FOCUSABLE.forEach(selector => {
+      document.querySelectorAll(selector).forEach(el => {
+        if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
+      });
+    });
+
     const selectors = [
       'a[href]',
       'button',
@@ -188,7 +205,13 @@ class SpatialNavigationService {
       '.related-card-v5',
       '.video-wrapper-v5',
       '.tab-item',
-      '[role="button"]'
+      '[role="button"]',
+      '.server-pill',          // Botones Uwu/Mochi/Beep
+      '.lang-pill',            // Sub/Lat
+      '.carousel-btn',         // Botones ❮ ❯ de carruseles
+      '.genre-item',           // Ítems del menú de géneros
+      '.settings-option',      // Opciones en configuración
+      '.auth-btn'              // Botones de login/registro
     ].join(', ');
 
     const elements = Array.from(document.querySelectorAll(selectors));

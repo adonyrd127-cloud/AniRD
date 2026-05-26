@@ -619,3 +619,115 @@ initApp();
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(console.warn);
 }
+
+// FASE B, C, E: AniRD Android & TV Bridge integration
+window.AniRDBridge = {
+  isPlaying: () => {
+    const playerActive = document.body.classList.contains('player-active') || document.querySelector('.watch-container') !== null;
+    const hasVideo = document.querySelector('video') !== null;
+    const hasIframe = document.querySelector('#video-container iframe, iframe') !== null;
+    return playerActive && (hasVideo || hasIframe);
+  },
+  enterPip: () => {
+    document.body.classList.add('pip-mode');
+  },
+  exitPip: () => {
+    document.body.classList.remove('pip-mode');
+  },
+  play: () => {
+    const media = document.querySelector('video');
+    if (media) {
+      media.play().catch(e => console.error("Play error:", e));
+    } else {
+      const iframe = document.querySelector('iframe');
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo' }), '*');
+      }
+    }
+  },
+  pause: () => {
+    const media = document.querySelector('video');
+    if (media) {
+      media.pause();
+    } else {
+      const iframe = document.querySelector('iframe');
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo' }), '*');
+      }
+    }
+  },
+  togglePlayPause: () => {
+    const media = document.querySelector('video');
+    if (media) {
+      if (media.paused) media.play().catch(e => console.error("Play error:", e));
+      else media.pause();
+    }
+  },
+  nextEpisode: () => {
+    const nextBtn = document.querySelector('.next-episode-btn, #next-ep-btn, button[title*="Siguiente"], a[title*="Siguiente"]');
+    if (nextBtn) nextBtn.click();
+  },
+  prevEpisode: () => {
+    const prevBtn = document.querySelector('.prev-episode-btn, #prev-ep-btn, button[title*="Anterior"], a[title*="Anterior"]');
+    if (prevBtn) prevBtn.click();
+  },
+  seekForward: (sec) => {
+    const media = document.querySelector('video');
+    if (media) {
+      media.currentTime = Math.min(media.duration || 0, media.currentTime + sec);
+    }
+  },
+  seekBack: (sec) => {
+    const media = document.querySelector('video');
+    if (media) {
+      media.currentTime = Math.max(0, media.currentTime - sec);
+    }
+  },
+  handleBack: () => {
+    const modal = document.querySelector('.modal.active, .dropdown.open, #notif-dropdown[style*="block"]');
+    if (modal) {
+      if (modal.id === 'notif-dropdown') {
+        modal.style.display = 'none';
+      } else {
+        modal.classList.remove('active', 'open');
+      }
+      return true;
+    }
+    return false;
+  },
+  loginWithToken: (token) => {
+    if (token) {
+      authService.loginWithToken(token).then(() => {
+        if (window.updateNavbarAuth) window.updateNavbarAuth();
+      }).catch(err => console.error("Auto login token error:", err));
+    }
+  },
+  notifyPlayback: (title, isPlaying) => {
+    if (window.Android && window.Android.onPlaybackChanged) {
+      window.Android.onPlaybackChanged(title, isPlaying);
+    }
+  }
+};
+
+// Auto-detect player playback events and notify android
+setInterval(() => {
+  const video = document.querySelector('video');
+  if (video && !video.dataset.hasAniRDListener) {
+    video.dataset.hasAniRDListener = 'true';
+    const notify = () => {
+      const titleElement = document.querySelector('.watch-anime-title, .anime-title, h1, h2');
+      const title = titleElement ? titleElement.textContent.trim() : 'AniRD Video';
+      if (window.AniRDBridge && window.AniRDBridge.notifyPlayback) {
+        window.AniRDBridge.notifyPlayback(title, !video.paused);
+      }
+    };
+    video.addEventListener('play', notify);
+    video.addEventListener('pause', notify);
+    video.addEventListener('ended', () => {
+      if (window.AniRDBridge && window.AniRDBridge.notifyPlayback) {
+        window.AniRDBridge.notifyPlayback('AniRD', false);
+      }
+    });
+  }
+}, 1000);
+

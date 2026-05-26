@@ -3592,3 +3592,69 @@ body.mobile-fullscreen-active #video-container iframe {
     scroll-behavior: auto !important;
   }
 }
+
+/* --- PiP Mode styles (Fase B.1) --- */
+body.pip-mode .sidebar,
+body.pip-mode .desktop-sidebar,
+body.pip-mode .navbar,
+body.pip-mode .nav-v4,
+body.pip-mode .bottom-nav,
+body.pip-mode .episode-list,
+body.pip-mode .mobile-nav {
+    display: none !important;
+}
+body.pip-mode #app {
+    margin-left: 0 !important;
+    left: 0 !important;
+    top: 0 !important;
+}
+body.pip-mode #video-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 999999 !important;
+}
+
+/* --- Overscan Safe Zone for TV (Fase C.4) --- */
+body.tv-mode {
+    --tv-safe-h: max(5vw, 40px);
+    --tv-safe-v: max(5vh, 30px);
+}
+body.tv-mode .nav-v4 {
+    padding-left: calc(320px + var(--tv-safe-h)) !important;
+    padding-right: var(--tv-safe-h) !important;
+}
+body.tv-mode.sidebar-collapsed .nav-v4 {
+    padding-left: var(--tv-safe-h) !important;
+}
+body.tv-mode #app {
+    padding-left: var(--tv-safe-h) !important;
+    padding-right: var(--tv-safe-h) !important;
+    padding-bottom: var(--tv-safe-v) !important;
+}
+body.tv-mode .mobile-nav.bottom-nav {
+    padding-bottom: var(--tv-safe-v) !important;
+    padding-left: var(--tv-safe-h) !important;
+    padding-right: var(--tv-safe-h) !important;
+}
+
+/* --- TV Mode outline indicator for spatial navigation (Fase C.5) --- */
+body.tv-mode .server-pill.focused,
+body.tv-mode .server-pill:focus,
+body.tv-mode .lang-pill.focused,
+body.tv-mode .lang-pill:focus,
+body.tv-mode .carousel-btn.focused,
+body.tv-mode .carousel-btn:focus,
+body.tv-mode .genre-item.focused,
+body.tv-mode .genre-item:focus,
+body.tv-mode .settings-option.focused,
+body.tv-mode .settings-option:focus,
+body.tv-mode .auth-btn.focused,
+body.tv-mode .auth-btn:focus {
+    outline: 3px solid var(--accent, #ff0055) !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 20px rgba(255, 0, 85, 0.4) !important;
+    border-radius: 8px !important;
+}

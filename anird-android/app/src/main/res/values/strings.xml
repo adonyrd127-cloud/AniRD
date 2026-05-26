@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">AniRD</string>
+    <string name="shortcut_continue_short">Historial</string>
+    <string name="shortcut_continue_long">Continuar Viendo</string>
+    <string name="shortcut_continue_disabled">Historial no disponible</string>
+    <string name="shortcut_favorites_short">Favoritos</string>
+    <string name="shortcut_favorites_long">Mis Favoritos</string>
+    <string name="shortcut_favorites_disabled">Favoritos no disponible</string>
 </resources>
