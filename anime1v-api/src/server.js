@@ -50,16 +50,18 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    if (!origin || origin.includes("localhost") || origin.includes("127.0.0.1")) {
+    const isLocalOrTailscale = origin && (
+      /^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|100\.\d+\.\d+\.\d+)(:\d+)?$/.test(origin)
+    );
+
+    if (!origin || origin.includes("localhost") || origin.includes("127.0.0.1") || isLocalOrTailscale) {
       return callback(null, true);
     }
 
     // Validar contra whitelist exacta en producción
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
-    } else if (allowedOrigins.includes("*")) {
-      // Advertencia en logs de producción
-      console.warn("⚠️ ALERTA DE SEGURIDAD: CORS está configurado para permitir todos los orígenes '*' en producción.");
+    } else if (allowedOrigins.includes("*") || allowedOrigins.includes("")) {
       callback(null, true);
     } else {
       callback(new Error("Origen no permitido por las políticas de seguridad de CORS de AniRD"));
