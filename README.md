@@ -1,5 +1,7 @@
 # AniRD - Anime Streaming Platform
 
+![AniRD Premium Interface](./files/anird_screenshot.png)
+
 AniRD es una plataforma moderna y minimalista para ver anime online, diseñada para ofrecer una experiencia premium con un enfoque en la legibilidad y la facilidad de uso.
 
 ## ✨ Características Principales
