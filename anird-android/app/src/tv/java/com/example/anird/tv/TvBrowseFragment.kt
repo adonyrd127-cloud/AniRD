@@ -22,6 +22,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.example.anird.tv.presenter.TvIconHeaderItem
+import com.example.anird.tv.presenter.TvIconHeaderPresenter
 
 /**
  * Fragmento principal de exploración (Browse) para Android TV.
@@ -68,7 +70,9 @@ class TvBrowseFragment : BrowseSupportFragment() {
     }
 
     private fun setupUIElements() {
-        title = getString(R.string.tv_app_name)
+        // En vez de título de texto, usar el logo de la aplicación
+        badgeDrawable = ContextCompat.getDrawable(requireContext(), R.mipmap.ic_launcher)
+        
         // Icono de búsqueda habilitado en la esquina superior izquierda
         headersState = HEADERS_ENABLED
         isHeadersTransitionOnBackEnabled = true
@@ -79,6 +83,13 @@ class TvBrowseFragment : BrowseSupportFragment() {
     }
 
     private fun setupAdapters() {
+        val presenterSelector = ClassPresenterSelector()
+        val customHeaderPresenter = TvIconHeaderPresenter()
+        setHeaderPresenterSelector(presenterSelector.apply {
+            addClassPresenter(Row::class.java, customHeaderPresenter)
+            addClassPresenter(ListRow::class.java, customHeaderPresenter)
+        })
+        
         rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
         adapter = rowsAdapter
     }
@@ -186,7 +197,15 @@ class TvBrowseFragment : BrowseSupportFragment() {
         val listRowAdapter = ArrayObjectAdapter(AnimeCardPresenter())
         listRowAdapter.addAll(0, list)
         
-        val header = HeaderItem(rowId.toLong(), getString(headerResId))
+        val iconResId = when(rowId) {
+            ROW_TRENDING -> R.drawable.ic_sidebar_home
+            ROW_LATEST -> R.drawable.ic_sidebar_explore
+            ROW_MOVIES -> R.drawable.ic_sidebar_explore
+            ROW_DUBBED -> R.drawable.ic_sidebar_explore
+            else -> R.drawable.ic_sidebar_explore
+        }
+        
+        val header = TvIconHeaderItem(rowId.toLong(), getString(headerResId), iconResId)
         rowsAdapter.add(ListRow(header, listRowAdapter))
     }
 
@@ -211,7 +230,13 @@ class TvBrowseFragment : BrowseSupportFragment() {
         }
 
         // Agregar al inicio del BrowseFragment para que tenga alta prioridad visual
-        val header = HeaderItem(rowId.toLong(), getString(headerResId))
+        val iconResId = when(rowId) {
+            ROW_CONTINUE -> R.drawable.ic_sidebar_history
+            ROW_FAVORITES -> R.drawable.ic_sidebar_favorites
+            ROW_FOLLOWING -> R.drawable.ic_sidebar_favorites
+            else -> R.drawable.ic_sidebar_explore
+        }
+        val header = TvIconHeaderItem(rowId.toLong(), getString(headerResId), iconResId)
         val listRow = ListRow(header, adapter)
         
         // Insertamos al principio (posición 0 o justo después de otra fila de base de datos)
@@ -327,7 +352,20 @@ class TvBrowseFragment : BrowseSupportFragment() {
             )
         )
 
-        val header = HeaderItem(ROW_SETTINGS.toLong(), getString(R.string.tv_settings_title))
+        val prefs = requireContext().getSharedPreferences("anird_tv_prefs", android.content.Context.MODE_PRIVATE)
+        val defaultAudio = prefs.getString("default_audio", "sub") ?: "sub"
+        val audioText = if (defaultAudio == "sub") "Japonés (Sub)" else "Español (Latino)"
+
+        listRowAdapter.add(
+            TvSettingsItem(
+                id = 4,
+                title = "Audio por Defecto",
+                description = "Actual: $audioText",
+                iconResId = R.drawable.ic_settings_audio
+            )
+        )
+
+        val header = TvIconHeaderItem(ROW_SETTINGS.toLong(), getString(R.string.tv_settings_title), R.drawable.ic_sidebar_profile)
         rowsAdapter.add(ListRow(header, listRowAdapter))
     }
 
@@ -363,6 +401,14 @@ class TvBrowseFragment : BrowseSupportFragment() {
                     animeRepo.clearCache()
                     Toast.makeText(context, R.string.tv_settings_cache_done, Toast.LENGTH_SHORT).show()
                 }
+            }
+            4 -> { // Default Audio
+                val prefs = requireContext().getSharedPreferences("anird_tv_prefs", android.content.Context.MODE_PRIVATE)
+                val current = prefs.getString("default_audio", "sub") ?: "sub"
+                val next = if (current == "sub") "dub" else "sub"
+                prefs.edit().putString("default_audio", next).apply()
+                Toast.makeText(context, "Idioma por defecto cambiado", Toast.LENGTH_SHORT).show()
+                requireActivity().recreate()
             }
         }
     }

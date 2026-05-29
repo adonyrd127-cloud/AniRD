@@ -274,9 +274,18 @@ class TvPlayerActivity : FragmentActivity() {
                 val servers = animeRepo.getStreamServers(currentEpisodeUrl)
                 streamServers = servers
 
-                // Auto-detectar si hay servidores doblados si no hay subtitulados, o viceversa
-                isDubMode = servers.sub.isEmpty() && servers.dub.isNotEmpty()
+                // Leer preferencia de idioma y aplicarla si hay servidores disponibles para ese idioma
+                val prefs = getSharedPreferences("anird_tv_prefs", android.content.Context.MODE_PRIVATE)
+                val defaultAudio = prefs.getString("default_audio", "sub") ?: "sub"
                 
+                if (defaultAudio == "dub" && servers.dub.isNotEmpty()) {
+                    isDubMode = true
+                } else if (defaultAudio == "sub" && servers.sub.isNotEmpty()) {
+                    isDubMode = false
+                } else {
+                    // Auto-detectar fallback si la preferencia no tiene servidores
+                    isDubMode = servers.sub.isEmpty() && servers.dub.isNotEmpty()
+                }
                 updateAudioSelectorButtons()
                 updateNavigationButtons()
                 populateServers()

@@ -204,14 +204,16 @@ class TvDetailsFragment : DetailsSupportFragment() {
                             val thumbnail = aniListEps.getOrNull(localEp.number - 1)?.thumbnail
                             val dbProgress = historyList.find { it.episodeNumber == localEp.number }
 
+                            val progress = dbProgress?.progress ?: 0L
+                            val duration = dbProgress?.duration ?: 1L
                             Episode(
                                 number = localEp.number,
                                 title = localEp.title ?: "Episodio ${localEp.number}",
                                 url = localEp.url,
                                 thumbnailUrl = thumbnail,
-                                watched = (dbProgress?.progress ?: 0L) >= ((dbProgress?.duration ?: 1L) * 0.9f).toLong(),
-                                progressMs = dbProgress?.progress ?: 0,
-                                durationMs = dbProgress?.duration ?: 0
+                                watched = progress > 0L && progress >= (duration * 0.9f).toLong(),
+                                progressMs = progress,
+                                durationMs = duration
                             )
                         }
                     }
@@ -226,14 +228,16 @@ class TvDetailsFragment : DetailsSupportFragment() {
                     episodesList = aniListEps.mapIndexed { index, aniEp ->
                         val epNum = index + 1
                         val dbProgress = historyList.find { it.episodeNumber == epNum }
+                        val progress = dbProgress?.progress ?: 0L
+                        val duration = dbProgress?.duration ?: 1L
                         Episode(
                             number = epNum,
                             title = aniEp.title ?: "Episodio $epNum",
                             url = null,
                             thumbnailUrl = aniEp.thumbnail,
-                            watched = (dbProgress?.progress ?: 0L) >= ((dbProgress?.duration ?: 1L) * 0.9f).toLong(),
-                            progressMs = dbProgress?.progress ?: 0,
-                            durationMs = dbProgress?.duration ?: 0
+                            watched = progress > 0L && progress >= (duration * 0.9f).toLong(),
+                            progressMs = progress,
+                            durationMs = duration
                         )
                     }
                 }
@@ -247,14 +251,16 @@ class TvDetailsFragment : DetailsSupportFragment() {
                     
                     episodesList = (1..totalEps).map { epNum ->
                         val dbProgress = historyList.find { it.episodeNumber == epNum }
+                        val progress = dbProgress?.progress ?: 0L
+                        val duration = dbProgress?.duration ?: 1L
                         Episode(
                             number = epNum,
                             title = "Episodio $epNum",
                             url = null,
                             thumbnailUrl = null,
-                            watched = (dbProgress?.progress ?: 0L) >= ((dbProgress?.duration ?: 1L) * 0.9f).toLong(),
-                            progressMs = dbProgress?.progress ?: 0,
-                            durationMs = dbProgress?.duration ?: 0
+                            watched = progress > 0L && progress >= (duration * 0.9f).toLong(),
+                            progressMs = progress,
+                            durationMs = duration
                         )
                     }
                 }
