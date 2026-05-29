@@ -11,6 +11,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.webkit.*
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.ProgressBar
@@ -41,6 +42,9 @@ class TvPlayerActivity : FragmentActivity() {
 
     private lateinit var animeRepo: AnimeRepository
     private lateinit var authRepo: AuthRepository
+    
+    private var customView: View? = null
+    private var customViewCallback: WebChromeClient.CustomViewCallback? = null
 
     // Datos del episodio actual e historial
     private var animeId: Int = 0
@@ -134,6 +138,12 @@ class TvPlayerActivity : FragmentActivity() {
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
+        // Habilitar cookies globales y cookies de terceros para CDNs cross-origin de stream
+        CookieManager.getInstance().apply {
+            setAcceptCookie(true)
+            setAcceptThirdPartyCookies(webView, true)
+        }
+
         // Optimización agresiva del WebView para TVs (Orange Pi / Fire TV)
         webView.settings.apply {
             javaScriptEnabled = true
@@ -143,7 +153,6 @@ class TvPlayerActivity : FragmentActivity() {
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             useWideViewPort = true
             loadWithOverviewMode = true
-            setSupportMultipleWindows(true)
             userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
         }
 
@@ -154,33 +163,60 @@ class TvPlayerActivity : FragmentActivity() {
                 loadingLayout.visibility = View.GONE
             }
 
+            override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler?, error: android.net.http.SslError?) {
+                // Proceder ante errores transitorios de SSL en CDNs de stream
+                handler?.proceed()
+            }
+
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val url = request?.url?.toString() ?: ""
+                val isMainFrame = request?.isForMainFrame ?: false
+                
+                // Si la navegación es dentro de un subframe (iframe), permitirla siempre para evitar romper reproductores CDNs
+                if (!isMainFrame) {
+                    return false
+                }
+
+                // Para el frame principal, solo permitir la URL de referer, data URIs, o hosts autorizados
                 val baseRefererUrl = com.example.anird.BuildConfig.API_BASE_URL.replace(":3005", ":8090")
-                // Solo permitir cargar el iframe, la URL del servidor, la base local, o data URIs
-                return if (url == selectedServerUrl || url.startsWith("data:") || url.contains("10.0.0.9") || url.contains("100.101.132.92") || url.startsWith(baseRefererUrl)) {
+                return if (url.startsWith("data:") || url.contains("10.0.0.9") || url.contains("100.101.132.92") || url.startsWith(baseRefererUrl)) {
                     false
                 } else {
-                    Log.d(TAG, "Redireccion externa bloqueada: $url")
+                    Log.d(TAG, "Redireccion externa en frame principal bloqueada: $url")
                     true
                 }
             }
         }
 
         webView.webChromeClient = object : WebChromeClient() {
-            // Permitir pantalla completa nativa si el reproductor iframe lo solicita
+            // Implementar pantalla completa nativa real solicitada por reproductores HTML5 embebidos
             override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
-                super.onShowCustomView(view, callback)
+                if (customView != null) {
+                    callback?.onCustomViewHidden()
+                    return
+                }
+
+                customView = view
+                customViewCallback = callback
+
+                val decorView = window.decorView as FrameLayout
+                decorView.addView(
+                    customView,
+                    FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT
+                    )
+                )
+
+                hideSystemBars()
             }
+
             override fun onHideCustomView() {
-                super.onHideCustomView()
+                hideCustomView()
             }
+
             override fun onPermissionRequest(request: PermissionRequest) {
                 request.grant(request.resources)
-            }
-            override fun onCreateWindow(view: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message?): Boolean {
-                // Bloquea ventanas emergentes (popups) de publicidad descartando el mensaje
-                return true
             }
         }
 
@@ -295,8 +331,16 @@ class TvPlayerActivity : FragmentActivity() {
         }
 
         showLoading("Cargando reproductor en ${server.displayName}…")
+
+        // Asegurar que las URLs relativas del tipo //dominio se resuelvan a HTTPS para evitar fallos de protocolo mixto
+        val iframeUrl = if (server.url.startsWith("//")) {
+            "https:" + server.url
+        } else {
+            server.url
+        }
         
         // Cargar iframe a pantalla completa con HTML personalizado para deshabilitar clicks publicitarios
+        // e incluir permisos explícitos para autoplay, descifrado de contenido encriptado (DRM) y Picture-in-Picture
         val html = """
             <html>
             <head>
@@ -307,7 +351,7 @@ class TvPlayerActivity : FragmentActivity() {
                 </style>
             </head>
             <body>
-                <iframe src="${server.url}" allowfullscreen="true" scrolling="no"></iframe>
+                <iframe src="$iframeUrl" allowfullscreen="true" allow="autoplay; encrypted-media; picture-in-picture" scrolling="no"></iframe>
             </body>
             </html>
         """.trimIndent()
@@ -401,6 +445,10 @@ class TvPlayerActivity : FragmentActivity() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if (customView != null) {
+                hideCustomView()
+                return true
+            }
             if (controlsOverlay.visibility == View.VISIBLE) {
                 hideControls()
                 return true
@@ -462,5 +510,47 @@ class TvPlayerActivity : FragmentActivity() {
             destroy()
         }
         super.onDestroy()
+    }
+
+    private fun hideCustomView() {
+        customView?.let { view ->
+            val decorView = window.decorView as FrameLayout
+            decorView.removeView(view)
+        }
+        customView = null
+        customViewCallback?.onCustomViewHidden()
+        customViewCallback = null
+
+        showSystemBars()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun hideSystemBars() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            window.insetsController?.apply {
+                hide(android.view.WindowInsets.Type.statusBars() or android.view.WindowInsets.Type.navigationBars())
+                systemBarsBehavior = android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } else {
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            )
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun showSystemBars() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            window.insetsController?.show(
+                android.view.WindowInsets.Type.statusBars() or android.view.WindowInsets.Type.navigationBars()
+            )
+        } else {
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+        }
     }
 }

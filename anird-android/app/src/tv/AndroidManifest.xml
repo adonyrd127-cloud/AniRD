@@ -54,7 +54,8 @@
             android:screenOrientation="landscape"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:theme="@style/Theme.AniRD.Tv.Fullscreen"
-            android:keepScreenOn="true" />
+            android:keepScreenOn="true"
+            android:hardwareAccelerated="true" />
 
         <activity
             android:name="com.example.anird.tv.TvSearchActivity"
