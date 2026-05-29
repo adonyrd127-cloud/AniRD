@@ -1,7 +1,7 @@
 package com.example.anird.tv
 
 import android.annotation.SuppressLint
-import android.content.Intent
+import android.content.Intent\r\nimport android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
