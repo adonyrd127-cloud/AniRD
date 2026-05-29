@@ -152,14 +152,38 @@ class AnimeRepository(
         for (title in titles) {
             if (title.isNullOrBlank()) continue
             try {
+                // 1. Intento con el titulo limpio normal
                 val cleanTitle = title.replace(Regex("[^\\w\\s]"), "").trim()
-                if (cleanTitle.length < 2) continue
-
-                val response = localApi.searchAnime(cleanTitle)
-                if (response.success && (response.data?.results?.isNotEmpty() == true)) {
-                    Log.d(TAG, "Encontrado en local con: '$cleanTitle' → ${response.data.results.size} resultados")
-                    return@withContext response.data.results.first()
+                if (cleanTitle.length >= 2) {
+                    val response = localApi.searchAnime(cleanTitle)
+                    if (response.success && (response.data?.results?.isNotEmpty() == true)) {
+                        Log.d(TAG, "Encontrado en local con: '$cleanTitle'")
+                        return@withContext response.data.results.first()
+                    }
                 }
+
+                // 2. Intento limpiando sufijos (Season, Movie, Part, :, (, -) como en el frontend web
+                val coreTitle = title.split(Regex("[:\\(\\-]|(?i)Season|(?i)Movie|(?i)Part"))[0].trim()
+                val cleanCoreTitle = coreTitle.replace(Regex("[^\\w\\s]"), "").trim()
+                if (cleanCoreTitle.length >= 2 && cleanCoreTitle != cleanTitle) {
+                    val response = localApi.searchAnime(cleanCoreTitle)
+                    if (response.success && (response.data?.results?.isNotEmpty() == true)) {
+                        Log.d(TAG, "Encontrado en local con core title: '$cleanCoreTitle'")
+                        return@withContext response.data.results.first()
+                    }
+                }
+
+                // 3. Intento con la primera palabra si tiene mas de 3 caracteres
+                val firstWord = title.split(" ")[0].trim()
+                val cleanFirstWord = firstWord.replace(Regex("[^\\w\\s]"), "").trim()
+                if (cleanFirstWord.length > 3 && cleanFirstWord != cleanTitle && cleanFirstWord != cleanCoreTitle) {
+                    val response = localApi.searchAnime(cleanFirstWord)
+                    if (response.success && (response.data?.results?.isNotEmpty() == true)) {
+                        Log.d(TAG, "Encontrado en local con primera palabra: '$cleanFirstWord'")
+                        return@withContext response.data.results.first()
+                    }
+                }
+
             } catch (e: Exception) {
                 Log.w(TAG, "Error buscando local '$title': ${e.message}")
             }

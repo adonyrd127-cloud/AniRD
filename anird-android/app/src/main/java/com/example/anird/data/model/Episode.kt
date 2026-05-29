@@ -57,7 +57,7 @@ data class LocalSearchData(
 )
 
 data class LocalAnimeResult(
-    val id: Int? = null,
+    val id: String? = null,
     val title: String = "",
     val slug: String? = null,
     val url: String = "",

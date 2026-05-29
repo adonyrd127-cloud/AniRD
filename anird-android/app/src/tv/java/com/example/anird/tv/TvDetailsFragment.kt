@@ -238,17 +238,19 @@ class TvDetailsFragment : DetailsSupportFragment() {
     private fun bindDetails(anime: Anime) {
         val detailsRow = DetailsOverviewRow(anime)
         
-        // Agregar imagen del poster con Glide de manera asíncrona
+        // Agregar imagen del poster con Glide de manera asíncrona con esquinas redondeadas
         val cardWidth = resources.getDimensionPixelSize(R.dimen.tv_card_width)
         val cardHeight = resources.getDimensionPixelSize(R.dimen.tv_card_height)
         
         Glide.with(requireContext())
             .asBitmap()
             .load(anime.imageUrl)
+            .override(cardWidth, cardHeight)
+            .centerCrop()
+            .transform(com.bumptech.glide.load.resource.bitmap.RoundedCorners(16))
             .into(object : CustomTarget<Bitmap>() {
                 override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-                    val scaledBitmap = Bitmap.createScaledBitmap(resource, cardWidth, cardHeight, true)
-                    detailsRow.setImageBitmap(requireContext(), scaledBitmap)
+                    detailsRow.setImageBitmap(requireContext(), resource)
                     detailsRow.isImageScaleUpAllowed = true
                 }
                 override fun onLoadCleared(placeholder: Drawable?) {}
