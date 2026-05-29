@@ -143,6 +143,8 @@ class TvPlayerActivity : FragmentActivity() {
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             useWideViewPort = true
             loadWithOverviewMode = true
+            setSupportMultipleWindows(true)
+            userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
         }
 
         webView.webViewClient = object : WebViewClient() {
@@ -154,12 +156,13 @@ class TvPlayerActivity : FragmentActivity() {
 
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val url = request?.url?.toString() ?: ""
-                // Bloquea redirecciones maliciosas publicitarias, mantiene la reproducción en el iframe
-                return if (url.contains("google") || url.contains("ad") || url.contains("popup") || url.contains("click")) {
-                    Log.d(TAG, "Redirección publicitaria bloqueada: $url")
-                    true
-                } else {
+                val baseRefererUrl = com.example.anird.BuildConfig.API_BASE_URL.replace(":3005", ":8090")
+                // Solo permitir cargar el iframe, la URL del servidor, la base local, o data URIs
+                return if (url == selectedServerUrl || url.startsWith("data:") || url.contains("10.0.0.9") || url.contains("100.101.132.92") || url.startsWith(baseRefererUrl)) {
                     false
+                } else {
+                    Log.d(TAG, "Redireccion externa bloqueada: $url")
+                    true
                 }
             }
         }
@@ -171,6 +174,13 @@ class TvPlayerActivity : FragmentActivity() {
             }
             override fun onHideCustomView() {
                 super.onHideCustomView()
+            }
+            override fun onPermissionRequest(request: PermissionRequest) {
+                request.grant(request.resources)
+            }
+            override fun onCreateWindow(view: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message?): Boolean {
+                // Bloquea ventanas emergentes (popups) de publicidad descartando el mensaje
+                return true
             }
         }
 
@@ -273,14 +283,15 @@ class TvPlayerActivity : FragmentActivity() {
 
     private fun playServer(server: StreamServer) {
         selectedServerUrl = server.url
+        
+        val activeColor = androidx.core.content.ContextCompat.getColor(this, R.color.tv_primary)
+        val inactiveColor = androidx.core.content.ContextCompat.getColor(this, R.color.tv_surface_elevated)
+        
         // Resaltar visualmente el servidor seleccionado en el contenedor
         for (i in 0 until serversContainer.childCount) {
             val child = serversContainer.getChildAt(i) as? Button ?: continue
             val isSelected = child.text == server.displayName
-            child.setBackgroundColor(
-                if (isSelected) Color.parseColor("#FF6B00") // tv_primary
-                else Color.parseColor("#242424") // tv_surface_elevated
-            )
+            child.setBackgroundColor(if (isSelected) activeColor else inactiveColor)
         }
 
         showLoading("Cargando reproductor en ${server.displayName}…")
@@ -301,8 +312,9 @@ class TvPlayerActivity : FragmentActivity() {
             </html>
         """.trimIndent()
 
-        // Cargamos la URL del servidor directamente para mejor soporte de reproducción nativa
-        webView.loadUrl(server.url)
+        // Cargamos la URL usando loadDataWithBaseURL para simular el referer correcto del frontend
+        val baseRefererUrl = com.example.anird.BuildConfig.API_BASE_URL.replace(":3005", ":8090")
+        webView.loadDataWithBaseURL(baseRefererUrl, html, "text/html", "utf-8", null)
     }
 
     private fun navigateEpisode(targetEpisodeNum: Int) {
@@ -333,14 +345,11 @@ class TvPlayerActivity : FragmentActivity() {
         btnAudioSub.visibility = if (streamServers.sub.isNotEmpty()) View.VISIBLE else View.GONE
         btnAudioDub.visibility = if (streamServers.dub.isNotEmpty()) View.VISIBLE else View.GONE
         
-        btnAudioSub.setBackgroundColor(
-            if (!isDubMode) Color.parseColor("#FF6B00")
-            else Color.parseColor("#242424")
-        )
-        btnAudioDub.setBackgroundColor(
-            if (isDubMode) Color.parseColor("#FF6B00")
-            else Color.parseColor("#242424")
-        )
+        val activeColor = androidx.core.content.ContextCompat.getColor(this, R.color.tv_primary)
+        val inactiveColor = androidx.core.content.ContextCompat.getColor(this, R.color.tv_surface_elevated)
+        
+        btnAudioSub.setBackgroundColor(if (!isDubMode) activeColor else inactiveColor)
+        btnAudioDub.setBackgroundColor(if (isDubMode) activeColor else inactiveColor)
     }
 
     private fun updateNavigationButtons() {

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Colores principales de AniRD TV -->
-    <color name="tv_primary">#FF6B00</color>
-    <color name="tv_primary_dark">#E05500</color>
-    <color name="tv_primary_light">#FF8A33</color>
+    <color name="tv_primary">#e50914</color>
+    <color name="tv_primary_dark">#b20710</color>
+    <color name="tv_primary_light">#ff1a26</color>
 
     <!-- Fondos -->
-    <color name="tv_background">#0F0F0F</color>
-    <color name="tv_surface">#1A1A1A</color>
-    <color name="tv_surface_elevated">#242424</color>
-    <color name="tv_surface_card">#1E1E1E</color>
+    <color name="tv_background">#0a0a0f</color>
+    <color name="tv_surface">#12121a</color>
+    <color name="tv_surface_elevated">#1a1a2e</color>
+    <color name="tv_surface_card">#12121a</color>
 
     <!-- Texto -->
     <color name="tv_text_primary">#FFFFFF</color>
@@ -17,9 +17,9 @@
     <color name="tv_text_tertiary">#787878</color>
 
     <!-- Estados -->
-    <color name="tv_focus_border">#FF6B00</color>
-    <color name="tv_focus_glow">#40FF6B00</color>
-    <color name="tv_selected">#33FF6B00</color>
+    <color name="tv_focus_border">#e50914</color>
+    <color name="tv_focus_glow">#40e50914</color>
+    <color name="tv_selected">#33e50914</color>
     <color name="tv_error">#FF4444</color>
     <color name="tv_success">#4CAF50</color>
 
