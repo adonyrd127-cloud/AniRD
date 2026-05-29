@@ -9,15 +9,15 @@
   - [x] WebView Remote Debugging en builds debug
   - [ ] Probar compilación inicial de la Fase A (En progreso)
 
-- [ ] **FASE 8: Corrección Profunda de Reproducción de Videos (TV)**
+- [x] **FASE 8: Corrección Profunda de Reproducción de Videos (TV)**
   - [x] Habilitar cookies de terceros en `TvPlayerActivity`
   - [x] Optimizar `shouldOverrideUrlLoading` para permitir subframes incondicionalmente
   - [x] Manejar de forma robusta el fullscreen nativo (`onShowCustomView` y `onHideCustomView`) en `TvPlayerActivity`
   - [x] Manejar errores SSL en `WebViewClient`
   - [x] Actualizar el HTML del iframe para añadir permisos `allow="autoplay; encrypted-media; picture-in-picture"` y corregir el protocolo relativo (`//` -> `https:`)
   - [x] Habilitar hardware accelerated en `TvPlayerActivity` en `tv/AndroidManifest.xml`
-  - [ ] Compilar y validar APKs (`assembleTvDebug`, `assembleDevDebug`)
-  - [ ] Subir cambios a GitHub (rama `master`)
+  - [x] Compilar y validar APKs (`assembleTvDebug`, `assembleDevDebug`)
+  - [x] Subir cambios a GitHub (rama `master`)
 
 - [ ] **FASE B: Características Nativas Móviles**
   - [x] Agregar dependencia `androidx.media:media`

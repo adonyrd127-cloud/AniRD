@@ -45,10 +45,10 @@ android {
             dimension = "environment"
             applicationIdSuffix = ".tv"
             versionNameSuffix = "-tv"
-            buildConfigField("String", "API_BASE_URL", "\"http://100.101.132.92:3005\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.0.9:8090\"")
             buildConfigField("Boolean", "ENABLE_WEBVIEW_DEBUG", "false")
             buildConfigField("Boolean", "IS_TV", "true")
-            buildConfigField("String", "LOCAL_API_URL", "\"http://100.101.132.92:3005/api/v1/\"")
+            buildConfigField("String", "LOCAL_API_URL", "\"http://10.0.0.9:3005/api/v1/\"")
             buildConfigField("String", "JIKAN_BASE_URL", "\"https://api.jikan.moe/v4/\"")
             buildConfigField("String", "ANILIST_URL", "\"https://graphql.anilist.co/\"")
             buildConfigField("String", "API_KEY", "\"dev-anime1v-key\"")
