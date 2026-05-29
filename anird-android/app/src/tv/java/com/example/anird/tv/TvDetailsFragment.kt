@@ -209,13 +209,56 @@ class TvDetailsFragment : DetailsSupportFragment() {
                                 title = localEp.title ?: "Episodio ${localEp.number}",
                                 url = localEp.url,
                                 thumbnailUrl = thumbnail,
-                                watched = dbProgress?.progress ?: 0 >= ((dbProgress?.duration ?: 1) * 0.9f),
+                                watched = (dbProgress?.progress ?: 0L) >= ((dbProgress?.duration ?: 1L) * 0.9f).toLong(),
                                 progressMs = dbProgress?.progress ?: 0,
                                 durationMs = dbProgress?.duration ?: 0
                             )
                         }
                     }
                 }
+
+                // Fallback 1: Si no tenemos episodios del scraper local, generar lista desde AniList
+                if (episodesList.isEmpty() && aniListEps.isNotEmpty()) {
+                    Log.d(TAG, "Fallback: usando episodios de AniList (sin URLs de reproducción)")
+                    val historyList = runCatching { animeRepo.getHistoryForAnime(malId) }.getOrElse { emptyList() }
+                    lastWatchedEpisodeNum = historyList.maxByOrNull { it.updatedAt }?.episodeNumber ?: 0
+                    
+                    episodesList = aniListEps.mapIndexed { index, aniEp ->
+                        val epNum = index + 1
+                        val dbProgress = historyList.find { it.episodeNumber == epNum }
+                        Episode(
+                            number = epNum,
+                            title = aniEp.title ?: "Episodio $epNum",
+                            url = null,
+                            thumbnailUrl = aniEp.thumbnail,
+                            watched = (dbProgress?.progress ?: 0L) >= ((dbProgress?.duration ?: 1L) * 0.9f).toLong(),
+                            progressMs = dbProgress?.progress ?: 0,
+                            durationMs = dbProgress?.duration ?: 0
+                        )
+                    }
+                }
+
+                // Fallback 2: Si tampoco tenemos AniList, crear episodios básicos del conteo de Jikan
+                if (episodesList.isEmpty() && (anime.episodes ?: 0) > 0) {
+                    Log.d(TAG, "Fallback: generando ${anime.episodes} episodios desde conteo Jikan")
+                    val totalEps = anime.episodes ?: 0
+                    val historyList = runCatching { animeRepo.getHistoryForAnime(malId) }.getOrElse { emptyList() }
+                    lastWatchedEpisodeNum = historyList.maxByOrNull { it.updatedAt }?.episodeNumber ?: 0
+                    
+                    episodesList = (1..totalEps).map { epNum ->
+                        val dbProgress = historyList.find { it.episodeNumber == epNum }
+                        Episode(
+                            number = epNum,
+                            title = "Episodio $epNum",
+                            url = null,
+                            thumbnailUrl = null,
+                            watched = (dbProgress?.progress ?: 0L) >= ((dbProgress?.duration ?: 1L) * 0.9f).toLong(),
+                            progressMs = dbProgress?.progress ?: 0,
+                            durationMs = dbProgress?.duration ?: 0
+                        )
+                    }
+                }
+
                 localEpisodes = episodesList
 
                 // 3. Cargar recomendaciones relacionadas en paralelo

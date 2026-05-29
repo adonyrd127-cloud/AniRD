@@ -281,8 +281,12 @@ class TvBrowseFragment : BrowseSupportFragment() {
                 cardView.titleText = settingsItem.title
                 cardView.contentText = settingsItem.description
                 
-                // Mostrar favicon/logo por defecto en las opciones de ajustes
-                cardView.mainImageView?.setImageResource(R.mipmap.ic_launcher)
+                // Mostrar ícono premium específico para cada opción de ajustes
+                if (settingsItem.iconResId != 0) {
+                    cardView.mainImageView?.setImageResource(settingsItem.iconResId)
+                } else {
+                    cardView.mainImageView?.setImageResource(R.mipmap.ic_launcher)
+                }
                 cardView.mainImageView?.setPadding(32, 32, 32, 32)
             }
 
@@ -302,21 +306,24 @@ class TvBrowseFragment : BrowseSupportFragment() {
             TvSettingsItem(
                 id = 1,
                 title = if (isLogged) "Cerrar Sesión" else "Iniciar Sesión",
-                description = "Usuario: $userText"
+                description = "Usuario: $userText",
+                iconResId = R.drawable.ic_settings_login
             )
         )
         listRowAdapter.add(
             TvSettingsItem(
                 id = 2,
                 title = "Sincronizar Datos",
-                description = "Forzar sincronización en la nube"
+                description = "Forzar sincronización en la nube",
+                iconResId = R.drawable.ic_settings_sync
             )
         )
         listRowAdapter.add(
             TvSettingsItem(
                 id = 3,
                 title = "Limpiar Caché",
-                description = "Eliminar portadas y metadatos cacheados"
+                description = "Eliminar portadas y metadatos cacheados",
+                iconResId = R.drawable.ic_settings_cache
             )
         )
 
@@ -384,5 +391,6 @@ class TvBrowseFragment : BrowseSupportFragment() {
 data class TvSettingsItem(
     val id: Int,
     val title: String,
-    val description: String? = null
+    val description: String? = null,
+    val iconResId: Int = 0
 )

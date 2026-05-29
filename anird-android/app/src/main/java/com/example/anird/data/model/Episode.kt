@@ -70,7 +70,7 @@ data class LocalAnimeResult(
 )
 
 data class LocalAnimeInfo(
-    val id: Int? = null,
+    val id: String? = null,
     val title: String = "",
     @SerializedName("titleJapanese") val titleJapanese: String? = null,
     val description: String? = null,
@@ -87,14 +87,14 @@ data class LocalAnimeInfo(
 )
 
 data class LocalGenre(
-    val id: Int? = null,
+    val id: String? = null,
     val name: String = "",
     val slug: String? = null,
     val malId: Int? = null
 )
 
 data class LocalEpisode(
-    val id: Int? = null,
+    val id: String? = null,
     val number: Int = 0,
     val title: String? = null,
     val url: String = ""

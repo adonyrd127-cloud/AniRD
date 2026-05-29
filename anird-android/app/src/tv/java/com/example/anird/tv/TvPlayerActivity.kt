@@ -2,7 +2,6 @@ package com.example.anird.tv
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -127,6 +126,17 @@ class TvPlayerActivity : FragmentActivity() {
         btnAudioDub = findViewById(R.id.btn_audio_dub)
         btnBack = findViewById(R.id.btn_player_back)
         serversContainer = findViewById(R.id.servers_container)
+
+        // Hacer el WebView enfocable para recibir clics del D-pad (play/pause del iframe)
+        webView.isFocusable = true
+        webView.isFocusableInTouchMode = true
+
+        // Vincular navegación D-pad vertical: botones inferiores → servidores (arriba)
+        btnPrev.nextFocusUpId = R.id.servers_container
+        btnNext.nextFocusUpId = R.id.servers_container
+        btnAudioSub.nextFocusUpId = R.id.servers_container
+        btnAudioDub.nextFocusUpId = R.id.servers_container
+        btnBack.nextFocusUpId = R.id.servers_container
 
         // Mostrar textos de títulos
         tvAnimeTitle.text = animeTitle
@@ -287,9 +297,12 @@ class TvPlayerActivity : FragmentActivity() {
         }
 
         // Crear botones interactivos para cada servidor de streaming (Uwu, Mochi, Beep...)
+        var firstServerButtonId = View.NO_ID
         for (i in servers.indices) {
             val server = servers[i]
-            val btnServer = Button(this, null, 0, R.style.AniRD_TvButton_Secondary).apply {
+            val contextThemeWrapper = android.view.ContextThemeWrapper(this, R.style.AniRD_TvButton_Secondary)
+            val btnServer = Button(contextThemeWrapper).apply {
+                id = View.generateViewId()
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
@@ -301,12 +314,15 @@ class TvPlayerActivity : FragmentActivity() {
                 setPadding(20, 8, 20, 8)
                 isFocusable = true
                 isFocusableInTouchMode = true
+                // Vincular navegación D-pad vertical: servidor → fila de controles inferiores
+                nextFocusDownId = R.id.btn_player_prev
                 
                 setOnClickListener {
                     playServer(server)
                 }
             }
 
+            if (i == 0) firstServerButtonId = btnServer.id
             serversContainer.addView(btnServer)
             
             // Auto-reproducir el primer servidor al cargar la lista
@@ -315,19 +331,23 @@ class TvPlayerActivity : FragmentActivity() {
                 btnServer.requestFocus()
             }
         }
+
+        // Actualizar fila inferior para que UP lleve al primer botón de servidor
+        if (firstServerButtonId != View.NO_ID) {
+            val bottomButtons = listOf(btnPrev, btnNext, btnAudioSub, btnAudioDub, btnBack)
+            for (btn in bottomButtons) {
+                btn.nextFocusUpId = firstServerButtonId
+            }
+        }
     }
 
     private fun playServer(server: StreamServer) {
         selectedServerUrl = server.url
         
-        val activeColor = androidx.core.content.ContextCompat.getColor(this, R.color.tv_primary)
-        val inactiveColor = androidx.core.content.ContextCompat.getColor(this, R.color.tv_surface_elevated)
-        
-        // Resaltar visualmente el servidor seleccionado en el contenedor
+        // Resaltar visualmente el servidor seleccionado usando isSelected (preserva tv_button_selector focus states)
         for (i in 0 until serversContainer.childCount) {
             val child = serversContainer.getChildAt(i) as? Button ?: continue
-            val isSelected = child.text == server.displayName
-            child.setBackgroundColor(if (isSelected) activeColor else inactiveColor)
+            child.isSelected = (child.text == server.displayName)
         }
 
         showLoading("Cargando reproductor en ${server.displayName}…")
@@ -389,11 +409,9 @@ class TvPlayerActivity : FragmentActivity() {
         btnAudioSub.visibility = if (streamServers.sub.isNotEmpty()) View.VISIBLE else View.GONE
         btnAudioDub.visibility = if (streamServers.dub.isNotEmpty()) View.VISIBLE else View.GONE
         
-        val activeColor = androidx.core.content.ContextCompat.getColor(this, R.color.tv_primary)
-        val inactiveColor = androidx.core.content.ContextCompat.getColor(this, R.color.tv_surface_elevated)
-        
-        btnAudioSub.setBackgroundColor(if (!isDubMode) activeColor else inactiveColor)
-        btnAudioDub.setBackgroundColor(if (isDubMode) activeColor else inactiveColor)
+        // Usar isSelected para preservar los estados de focus del tv_button_selector
+        btnAudioSub.isSelected = !isDubMode
+        btnAudioDub.isSelected = isDubMode
     }
 
     private fun updateNavigationButtons() {
@@ -422,6 +440,8 @@ class TvPlayerActivity : FragmentActivity() {
 
     private fun hideControls() {
         controlsOverlay.visibility = View.INVISIBLE
+        // Solicitar foco al WebView para que pueda recibir y procesar clics del D-pad
+        webView.requestFocus()
     }
 
     private fun resetAutoHideTimer() {
@@ -435,6 +455,19 @@ class TvPlayerActivity : FragmentActivity() {
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN) {
             if (controlsOverlay.visibility == View.INVISIBLE) {
+                // Permitir que las teclas del D-pad (Direccionales y OK/Enter) y BACK pasen directamente al WebView
+                // cuando los controles estén ocultos, para que el usuario pueda navegar por el iframe y dar PLAY.
+                if (event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
+                    event.keyCode == KeyEvent.KEYCODE_DPAD_LEFT ||
+                    event.keyCode == KeyEvent.KEYCODE_DPAD_RIGHT ||
+                    event.keyCode == KeyEvent.KEYCODE_DPAD_UP ||
+                    event.keyCode == KeyEvent.KEYCODE_DPAD_DOWN ||
+                    event.keyCode == KeyEvent.KEYCODE_ENTER ||
+                    event.keyCode == KeyEvent.KEYCODE_BACK
+                ) {
+                    return super.dispatchKeyEvent(event)
+                }
+                
                 showControls()
                 return true
             }

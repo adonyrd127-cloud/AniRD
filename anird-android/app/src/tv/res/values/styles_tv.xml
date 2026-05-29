@@ -89,7 +89,13 @@
 
     <!-- Se eliminó el punto en el nombre para evitar problemas de herencia implícita en Android -->
     <style name="AniRD_TvButton_Secondary">
-        <item name="android:background">@color/tv_surface_elevated</item>
+        <item name="android:background">@drawable/tv_button_selector</item>
+        <item name="android:textColor">@color/tv_text_primary</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:focusable">true</item>
+        <item name="android:focusableInTouchMode">true</item>
+        <item name="android:gravity">center</item>
     </style>
 
     <style name="AniRD.TvInput">
