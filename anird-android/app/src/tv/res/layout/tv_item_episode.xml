@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/episode_card"
+    android:layout_width="@dimen/tv_ep_card_width"
+    android:layout_height="@dimen/tv_ep_card_height"
+    android:layout_margin="8dp"
+    android:clipChildren="true"
+    android:clipToPadding="true"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:background="@drawable/tv_card_background">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- Miniatura del episodio (16:9) -->
+        <ImageView
+            android:id="@+id/episode_thumbnail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:contentDescription="@null" />
+
+        <!-- Degradado inferior para legibilidad del texto -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/tv_gradient_bottom" />
+
+        <!-- Contenido textual en la esquina inferior izquierda -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:orientation="vertical"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/episode_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Episodio 1"
+                android:textColor="@color/tv_text_primary"
+                android:textSize="@dimen/tv_text_subtitle"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/episode_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Nombre del episodio"
+                android:textColor="@color/tv_text_secondary"
+                android:textSize="@dimen/tv_text_body"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Indicador de Visto (Badge) en la parte superior derecha -->
+        <TextView
+            android:id="@+id/episode_watched_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:layout_margin="6dp"
+            android:background="@drawable/tv_badge_background"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="3dp"
+            android:text="@string/tv_episode_watched"
+            android:textColor="@color/tv_text_primary"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <!-- Barra de progreso para episodios a medias -->
+        <ProgressBar
+            android:id="@+id/episode_progress"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tv_player_progress_height"
+            android:layout_alignParentBottom="true"
+            android:progressDrawable="@drawable/tv_progress_drawable"
+            android:visibility="gone" />
+
+        <!-- Borde naranja dinámico que aparece solo con el foco -->
+        <View
+            android:id="@+id/focus_border"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/tv_focus_stroke"
+            android:visibility="invisible" />
+
+    </RelativeLayout>
+</FrameLayout>

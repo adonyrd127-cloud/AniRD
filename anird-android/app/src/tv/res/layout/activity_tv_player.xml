@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <!-- WebView del reproductor de video (iframe embebido) -->
+    <WebView
+        android:id="@+id/player_webview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Overlay de carga inicial -->
+    <RelativeLayout
+        android:id="@+id/loading_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/tv_background"
+        android:gravity="center">
+
+        <ProgressBar
+            android:id="@+id/loading_progress"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:indeterminateTint="@color/tv_primary" />
+
+        <TextView
+            android:id="@+id/tv_loading_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/loading_progress"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp"
+            android:text="@string/tv_player_loading"
+            android:textColor="@color/tv_text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- Overlay general de controles nativos (D-pad accesible) -->
+    <RelativeLayout
+        android:id="@+id/controls_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/tv_player_overlay"
+        android:visibility="visible">
+
+        <!-- Barra superior: Información del Episodio -->
+        <LinearLayout
+            android:id="@+id/top_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/tv_spacing_lg"
+            android:background="@drawable/tv_gradient_top">
+
+            <TextView
+                android:id="@+id/tv_player_anime_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nombre del Anime"
+                android:textColor="@color/tv_text_primary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_player_episode_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Episodio 1"
+                android:textColor="@color/tv_text_secondary"
+                android:textSize="16sp"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- Barra inferior: Controles de navegación y servidores -->
+        <LinearLayout
+            android:id="@+id/bottom_controls_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:background="@color/tv_player_controls_bg"
+            android:orientation="vertical"
+            android:padding="@dimen/tv_spacing_md">
+
+            <!-- Fila superior de controles: Servidores disponibles -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/tv_spacing_sm">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/tv_player_server_label"
+                    android:textColor="@color/tv_text_secondary"
+                    android:textSize="14sp"
+                    android:layout_marginEnd="@dimen/tv_spacing_md" />
+
+                <!-- Contenedor dinámico horizontal de servidores -->
+                <LinearLayout
+                    android:id="@+id/servers_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </LinearLayout>
+
+            <!-- Fila inferior de controles: Botones prev/next/back y audios -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- Botones de reproducción/navegación -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_alignParentStart="true">
+
+                    <Button
+                        android:id="@+id/btn_player_prev"
+                        style="@style/AniRD_TvButton_Secondary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/tv_player_prev"
+                        android:textSize="14sp"
+                        android:padding="10dp"
+                        android:layout_marginEnd="@dimen/tv_spacing_sm"
+                        android:nextFocusRight="@+id/btn_player_next" />
+
+                    <Button
+                        android:id="@+id/btn_player_next"
+                        style="@style/AniRD_TvButton_Secondary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/tv_player_next"
+                        android:textSize="14sp"
+                        android:padding="10dp"
+                        android:layout_marginEnd="@dimen/tv_spacing_sm"
+                        android:nextFocusLeft="@+id/btn_player_prev"
+                        android:nextFocusRight="@+id/btn_audio_sub" />
+                </LinearLayout>
+
+                <!-- Selector SUB / DUB -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_centerHorizontal="true">
+
+                    <Button
+                        android:id="@+id/btn_audio_sub"
+                        style="@style/AniRD_TvButton_Secondary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/tv_player_sub"
+                        android:textSize="14sp"
+                        android:padding="10dp"
+                        android:layout_marginEnd="@dimen/tv_spacing_xs"
+                        android:nextFocusLeft="@+id/btn_player_next"
+                        android:nextFocusRight="@+id/btn_audio_dub" />
+
+                    <Button
+                        android:id="@+id/btn_audio_dub"
+                        style="@style/AniRD_TvButton_Secondary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/tv_player_dub"
+                        android:textSize="14sp"
+                        android:padding="10dp"
+                        android:nextFocusLeft="@+id/btn_audio_sub"
+                        android:nextFocusRight="@+id/btn_player_back" />
+                </LinearLayout>
+
+                <!-- Botón Volver -->
+                <Button
+                    android:id="@+id/btn_player_back"
+                    style="@style/AniRD_TvButton_Secondary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:text="@string/tv_player_back"
+                    android:textSize="14sp"
+                    android:padding="10dp"
+                    android:nextFocusLeft="@+id/btn_audio_dub" />
+            </RelativeLayout>
+        </LinearLayout>
+    </RelativeLayout>
+</RelativeLayout>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tv_app_name">AniRD TV</string>
+    
+    <!-- Browse headers -->
+    <string name="tv_header_continue">Continuar Viendo</string>
+    <string name="tv_header_trending">🔥 Populares</string>
+    <string name="tv_header_latest">📺 Últimos Lanzamientos</string>
+    <string name="tv_header_movies">🎬 Películas</string>
+    <string name="tv_header_dubbed">🗣 Doblados</string>
+    <string name="tv_header_action">⚔ Acción</string>
+    <string name="tv_header_romance">💕 Romance</string>
+    <string name="tv_header_comedy">😄 Comedia</string>
+    <string name="tv_header_fantasy">🧙 Fantasía</string>
+    <string name="tv_header_favorites">⭐ Mis Favoritos</string>
+    <string name="tv_header_following">📋 Mi Lista</string>
+    
+    <!-- Menú lateral -->
+    <string name="tv_menu_home">Inicio</string>
+    <string name="tv_menu_search">Buscar</string>
+    <string name="tv_menu_favorites">Favoritos</string>
+    <string name="tv_menu_following">Mi Lista</string>
+    <string name="tv_menu_settings">Ajustes</string>
+    
+    <!-- Detalles -->
+    <string name="tv_action_play">▶ Reproducir</string>
+    <string name="tv_action_resume">▶ Continuar Ep. %d</string>
+    <string name="tv_action_favorite_add">★ Agregar a Favoritos</string>
+    <string name="tv_action_favorite_remove">★ Quitar de Favoritos</string>
+    <string name="tv_action_follow_add">📋 Agregar a Mi Lista</string>
+    <string name="tv_action_follow_remove">📋 Quitar de Mi Lista</string>
+    <string name="tv_episodes_header">Episodios</string>
+    <string name="tv_related_header">Recomendaciones</string>
+    <string name="tv_episode_format">Ep. %d</string>
+    <string name="tv_episode_watched">VISTO</string>
+    <string name="tv_score_format">★ %.1f</string>
+    <string name="tv_genres_separator"> • </string>
+    <string name="tv_no_synopsis">Sin sinopsis disponible.</string>
+    
+    <!-- Reproductor -->
+    <string name="tv_player_server_label">Servidor:</string>
+    <string name="tv_player_sub">SUB</string>
+    <string name="tv_player_dub">DUB</string>
+    <string name="tv_player_prev">◀ Anterior</string>
+    <string name="tv_player_next">Siguiente ▶</string>
+    <string name="tv_player_back">← Volver</string>
+    <string name="tv_player_no_servers">No hay servidores disponibles</string>
+    <string name="tv_player_loading">Cargando servidores…</string>
+    <string name="tv_player_error">Error al cargar el episodio</string>
+    
+    <!-- Búsqueda -->
+    <string name="tv_search_hint">Buscar anime…</string>
+    <string name="tv_search_no_results">No se encontraron resultados</string>
+    
+    <!-- Login -->
+    <string name="tv_login_title">Iniciar Sesión</string>
+    <string name="tv_login_username">Usuario</string>
+    <string name="tv_login_password">Contraseña</string>
+    <string name="tv_login_button">Entrar</string>
+    <string name="tv_register_button">Registrarse</string>
+    <string name="tv_login_error">Usuario o contraseña incorrectos</string>
+    <string name="tv_login_success">¡Bienvenido, %s!</string>
+    <string name="tv_login_skip">Continuar sin cuenta</string>
+    
+    <!-- Ajustes -->
+    <string name="tv_settings_title">Ajustes</string>
+    <string name="tv_settings_account">Cuenta</string>
+    <string name="tv_settings_logout">Cerrar Sesión</string>
+    <string name="tv_settings_cache">Limpiar Caché</string>
+    <string name="tv_settings_cache_done">Caché eliminada</string>
+    <string name="tv_settings_about">Acerca de</string>
+    <string name="tv_settings_version">Versión %s</string>
+    <string name="tv_settings_sync">Sincronizar Datos</string>
+    <string name="tv_settings_sync_done">Datos sincronizados</string>
+    
+    <!-- Errores -->
+    <string name="tv_error_network">Sin conexión a Internet</string>
+    <string name="tv_error_server">Error de servidor</string>
+    <string name="tv_error_retry">Reintentar</string>
+    <string name="tv_error_loading">Error al cargar contenido</string>
+</resources>

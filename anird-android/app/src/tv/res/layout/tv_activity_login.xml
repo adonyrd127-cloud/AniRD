@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/tv_background"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="@dimen/tv_spacing_xl">
+
+    <!-- Logo / Nombre de la app -->
+    <ImageView
+        android:id="@+id/login_logo"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginBottom="@dimen/tv_spacing_md"
+        android:src="@mipmap/ic_launcher" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/tv_login_title"
+        android:textColor="@color/tv_text_primary"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="@dimen/tv_spacing_lg" />
+
+    <!-- Campo Usuario -->
+    <EditText
+        android:id="@+id/et_username"
+        style="@style/AniRD.TvInput"
+        android:layout_width="360dp"
+        android:layout_height="wrap_content"
+        android:hint="@string/tv_login_username"
+        android:inputType="text"
+        android:layout_marginBottom="@dimen/tv_spacing_md"
+        android:nextFocusDown="@+id/et_password" />
+
+    <!-- Campo Contraseña -->
+    <EditText
+        android:id="@+id/et_password"
+        style="@style/AniRD.TvInput"
+        android:layout_width="360dp"
+        android:layout_height="wrap_content"
+        android:hint="@string/tv_login_password"
+        android:inputType="textPassword"
+        android:layout_marginBottom="@dimen/tv_spacing_xl"
+        android:nextFocusDown="@+id/btn_login" />
+
+    <!-- Botones de Acción -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/btn_login"
+            style="@style/AniRD.TvButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tv_login_button"
+            android:layout_marginEnd="@dimen/tv_spacing_md"
+            android:nextFocusRight="@+id/btn_register"
+            android:nextFocusDown="@+id/btn_skip" />
+
+        <Button
+            android:id="@+id/btn_register"
+            style="@style/AniRD_TvButton_Secondary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tv_register_button"
+            android:nextFocusLeft="@+id/btn_login"
+            android:nextFocusDown="@+id/btn_skip" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_skip"
+        style="@style/AniRD_TvButton_Secondary"
+        android:layout_width="360dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/tv_spacing_md"
+        android:text="@string/tv_login_skip"
+        android:nextFocusUp="@+id/btn_login" />
+
+</LinearLayout>

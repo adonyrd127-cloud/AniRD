@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Colores principales de AniRD TV -->
+    <color name="tv_primary">#FF6B00</color>
+    <color name="tv_primary_dark">#E05500</color>
+    <color name="tv_primary_light">#FF8A33</color>
+
+    <!-- Fondos -->
+    <color name="tv_background">#0F0F0F</color>
+    <color name="tv_surface">#1A1A1A</color>
+    <color name="tv_surface_elevated">#242424</color>
+    <color name="tv_surface_card">#1E1E1E</color>
+
+    <!-- Texto -->
+    <color name="tv_text_primary">#FFFFFF</color>
+    <color name="tv_text_secondary">#B0B0B0</color>
+    <color name="tv_text_tertiary">#787878</color>
+
+    <!-- Estados -->
+    <color name="tv_focus_border">#FF6B00</color>
+    <color name="tv_focus_glow">#40FF6B00</color>
+    <color name="tv_selected">#33FF6B00</color>
+    <color name="tv_error">#FF4444</color>
+    <color name="tv_success">#4CAF50</color>
+
+    <!-- Badge -->
+    <color name="tv_badge_score">#E6B800</color>
+    <color name="tv_badge_bg">#CC000000</color>
+
+    <!-- Player overlay -->
+    <color name="tv_player_overlay">#B3000000</color>
+    <color name="tv_player_controls_bg">#E6111111</color>
+</resources>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- TV requiere leanback -->
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="true" />
+
+    <!-- TV no necesita touchscreen -->
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+
+    <!-- Landscape forzado en TV -->
+    <uses-feature
+        android:name="android.hardware.screen.landscape"
+        android:required="true" />
+
+    <application
+        android:banner="@drawable/tv_banner"
+        tools:replace="android:banner">
+
+        <!-- Reemplazar el launcher de MainActivity por TvMainActivity -->
+        <activity
+            android:name="com.example.anird.tv.TvMainActivity"
+            android:exported="true"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:theme="@style/Theme.AniRD.Tv">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Desactivar el launcher de MainActivity en TV -->
+        <activity
+            android:name="com.example.anird.MainActivity"
+            android:exported="true"
+            tools:node="replace">
+            <!-- Sin intent-filter LAUNCHER en flavor TV -->
+        </activity>
+
+        <activity
+            android:name="com.example.anird.tv.TvDetailsActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AniRD.Tv" />
+
+        <activity
+            android:name="com.example.anird.tv.TvPlayerActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:theme="@style/Theme.AniRD.Tv.Fullscreen"
+            android:keepScreenOn="true" />
+
+        <activity
+            android:name="com.example.anird.tv.TvSearchActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AniRD.Tv" />
+
+        <activity
+            android:name="com.example.anird.tv.TvLoginActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AniRD.Tv" />
+
+    </application>
+</manifest>

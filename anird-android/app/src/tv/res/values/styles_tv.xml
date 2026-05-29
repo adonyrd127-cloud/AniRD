@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base style to prevent implicit parent inheritance issues with dot notation in style names -->
+    <style name="AniRD" />
+
+    <!-- Tema base de TV -->
+    <style name="Theme.AniRD.Tv" parent="Theme.Leanback">
+        <item name="android:windowBackground">@color/tv_background</item>
+        <item name="android:colorPrimary">@color/tv_primary</item>
+        <item name="android:colorAccent">@color/tv_primary</item>
+        <item name="android:textColorPrimary">@color/tv_text_primary</item>
+        <item name="android:textColorSecondary">@color/tv_text_secondary</item>
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowNoTitle">true</item>
+
+        <!-- Header styling -->
+        <item name="headersVerticalGridStyle">@style/AniRD.HeadersVerticalGrid</item>
+        <item name="headerStyle">@style/AniRD.HeaderItem</item>
+        <item name="sectionHeaderStyle">@style/AniRD.SectionHeader</item>
+
+        <!-- Details -->
+        <item name="detailsDescriptionTitleStyle">@style/AniRD.DetailsTitle</item>
+        <item name="detailsDescriptionSubtitleStyle">@style/AniRD.DetailsSubtitle</item>
+        <item name="detailsDescriptionBodyStyle">@style/AniRD.DetailsBody</item>
+
+        <!-- Search -->
+        <item name="searchOrbViewStyle">@style/AniRD.SearchOrb</item>
+    </style>
+
+    <!-- Tema fullscreen para player -->
+    <style name="Theme.AniRD.Tv.Fullscreen">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
+    <!-- Estilos de componentes -->
+    <style name="AniRD.HeadersVerticalGrid" parent="Widget.Leanback.Headers.VerticalGridView">
+        <item name="android:background">@color/tv_surface</item>
+    </style>
+
+    <style name="AniRD.HeaderItem" parent="Widget.Leanback.Header">
+        <item name="android:textColor">@color/tv_text_secondary</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="AniRD.SectionHeader" parent="Widget.Leanback.Header.Section">
+        <item name="android:textColor">@color/tv_text_primary</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="AniRD.DetailsTitle" parent="Widget.Leanback.DetailsDescriptionTitleStyle">
+        <item name="android:textColor">@color/tv_text_primary</item>
+        <item name="android:textSize">28sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">2</item>
+    </style>
+
+    <style name="AniRD.DetailsSubtitle" parent="Widget.Leanback.DetailsDescriptionSubtitleStyle">
+        <item name="android:textColor">@color/tv_primary</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="AniRD.DetailsBody" parent="Widget.Leanback.DetailsDescriptionBodyStyle">
+        <item name="android:textColor">@color/tv_text_secondary</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:maxLines">8</item>
+    </style>
+
+    <style name="AniRD.SearchOrb" parent="Widget.Leanback.SearchOrbViewStyle">
+        <item name="searchOrbColor">@color/tv_primary</item>
+        <item name="searchOrbBrightColor">@color/tv_primary_light</item>
+    </style>
+
+    <!-- Estilo para botones del login -->
+    <style name="AniRD.TvButton">
+        <item name="android:background">@color/tv_primary</item>
+        <item name="android:textColor">@color/tv_text_primary</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:focusable">true</item>
+        <item name="android:focusableInTouchMode">true</item>
+        <item name="android:minWidth">200dp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- Se eliminó el punto en el nombre para evitar problemas de herencia implícita en Android -->
+    <style name="AniRD_TvButton_Secondary">
+        <item name="android:background">@color/tv_surface_elevated</item>
+    </style>
+
+    <style name="AniRD.TvInput">
+        <item name="android:background">@color/tv_surface_elevated</item>
+        <item name="android:textColor">@color/tv_text_primary</item>
+        <item name="android:textColorHint">@color/tv_text_tertiary</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:focusable">true</item>
+        <item name="android:focusableInTouchMode">true</item>
+        <item name="android:imeOptions">actionNext</item>
+        <item name="android:minWidth">300dp</item>
+    </style>
+</resources>

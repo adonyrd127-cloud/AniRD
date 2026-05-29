@@ -1,0 +1,457 @@
+package com.example.anird.tv
+
+import android.annotation.SuppressLint
+import android.content.Intent
+import android.graphics.Color
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import android.view.KeyEvent
+import android.view.View
+import android.webkit.*
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.RelativeLayout
+import android.widget.ProgressBar
+import android.widget.TextView
+import android.widget.Toast
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.lifecycleScope
+import com.example.anird.R
+import com.example.anird.data.model.StreamResponse
+import com.example.anird.data.model.StreamServer
+import com.example.anird.data.repository.AnimeRepository
+import com.example.anird.data.repository.AuthRepository
+import kotlinx.coroutines.launch
+
+/**
+ * Actividad del Reproductor de Video de Android TV.
+ * Carga servidores de streaming (Uwu, Mochi, Beep) desde el API del scraper y los reproduce
+ * en un WebView optimizado a pantalla completa.
+ * Proporciona un overlay nativo interactivo con D-pad para cambiar de servidor, cambiar entre
+ * SUB/DUB, saltar de episodio, y guardar automáticamente el progreso de visualización en Room y la nube.
+ */
+class TvPlayerActivity : FragmentActivity() {
+
+    companion object {
+        private const val TAG = "AniRD-TvPlayer"
+        private const val AUTO_HIDE_DELAY = 4000L // Ocultar controles tras 4 segundos de inactividad
+    }
+
+    private lateinit var animeRepo: AnimeRepository
+    private lateinit var authRepo: AuthRepository
+
+    // Datos del episodio actual e historial
+    private var animeId: Int = 0
+    private var animeTitle: String = ""
+    private var animeCover: String? = null
+    
+    private var currentEpisodeUrl: String = ""
+    private var currentEpisodeNumber: Int = 1
+    private var startTimeMs: Long = 0
+
+    // Listas para control de Prev/Next
+    private lateinit var episodesUrls: Array<String>
+    private lateinit var episodesNumbers: IntArray
+    private lateinit var episodesTitles: Array<String>
+
+    // Servidores obtenidos
+    private var streamServers = StreamResponse()
+    private var isDubMode = false
+    private var selectedServerUrl: String? = null
+
+    // Vistas de la UI
+    private lateinit var webView: WebView
+    private lateinit var loadingLayout: RelativeLayout
+    private lateinit var tvLoadingText: TextView
+    private lateinit var controlsOverlay: RelativeLayout
+    private lateinit var tvAnimeTitle: TextView
+    private lateinit var tvEpisodeTitle: TextView
+    private lateinit var btnPrev: Button
+    private lateinit var btnNext: Button
+    private lateinit var btnAudioSub: Button
+    private lateinit var btnAudioDub: Button
+    private lateinit var btnBack: Button
+    private lateinit var serversContainer: LinearLayout
+
+    // Control de auto-ocultación de controles
+    private val handler = Handler(Looper.getMainLooper())
+    private val hideControlsRunnable = Runnable { hideControls() }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_tv_player)
+
+        animeRepo = TvRepositoryProvider.getAnimeRepository(this)
+        authRepo = TvRepositoryProvider.getAuthRepository(this)
+        startTimeMs = System.currentTimeMillis()
+
+        extractIntentData()
+        initViews()
+        setupWebView()
+        setupListeners()
+
+        loadEpisodeData()
+    }
+
+    private fun extractIntentData() {
+        animeId = intent.getIntExtra("anime_id", 0)
+        animeTitle = intent.getStringExtra("anime_title") ?: ""
+        animeCover = intent.getStringExtra("anime_cover")
+
+        currentEpisodeUrl = intent.getStringExtra("episode_url") ?: ""
+        currentEpisodeNumber = intent.getIntExtra("episode_number", 1)
+
+        episodesUrls = intent.getStringArrayExtra("episodes_urls") ?: emptyArray()
+        episodesNumbers = intent.getIntArrayExtra("episodes_numbers") ?: intArrayOf()
+        episodesTitles = intent.getStringArrayExtra("episodes_titles") ?: emptyArray()
+    }
+
+    private fun initViews() {
+        webView = findViewById(R.id.player_webview)
+        loadingLayout = findViewById(R.id.loading_layout)
+        tvLoadingText = findViewById(R.id.tv_loading_text)
+        controlsOverlay = findViewById(R.id.controls_overlay)
+        
+        tvAnimeTitle = findViewById(R.id.tv_player_anime_title)
+        tvEpisodeTitle = findViewById(R.id.tv_player_episode_title)
+        
+        btnPrev = findViewById(R.id.btn_player_prev)
+        btnNext = findViewById(R.id.btn_player_next)
+        btnAudioSub = findViewById(R.id.btn_audio_sub)
+        btnAudioDub = findViewById(R.id.btn_audio_dub)
+        btnBack = findViewById(R.id.btn_player_back)
+        serversContainer = findViewById(R.id.servers_container)
+
+        // Mostrar textos de títulos
+        tvAnimeTitle.text = animeTitle
+        updateEpisodeTitleText()
+
+        // Mostrar controles por defecto al inicio
+        showControls()
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun setupWebView() {
+        // Optimización agresiva del WebView para TVs (Orange Pi / Fire TV)
+        webView.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            databaseEnabled = true
+            mediaPlaybackRequiresUserGesture = false
+            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            useWideViewPort = true
+            loadWithOverviewMode = true
+        }
+
+        webView.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                // Ocultar pantalla de carga una vez renderizado el reproductor iframe
+                loadingLayout.visibility = View.GONE
+            }
+
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                val url = request?.url?.toString() ?: ""
+                // Bloquea redirecciones maliciosas publicitarias, mantiene la reproducción en el iframe
+                return if (url.contains("google") || url.contains("ad") || url.contains("popup") || url.contains("click")) {
+                    Log.d(TAG, "Redirección publicitaria bloqueada: $url")
+                    true
+                } else {
+                    false
+                }
+            }
+        }
+
+        webView.webChromeClient = object : WebChromeClient() {
+            // Permitir pantalla completa nativa si el reproductor iframe lo solicita
+            override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
+                super.onShowCustomView(view, callback)
+            }
+            override fun onHideCustomView() {
+                super.onHideCustomView()
+            }
+        }
+
+        webView.setBackgroundColor(Color.BLACK)
+    }
+
+    private fun setupListeners() {
+        btnBack.setOnClickListener {
+            finish()
+        }
+
+        btnPrev.setOnClickListener {
+            navigateEpisode(currentEpisodeNumber - 1)
+        }
+
+        btnNext.setOnClickListener {
+            navigateEpisode(currentEpisodeNumber + 1)
+        }
+
+        btnAudioSub.setOnClickListener {
+            if (isDubMode) {
+                isDubMode = false
+                updateAudioSelectorButtons()
+                populateServers()
+            }
+        }
+
+        btnAudioDub.setOnClickListener {
+            if (!isDubMode) {
+                isDubMode = true
+                updateAudioSelectorButtons()
+                populateServers()
+            }
+        }
+    }
+
+    /**
+     * Cargar servidores de streaming del episodio.
+     */
+    private fun loadEpisodeData() {
+        showLoading("Cargando servidores del Ep. $currentEpisodeNumber…")
+        lifecycleScope.launch {
+            try {
+                val servers = animeRepo.getStreamServers(currentEpisodeUrl)
+                streamServers = servers
+
+                // Auto-detectar si hay servidores doblados si no hay subtitulados, o viceversa
+                isDubMode = servers.sub.isEmpty() && servers.dub.isNotEmpty()
+                
+                updateAudioSelectorButtons()
+                updateNavigationButtons()
+                populateServers()
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error cargando servidores de streaming", e)
+                showError("No hay servidores disponibles.")
+            }
+        }
+    }
+
+    private fun populateServers() {
+        serversContainer.removeAllViews()
+        val servers = if (isDubMode) streamServers.dub else streamServers.sub
+
+        if (servers.isEmpty()) {
+            showError("No hay servidores disponibles para este audio.")
+            return
+        }
+
+        // Crear botones interactivos para cada servidor de streaming (Uwu, Mochi, Beep...)
+        for (i in servers.indices) {
+            val server = servers[i]
+            val btnServer = Button(this, null, 0, R.style.AniRD_TvButton_Secondary).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    marginEnd = resources.getDimensionPixelSize(R.dimen.tv_spacing_sm)
+                }
+                text = server.displayName
+                textSize = 13f
+                setPadding(20, 8, 20, 8)
+                isFocusable = true
+                isFocusableInTouchMode = true
+                
+                setOnClickListener {
+                    playServer(server)
+                }
+            }
+
+            serversContainer.addView(btnServer)
+            
+            // Auto-reproducir el primer servidor al cargar la lista
+            if (i == 0) {
+                playServer(server)
+                btnServer.requestFocus()
+            }
+        }
+    }
+
+    private fun playServer(server: StreamServer) {
+        selectedServerUrl = server.url
+        // Resaltar visualmente el servidor seleccionado en el contenedor
+        for (i in 0 until serversContainer.childCount) {
+            val child = serversContainer.getChildAt(i) as? Button ?: continue
+            val isSelected = child.text == server.displayName
+            child.setBackgroundColor(
+                if (isSelected) Color.parseColor("#FF6B00") // tv_primary
+                else Color.parseColor("#242424") // tv_surface_elevated
+            )
+        }
+
+        showLoading("Cargando reproductor en ${server.displayName}…")
+        
+        // Cargar iframe a pantalla completa con HTML personalizado para deshabilitar clicks publicitarios
+        val html = """
+            <html>
+            <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                <style>
+                    body, html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background-color:#000; }
+                    iframe { width:100%; height:100%; border:none; }
+                </style>
+            </head>
+            <body>
+                <iframe src="${server.url}" allowfullscreen="true" scrolling="no"></iframe>
+            </body>
+            </html>
+        """.trimIndent()
+
+        // Cargamos la URL del servidor directamente para mejor soporte de reproducción nativa
+        webView.loadUrl(server.url)
+    }
+
+    private fun navigateEpisode(targetEpisodeNum: Int) {
+        val index = episodesNumbers.indexOf(targetEpisodeNum)
+        if (index == -1) return
+
+        // 1. Guardar progreso actual del episodio anterior antes de cambiar
+        saveEpisodeProgress()
+
+        // 2. Cargar los nuevos parámetros del episodio
+        currentEpisodeUrl = episodesUrls[index]
+        currentEpisodeNumber = targetEpisodeNum
+        
+        // Reiniciar contador de tiempo de reproducción para el nuevo episodio
+        startTimeMs = System.currentTimeMillis()
+
+        updateEpisodeTitleText()
+        loadEpisodeData()
+    }
+
+    private fun updateEpisodeTitleText() {
+        val index = episodesNumbers.indexOf(currentEpisodeNumber)
+        val epTitle = if (index != -1) episodesTitles[index] else "Episodio $currentEpisodeNumber"
+        tvEpisodeTitle.text = epTitle
+    }
+
+    private fun updateAudioSelectorButtons() {
+        btnAudioSub.visibility = if (streamServers.sub.isNotEmpty()) View.VISIBLE else View.GONE
+        btnAudioDub.visibility = if (streamServers.dub.isNotEmpty()) View.VISIBLE else View.GONE
+        
+        btnAudioSub.setBackgroundColor(
+            if (!isDubMode) Color.parseColor("#FF6B00")
+            else Color.parseColor("#242424")
+        )
+        btnAudioDub.setBackgroundColor(
+            if (isDubMode) Color.parseColor("#FF6B00")
+            else Color.parseColor("#242424")
+        )
+    }
+
+    private fun updateNavigationButtons() {
+        val hasPrev = episodesNumbers.contains(currentEpisodeNumber - 1)
+        val hasNext = episodesNumbers.contains(currentEpisodeNumber + 1)
+
+        btnPrev.isEnabled = hasPrev
+        btnNext.isEnabled = hasNext
+
+        btnPrev.alpha = if (hasPrev) 1.0f else 0.4f
+        btnNext.alpha = if (hasNext) 1.0f else 0.4f
+    }
+
+    // --- Control de Interfaz y Visibilidad ---
+
+    private fun showControls() {
+        controlsOverlay.visibility = View.VISIBLE
+        // Auto-enfocar el primer elemento disponible
+        if (serversContainer.childCount > 0) {
+            serversContainer.getChildAt(0).requestFocus()
+        } else {
+            btnBack.requestFocus()
+        }
+        resetAutoHideTimer()
+    }
+
+    private fun hideControls() {
+        controlsOverlay.visibility = View.INVISIBLE
+    }
+
+    private fun resetAutoHideTimer() {
+        handler.removeCallbacks(hideControlsRunnable)
+        handler.postDelayed(hideControlsRunnable, AUTO_HIDE_DELAY)
+    }
+
+    /**
+     * Interceptar cualquier pulsación física del control remoto para mostrar controles.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            if (controlsOverlay.visibility == View.INVISIBLE) {
+                showControls()
+                return true
+            }
+            resetAutoHideTimer()
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if (controlsOverlay.visibility == View.VISIBLE) {
+                hideControls()
+                return true
+            }
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
+    // --- Estado de Carga / Errores ---
+
+    private fun showLoading(message: String) {
+        loadingLayout.visibility = View.VISIBLE
+        tvLoadingText.text = message
+    }
+
+    private fun showError(message: String) {
+        loadingLayout.visibility = View.VISIBLE
+        tvLoadingText.text = message
+        // Ocultar ProgressBar para indicar que se detuvo por error
+        findViewById<ProgressBar>(R.id.loading_progress).visibility = View.GONE
+    }
+
+    // --- Persistencia y Sincronización ---
+
+    private fun saveEpisodeProgress() {
+        if (animeId == 0) return
+        val timeSpent = System.currentTimeMillis() - startTimeMs
+        
+        // Consideramos 24 minutos duración estándar por si no hay metadato
+        val mockDuration = 24 * 60 * 1000L 
+        
+        lifecycleScope.launch {
+            try {
+                animeRepo.saveProgress(
+                    animeId = animeId,
+                    episodeNumber = currentEpisodeNumber,
+                    progress = minOf(timeSpent, mockDuration),
+                    duration = mockDuration,
+                    title = animeTitle,
+                    cover = animeCover
+                )
+                authRepo.syncToServer()
+            } catch (e: Exception) {
+                Log.w(TAG, "Error guardando progreso del episodio", e)
+            }
+        }
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        saveEpisodeProgress()
+    }
+
+    override fun onDestroy() {
+        saveEpisodeProgress()
+        webView.apply {
+            stopLoading()
+            webChromeClient = null
+            destroy()
+        }
+        super.onDestroy()
+    }
+}

@@ -1,14 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Producción: solo HTTP permitido para IPs de Tailscale o localhost -->
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="false">100.101.132.92</domain>
-        <domain includeSubdomains="false">100.110.101.28</domain>
-        <domain includeSubdomains="false">10.0.0.9</domain>
-        <domain includeSubdomains="false">localhost</domain>
-    </domain-config>
-    <!-- Todo lo demás: HTTPS obligatorio -->
-    <base-config cleartextTrafficPermitted="false">
+    <!-- Permitir HTTP cleartext de forma global para dar soporte completo a IPs locales (10.x.x.x) y Tailscale (100.x.x.x) -->
+    <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system"/>
         </trust-anchors>
