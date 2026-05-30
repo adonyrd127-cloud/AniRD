@@ -21,10 +21,13 @@ data class Anime(
     val genres: List<Genre>? = null,
     val studios: List<Studio>? = null,
     val trailer: Trailer? = null,
+    val broadcast: Broadcast? = null,
     // Campos locales (del scraper)
     var localUrl: String? = null,
     var bannerUrl: String? = null,
-    var coverUrl: String? = null
+    var coverUrl: String? = null,
+    var nextEpisodeDate: String? = null,
+    var relations: List<AnimeRelation>? = null
 ) {
     /** URL de la imagen del poster (Jikan) */
     val imageUrl: String?
@@ -71,6 +74,13 @@ data class Studio(
 data class Trailer(
     @SerializedName("youtube_id") val youtubeId: String? = null,
     val url: String? = null
+)
+
+data class Broadcast(
+    val day: String? = null,
+    val time: String? = null,
+    val timezone: String? = null,
+    val string: String? = null
 )
 
 // --- Respuestas de Jikan ---

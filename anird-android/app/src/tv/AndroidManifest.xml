@@ -69,5 +69,11 @@
             android:screenOrientation="landscape"
             android:theme="@style/Theme.AniRD.Tv" />
 
+        <activity
+            android:name="com.example.anird.tv.TvCalendarActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AniRD.Tv" />
+
     </application>
 </manifest>

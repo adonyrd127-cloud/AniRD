@@ -21,6 +21,11 @@ interface AniListService {
             query (${'$'}idMal: Int) {
                 Media(idMal: ${'$'}idMal, type: ANIME) {
                     bannerImage
+                    nextAiringEpisode {
+                        airingAt
+                        timeUntilAiring
+                        episode
+                    }
                 }
             }
         """

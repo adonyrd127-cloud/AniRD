@@ -177,7 +177,14 @@ data class AniListData(
 
 data class AniListMedia(
     val bannerImage: String? = null,
-    val streamingEpisodes: List<AniListEpisode>? = null
+    val streamingEpisodes: List<AniListEpisode>? = null,
+    val nextAiringEpisode: NextAiringEpisode? = null
+)
+
+data class NextAiringEpisode(
+    val airingAt: Long = 0,
+    val timeUntilAiring: Long = 0,
+    val episode: Int = 0
 )
 
 data class AniListEpisode(

@@ -18,7 +18,7 @@ object TvRepositoryProvider {
     fun getAnimeRepository(context: Context): AnimeRepository {
         return animeRepository ?: synchronized(this) {
             val jwtManager = JwtManager(context.applicationContext)
-            val localApi = RetrofitClient.getLocalApi(jwtManager)
+            val localApi = RetrofitClient.getLocalApi(context.applicationContext, jwtManager)
             animeRepository ?: AnimeRepository(
                 jikanApi = RetrofitClient.jikanApi,
                 anilistApi = RetrofitClient.anilistApi,
@@ -31,7 +31,7 @@ object TvRepositoryProvider {
     fun getAuthRepository(context: Context): AuthRepository {
         return authRepository ?: synchronized(this) {
             val jwtManager = JwtManager(context.applicationContext)
-            val localApi = RetrofitClient.getLocalApi(jwtManager)
+            val localApi = RetrofitClient.getLocalApi(context.applicationContext, jwtManager)
             authRepository ?: AuthRepository(
                 localApi = localApi,
                 jwtManager = jwtManager,

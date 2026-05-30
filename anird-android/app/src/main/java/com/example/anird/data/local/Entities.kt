@@ -51,3 +51,42 @@ data class CacheEntity(
     val isExpired: Boolean
         get() = System.currentTimeMillis() > expiresAt
 }
+
+@Entity(tableName = "anime_library")
+data class AnimeEntity(
+    @PrimaryKey val malId: Int,
+    val title: String,
+    val titleJapanese: String?,
+    val imageUrl: String,
+    val bannerImage: String?,
+    val synopsis: String?,
+    val score: Double?,
+    val status: String, // "airing", "finished", "upcoming"
+    val userStatus: String?, // "following", "favorite", "completed", "dropped", null
+    val episodes: Int?,
+    val airedFrom: String?,
+    val genres: String?, // JSON array serialized
+    val lastEpisodeWatched: Int?,
+    val watchProgressMs: Long?,
+    val updatedAt: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "episodes")
+data class EpisodeEntity(
+    @PrimaryKey val id: String, // "${malId}_${episodeNumber}"
+    val animeMalId: Int,
+    val episodeNumber: Int,
+    val title: String?,
+    val thumbnailUrl: String?,
+    val videoUrl: String?,
+    val durationSeconds: Int?,
+    val watchedProgressMs: Long?,
+    val isDownloaded: Boolean = false,
+    val localPath: String?
+)
+
+@Entity(tableName = "search_history")
+data class SearchHistoryEntity(
+    @PrimaryKey val query: String,
+    val searchedAt: Long = System.currentTimeMillis()
+)

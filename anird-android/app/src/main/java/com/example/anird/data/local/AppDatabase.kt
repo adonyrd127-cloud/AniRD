@@ -10,7 +10,10 @@ import androidx.room.RoomDatabase
         FavoriteEntity::class,
         HistoryEntity::class,
         FollowingEntity::class,
-        CacheEntity::class
+        CacheEntity::class,
+        AnimeEntity::class,
+        EpisodeEntity::class,
+        SearchHistoryEntity::class
     ],
     version = 1,
     exportSchema = false
@@ -21,6 +24,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun historyDao(): HistoryDao
     abstract fun followingDao(): FollowingDao
     abstract fun cacheDao(): CacheDao
+    abstract fun animeLibraryDao(): AnimeLibraryDao
+    abstract fun episodeDao(): EpisodeDao
+    abstract fun searchHistoryDao(): SearchHistoryDao
 
     companion object {
         @Volatile

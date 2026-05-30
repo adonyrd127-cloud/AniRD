@@ -1,5 +1,6 @@
 package com.example.anird.data.remote
 
+import android.content.Context
 import android.util.Log
 import com.example.anird.BuildConfig
 import com.example.anird.utils.JwtManager
@@ -115,11 +116,30 @@ object RetrofitClient {
 
     private var _localApi: LocalApiService? = null
 
-    fun getLocalApi(jwtManager: JwtManager): LocalApiService {
+    fun getLocalApi(context: Context, jwtManager: JwtManager): LocalApiService {
         if (_localApi == null) {
+            val serverConfig = com.example.anird.utils.ServerConfigManager(context)
+            val dynamicLocalClient = localClient(jwtManager).newBuilder()
+                .addInterceptor { chain ->
+                    var request = chain.request()
+                    val targetIp = serverConfig.ip
+                    val targetPort = serverConfig.port.toIntOrNull() ?: 3005
+                    try {
+                        val newUrl = request.url.newBuilder()
+                            .host(targetIp)
+                            .port(targetPort)
+                            .build()
+                        request = request.newBuilder().url(newUrl).build()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error rewriting TV dynamic URL", e)
+                    }
+                    chain.proceed(request)
+                }
+                .build()
+
             _localApi = Retrofit.Builder()
                 .baseUrl(BuildConfig.LOCAL_API_URL)
-                .client(localClient(jwtManager))
+                .client(dynamicLocalClient)
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build()
                 .create(LocalApiService::class.java)
@@ -127,7 +147,7 @@ object RetrofitClient {
         return _localApi!!
     }
 
-    /** Resetear el cliente local (por ejemplo al cambiar de token) */
+    /** Resetear el cliente local (por ejemplo al cambiar de token o de servidor) */
     fun resetLocalApi() {
         _localApi = null
     }

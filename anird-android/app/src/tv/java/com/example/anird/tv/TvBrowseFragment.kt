@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.example.anird.tv.presenter.TvIconHeaderItem
 import com.example.anird.tv.presenter.TvIconHeaderPresenter
+import com.example.anird.tv.presenter.TvFollowingHeaderItem
 
 /**
  * Fragmento principal de exploración (Browse) para Android TV.
@@ -37,23 +38,46 @@ class TvBrowseFragment : BrowseSupportFragment() {
         private const val ROW_CONTINUE = 10
         private const val ROW_FAVORITES = 11
         private const val ROW_FOLLOWING = 12
-        private const val ROW_TRENDING = 13
-        private const val ROW_LATEST = 14
-        private const val ROW_MOVIES = 15
-        private const val ROW_DUBBED = 16
-        private const val ROW_GENRE_ACTION = 17
-        private const val ROW_GENRE_COMEDY = 18
-        private const val ROW_SETTINGS = 19
+        private const val ROW_CALENDAR = 13
+        private const val ROW_TRENDING = 14
+        private const val ROW_LATEST = 15
+        private const val ROW_MOVIES = 16
+        private const val ROW_DUBBED = 17
+        
+        private const val ROW_CATEGORIES = 100
+
+        private const val ROW_SETTINGS = 200
     }
 
     private lateinit var animeRepo: AnimeRepository
     private lateinit var authRepo: AuthRepository
     private lateinit var rowsAdapter: ArrayObjectAdapter
 
-    // Adaptadores para las filas que son de base de datos local (observados en LiveData)
     private val continueAdapter = ArrayObjectAdapter(AnimeCardPresenter())
     private val favoritesAdapter = ArrayObjectAdapter(AnimeCardPresenter())
     private val followingAdapter = ArrayObjectAdapter(AnimeCardPresenter())
+
+    private var isCategoriesExpanded = false
+    private val addedCategoryRows = mutableListOf<ListRow>()
+    private val loadingGenres = mutableSetOf<String>()
+
+    private val categoriesList = listOf(
+        TvCategoryItem("1", "Acción"),
+        TvCategoryItem("2", "Aventura"),
+        TvCategoryItem("4", "Comedia"),
+        TvCategoryItem("8", "Drama"),
+        TvCategoryItem("10", "Fantasía"),
+        TvCategoryItem("19", "Musical"),
+        TvCategoryItem("22", "Romance"),
+        TvCategoryItem("24", "Ciencia Ficción"),
+        TvCategoryItem("42", "Seinen"),
+        TvCategoryItem("25", "Shoujo"),
+        TvCategoryItem("27", "Shounen"),
+        TvCategoryItem("36", "Recuentos de la Vida"),
+        TvCategoryItem("30", "Deportes"),
+        TvCategoryItem("37", "Sobrenatural"),
+        TvCategoryItem("41", "Thriller")
+    )
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -84,7 +108,10 @@ class TvBrowseFragment : BrowseSupportFragment() {
 
     private fun setupAdapters() {
         val presenterSelector = ClassPresenterSelector()
-        val customHeaderPresenter = TvIconHeaderPresenter()
+        val customHeaderPresenter = TvIconHeaderPresenter(
+            onCategoriesClicked = { toggleCategoriesExpansion() },
+            isExpandedProvider = { isCategoriesExpanded }
+        )
         setHeaderPresenterSelector(presenterSelector.apply {
             addClassPresenter(Row::class.java, customHeaderPresenter)
             addClassPresenter(ListRow::class.java, customHeaderPresenter)
@@ -103,16 +130,31 @@ class TvBrowseFragment : BrowseSupportFragment() {
 
         // Clic en cualquier elemento de las filas
         onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
-            when (item) {
-                is Anime -> {
-                    // Abrir detalles del Anime
-                    val intent = Intent(requireActivity(), TvDetailsActivity::class.java).apply {
-                        putExtra("mal_id", item.malId)
-                    }
+            if (item is Anime) {
+                if (item.malId == -1) {
+                    val intent = Intent(requireActivity(), TvCalendarActivity::class.java)
                     startActivity(intent)
+                    return@OnItemViewClickedListener
                 }
-                is TvSettingsItem -> {
-                    handleSettingsClick(item)
+                val intent = Intent(requireActivity(), TvDetailsActivity::class.java).apply {
+                    putExtra("mal_id", item.malId)
+                }
+                startActivity(intent)
+            } else if (item is TvSettingsItem) {
+                handleSettingsClick(item)
+            }
+        }
+
+        // Selección de fila para carga perezosa de subcategorías
+        onItemViewSelectedListener = OnItemViewSelectedListener { _, item, _, row ->
+            if (row is ListRow) {
+                val rowId = row.id
+                if (rowId in 1001L..1099L) {
+                    val genreId = (rowId - 1000L).toString()
+                    val listAdapter = row.adapter as ArrayObjectAdapter
+                    if (listAdapter.size() == 0) {
+                        loadCategoryData(rowId.toInt(), genreId, listAdapter)
+                    }
                 }
             }
         }
@@ -125,27 +167,35 @@ class TvBrowseFragment : BrowseSupportFragment() {
         lifecycleScope.launch {
             try {
                 // Ejecutar solicitudes en paralelo para carga rápida sin retrasos
+                val calendarDeferred = async { runCatching { animeRepo.getSchedules() }.getOrNull() }
                 val trendingDeferred = async { runCatching { animeRepo.getTrending() }.getOrNull() }
                 val latestDeferred = async { runCatching { animeRepo.getLatest() }.getOrNull() }
                 val moviesDeferred = async { runCatching { animeRepo.getMovies() }.getOrNull() }
                 val dubbedDeferred = async { runCatching { animeRepo.getDubbed() }.getOrNull() }
-                val actionDeferred = async { runCatching { animeRepo.getByGenre("1") }.getOrNull() } // 1 = Action
-                val comedyDeferred = async { runCatching { animeRepo.getByGenre("4") }.getOrNull() } // 4 = Comedy
+
+                val calendar = calendarDeferred.await() ?: emptyList()
+                if (calendar.isNotEmpty()) {
+                    val extendedCalendarList = mutableListOf<Anime>()
+                    extendedCalendarList.add(Anime(malId = -1, title = "Ver Calendario Semanal Completo\n(Lunes a Domingo)"))
+                    extendedCalendarList.addAll(calendar)
+                    addAnimeRow(ROW_CALENDAR, "Calendario", extendedCalendarList, R.drawable.ic_sidebar_calendar)
+                }
 
                 val trending = trendingDeferred.await() ?: emptyList()
-                val latest = latestDeferred.await() ?: emptyList()
-                val movies = moviesDeferred.await() ?: emptyList()
-                val dubbed = dubbedDeferred.await() ?: emptyList()
-                val action = actionDeferred.await() ?: emptyList()
-                val comedy = comedyDeferred.await() ?: emptyList()
+                if (trending.isNotEmpty()) addAnimeRow(ROW_TRENDING, "Tendencias Globales", trending, R.drawable.ic_sidebar_home)
 
-                // Insertar filas si hay datos
-                if (trending.isNotEmpty()) addAnimeRow(ROW_TRENDING, R.string.tv_header_trending, trending)
-                if (latest.isNotEmpty()) addAnimeRow(ROW_LATEST, R.string.tv_header_latest, latest)
-                if (movies.isNotEmpty()) addAnimeRow(ROW_MOVIES, R.string.tv_header_movies, movies)
-                if (dubbed.isNotEmpty()) addAnimeRow(ROW_DUBBED, R.string.tv_header_dubbed, dubbed)
-                if (action.isNotEmpty()) addAnimeRow(ROW_GENRE_ACTION, R.string.tv_header_action, action)
-                if (comedy.isNotEmpty()) addAnimeRow(ROW_GENRE_COMEDY, R.string.tv_header_comedy, comedy)
+                val latest = latestDeferred.await() ?: emptyList()
+                if (latest.isNotEmpty()) addAnimeRow(ROW_LATEST, "Últimos Lanzamientos", latest, R.drawable.ic_sidebar_latest)
+
+                val movies = moviesDeferred.await() ?: emptyList()
+                if (movies.isNotEmpty()) addAnimeRow(ROW_MOVIES, "Películas", movies, R.drawable.ic_sidebar_movies)
+
+                val dubbed = dubbedDeferred.await() ?: emptyList()
+                if (dubbed.isNotEmpty()) addAnimeRow(ROW_DUBBED, "Doblaje Latino", dubbed, R.drawable.ic_sidebar_dubbed)
+
+                // Fila de Categorías (ListRow con adaptador vacío)
+                val catHeader = TvIconHeaderItem(ROW_CATEGORIES.toLong(), "Categorías", R.drawable.ic_sidebar_categories)
+                rowsAdapter.add(ListRow(catHeader, ArrayObjectAdapter()))
 
                 // Agregar la fila de ajustes de cuenta al final
                 addSettingsRow()
@@ -182,30 +232,17 @@ class TvBrowseFragment : BrowseSupportFragment() {
             )
         }
 
-        // 3. Mi Lista (Seguimiento)
+        // 3. Mi Lista (Seguimiento) - Ahora en la barra lateral
         animeRepo.getFollowingLive().observe(viewLifecycleOwner) { followList ->
-            updateDatabaseRow(
-                rowId = ROW_FOLLOWING,
-                headerResId = R.string.tv_header_following,
-                adapter = followingAdapter,
-                items = followList.map { it.toAnime() }
-            )
+            updateFollowingSidebar(followList.map { it.toAnime() })
         }
     }
 
-    private fun addAnimeRow(rowId: Int, headerResId: Int, list: List<Anime>) {
+    private fun addAnimeRow(rowId: Int, headerTitle: String, list: List<Anime>, iconResId: Int) {
         val listRowAdapter = ArrayObjectAdapter(AnimeCardPresenter())
         listRowAdapter.addAll(0, list)
         
-        val iconResId = when(rowId) {
-            ROW_TRENDING -> R.drawable.ic_sidebar_home
-            ROW_LATEST -> R.drawable.ic_sidebar_explore
-            ROW_MOVIES -> R.drawable.ic_sidebar_explore
-            ROW_DUBBED -> R.drawable.ic_sidebar_explore
-            else -> R.drawable.ic_sidebar_explore
-        }
-        
-        val header = TvIconHeaderItem(rowId.toLong(), getString(headerResId), iconResId)
+        val header = TvIconHeaderItem(rowId.toLong(), headerTitle, iconResId)
         rowsAdapter.add(ListRow(header, listRowAdapter))
     }
 
@@ -254,6 +291,44 @@ class TvBrowseFragment : BrowseSupportFragment() {
             rowsAdapter.add(listRow)
         }
     }
+    
+    // Lista de IDs dinámicos que usamos para la sección SIGUIENDO
+    private val followingIdsInAdapter = mutableListOf<Long>()
+
+    private fun updateFollowingSidebar(items: List<Anime>) {
+        // Remover elementos existentes (incluyendo divisor y sección si los hay)
+        followingIdsInAdapter.forEach { id -> removeRowById(id.toInt()) }
+        followingIdsInAdapter.clear()
+        
+        removeRowById(3000) // Divider
+        removeRowById(3001) // Section
+        
+        if (items.isEmpty()) return
+        
+        // Agregar Divider y Section "SIGUIENDO"
+        val divider = DividerRow()
+        divider.id = 3000L
+        rowsAdapter.add(divider)
+        
+        val section = SectionRow(HeaderItem(3001L, "SIGUIENDO"))
+        rowsAdapter.add(section)
+        
+        // Agregar los items (limitamos a 5 por ejemplo, o todos)
+        items.take(5).forEachIndexed { index, anime ->
+            val itemId = 4000L + index
+            followingIdsInAdapter.add(itemId)
+            
+            val followingHeader = TvFollowingHeaderItem(
+                id = itemId,
+                name = anime.title,
+                malId = anime.malId,
+                coverUrl = anime.coverUrl,
+                subtitle = "Ver ahora"
+            )
+            // ListRow con adaptador vacío evita crasheos de PageRow y es perfectamente cliqueable
+            rowsAdapter.add(ListRow(followingHeader, ArrayObjectAdapter()))
+        }
+    }
 
     private fun removeRowById(rowId: Int) {
         val index = findRowIndexById(rowId)
@@ -267,7 +342,7 @@ class TvBrowseFragment : BrowseSupportFragment() {
 
     private fun findRowIndexById(rowId: Int): Int {
         for (i in 0 until rowsAdapter.size()) {
-            val row = rowsAdapter.get(i) as? ListRow
+            val row = rowsAdapter.get(i) as? Row
             if (row?.id == rowId.toLong()) {
                 return i
             }
@@ -432,7 +507,59 @@ class TvBrowseFragment : BrowseSupportFragment() {
         title = "Ep. $episodeNumber • ${title ?: "Anime"}",
         coverUrl = cover
     )
+
+    private fun toggleCategoriesExpansion() {
+        isCategoriesExpanded = !isCategoriesExpanded
+        
+        val catIndex = findRowIndexById(ROW_CATEGORIES)
+        if (catIndex == -1) return
+        
+        if (isCategoriesExpanded) {
+            // Expandir: Insertar las 15 categorías debajo
+            categoriesList.forEachIndexed { index, cat ->
+                val rowId = 1000L + cat.id.toLong()
+                val header = TvIconHeaderItem(rowId, cat.name, R.drawable.ic_sidebar_bullet)
+                val listRowAdapter = ArrayObjectAdapter(AnimeCardPresenter())
+                val listRow = ListRow(header, listRowAdapter)
+                
+                rowsAdapter.add(catIndex + 1 + index, listRow)
+                addedCategoryRows.add(listRow)
+            }
+        } else {
+            // Colapsar: Remover las categorías agregadas
+            addedCategoryRows.forEach { row ->
+                rowsAdapter.remove(row)
+            }
+            addedCategoryRows.clear()
+        }
+        
+        // Forzar rebinding del header de Categorías para actualizar el chevron
+        val catRow = rowsAdapter.get(catIndex)
+        rowsAdapter.replace(catIndex, catRow!!)
+    }
+
+    private fun loadCategoryData(rowId: Int, genreId: String, adapter: ArrayObjectAdapter) {
+        if (loadingGenres.contains(genreId)) return
+        loadingGenres.add(genreId)
+        
+        lifecycleScope.launch {
+            try {
+                val animeList = withContext(Dispatchers.IO) {
+                    animeRepo.getByGenre(genreId)
+                }
+                if (animeList.isNotEmpty()) {
+                    adapter.addAll(0, animeList)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error cargando género $genreId", e)
+            } finally {
+                loadingGenres.remove(genreId)
+            }
+        }
+    }
 }
+
+data class TvCategoryItem(val id: String, val name: String)
 
 data class TvSettingsItem(
     val id: Int,

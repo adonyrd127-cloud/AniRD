@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Base Theme -->
-    <style name="Theme.AniRD" parent="android:Theme.Material.NoActionBar" />
+    <style name="Theme.AniRD" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
 
     <!-- Splash Screen Theme -->
     <style name="Theme.AniRD.Starting" parent="Theme.SplashScreen">

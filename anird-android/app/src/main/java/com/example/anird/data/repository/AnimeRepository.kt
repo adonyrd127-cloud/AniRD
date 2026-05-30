@@ -49,6 +49,14 @@ class AnimeRepository(
         }
     }
 
+    suspend fun getSchedules(page: Int = 1): List<Anime> = withContext(Dispatchers.IO) {
+        val cacheKey = "schedules_$page"
+        getCachedOrFetch(cacheKey) {
+            val response = jikanApi.getSeasonNow(page = page)
+            response.data ?: emptyList()
+        }
+    }
+
     suspend fun getMovies(page: Int = 1): List<Anime> = withContext(Dispatchers.IO) {
         val cacheKey = "movies_$page"
         getCachedOrFetch(cacheKey) {
@@ -94,15 +102,22 @@ class AnimeRepository(
                 val bannerDeferred = async {
                     try {
                         val resp = anilistApi.query(AniListService.bannerRequest(malId))
-                        resp.data?.media?.bannerImage
+                        resp.data?.media
                     } catch (e: Exception) { null }
                 }
 
                 val anime = jikanDeferred.await()
-                val banner = bannerDeferred.await()
+                val anilistMedia = bannerDeferred.await()
 
                 anime?.copy()?.apply {
-                    bannerUrl = banner
+                    bannerUrl = anilistMedia?.bannerImage
+                    val nextAiring = anilistMedia?.nextAiringEpisode
+                    if (nextAiring != null) {
+                        // Formatear la fecha en base a timeUntilAiring o airingAt
+                        val days = nextAiring.timeUntilAiring / 86400
+                        val hours = (nextAiring.timeUntilAiring % 86400) / 3600
+                        nextEpisodeDate = "Episodio ${nextAiring.episode} en $days d $hours h"
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -120,6 +135,15 @@ class AnimeRepository(
         }
     }
 
+    suspend fun getAnimeRelations(malId: Int): List<AnimeRelation> = withContext(Dispatchers.IO) {
+        try {
+            jikanApi.getAnimeRelations(malId).data ?: emptyList()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error obteniendo relaciones $malId", e)
+            emptyList()
+        }
+    }
+
     suspend fun getAnimeRecommendations(malId: Int): List<Anime> = withContext(Dispatchers.IO) {
         try {
             val recs = jikanApi.getAnimeRecommendations(malId).data ?: emptyList()
@@ -127,6 +151,14 @@ class AnimeRepository(
         } catch (e: Exception) {
             Log.e(TAG, "Error obteniendo recomendaciones $malId", e)
             emptyList()
+        }
+    }
+
+    suspend fun getAnimeBasicInfo(malId: Int): Anime? = withContext(Dispatchers.IO) {
+        val cacheKey = "basic_$malId"
+        getCachedOrFetch(cacheKey) {
+            val response = jikanApi.getAnimeBasic(malId)
+            response.data
         }
     }
 
@@ -219,6 +251,7 @@ class AnimeRepository(
 
     fun getFavoritesLive() = favoriteDao.getAllFavorites()
     fun isFavoriteLive(animeId: Int) = favoriteDao.isFavorite(animeId)
+    fun isFavoriteFlow(animeId: Int) = favoriteDao.isFavoriteFlow(animeId)
 
     suspend fun toggleFavorite(anime: Anime): Boolean = withContext(Dispatchers.IO) {
         val isFav = favoriteDao.isFavoriteSync(anime.malId)
@@ -240,6 +273,7 @@ class AnimeRepository(
 
     fun getFollowingLive() = followingDao.getAllFollowing()
     fun isFollowingLive(animeId: Int) = followingDao.isFollowing(animeId)
+    fun isFollowingFlow(animeId: Int) = followingDao.isFollowingFlow(animeId)
 
     suspend fun toggleFollowing(anime: Anime): Boolean = withContext(Dispatchers.IO) {
         val isFollow = followingDao.isFollowingSync(anime.malId)
@@ -290,7 +324,7 @@ class AnimeRepository(
         crossinline fetch: suspend () -> T
     ): T {
         try {
-            val cached = cacheDao.get(key)
+            val cached = cacheDao.get(key, System.currentTimeMillis())
             if (cached != null) {
                 val type = object : TypeToken<T>() {}.type
                 val data = gson.fromJson<T>(cached.data, type)

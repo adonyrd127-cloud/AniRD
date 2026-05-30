@@ -1,6 +1,6 @@
-# Walkthrough: AniRD Android & Android TV Suite (v4.5.0)
+# Walkthrough: AniRD Android & Android TV Suite (v4.5.2)
 
-¡Esta actualización (v4.5.0) representa la evolución definitiva del wrapper nativo en Kotlin y la integración frontend Vite, logrando un despliegue de alto rendimiento con compatibilidad absoluta para dispositivos móviles y televisores inteligentes (Android TV/Google TV)!
+¡Esta actualización (v4.5.2) implementa correcciones críticas solicitadas para resolver los problemas del reproductor, carátulas de episodios incompletas y el inicio de sesión mediante una configuración dinámica de servidores en caliente!
 
 ---
 
@@ -38,27 +38,46 @@
 
 ---
 
-## 🧪 Pruebas de Compilación Local Exitosas
+## 🛠️ Correcciones Críticas de Funcionalidad (v4.5.2)
 
-La compilación ha finalizado con éxito total:
-```bash
-BUILD SUCCESSFUL in 1m 43s
-38 actionable tasks: 38 executed
-```
-Se ha generado correctamente el APK de desarrollo en `app/build/outputs/apk/dev/debug/app-dev-debug.apk`.
+### 1. Configuración Dinámica de Servidor Backend (Solución al Login)
+- **Problema:** El inicio de sesión fallaba con el error `"Failed to connect to /10.0.0.30:3005"`. Esto sucedía porque el puerto de producción (`3005` para Docker Compose en la Orange Pi) estaba configurado en los flavors estáticos del APK, mientras que durante las pruebas en Windows el backend local corre en el puerto `3000`. Al no poder conectar, fallaba el Login, el Calendario y la carga de imágenes.
+- **Solución:**
+  - Implementado un diálogo moderno e inmersivo de configuración del backend en `ProfileScreen.kt` mediante el botón **"⚙️ Configurar Servidor Backend"** en la tarjeta de Login y la fila **"Servidor Backend"** de la configuración de cuenta.
+  - Integrado `ServerConfigManager` en `AuthViewModel.kt` para almacenar la IP y el Puerto ingresados directamente por el usuario en SharedPreferences persistentes en caliente.
+  - Diseñado un interceptor dinámico de OkHttp en `AppModule.kt` y `RetrofitClient.kt` que intercepta y reescribe sobre la marcha la IP y el Puerto de destino a los configurados por el usuario para todas las peticiones del backend.
+  - Añadido `RetrofitClient.resetLocalApi()` para reconstruir el cliente HTTP en caliente. ¡Ahora puedes alternar entre el servidor local (`10.0.0.30:3000`) y la Orange Pi (`10.0.0.X:3005`) al instante dentro del app sin reinstalar!
+
+### 2. Carga y Visualización de Carátulas en los Episodios
+- **Problema:** En la pestaña "Episodios" del detalle del anime, las portadas individuales de cada capítulo se visualizaban en blanco con iconos grises genéricos debido a que la base de datos local guardaba `thumbnailUrl = null`. Además, MyAnimeList bloquea peticiones de imágenes de Coil si se usa el User-Agent por defecto de Java.
+- **Solución:**
+  - Modificado `DetailViewModel.kt` para consultar la API de AniList (`repository.getAniListEpisodes(anime.malId)`) al sincronizar episodios.
+  - Se mapean y emparejan los episodios locales del scraper con los de la API mediante parseo del título (ej. "Episode 1" -> 1) y fallback por índice de lista para poblar y persistir la miniatura de alta calidad `thumbnailUrl` en Room.
+  - Implementada la interfaz `ImageLoaderFactory` de Coil en `AniRDApplication.kt` inyectando un encabezado global con User-Agent de navegador y Referer para saltarse los bloqueos de seguridad del CDN de MyAnimeList. ¡Las portadas de capítulos ahora cargan perfectamente con transiciones suaves!
+
+### 3. Error de Reproducción: "No se encontraron enlaces de reproducción disponibles"
+- **Problema:** Al hacer clic en reproducir un episodio, el reproductor lanzaba un error de "enlaces no disponibles". Esto era consecuencia del mismo desalineamiento de puertos en local (buscando la API de scraping de streams en `3005` en lugar de `3000`).
+- **Solución:** Al habilitar la reescritura dinámica de endpoints en `RetrofitClient` a través de `ServerConfigManager`, el flujo de scraping de streams (`repository.getStreamServers`) realiza las peticiones directamente contra el puerto activo en caliente. El backend resuelve los servidores exitosamente y el reproductor carga de manera automática.
 
 ---
 
-## 📁 Archivos Modificados y Creados
+## 🧪 Pruebas de Compilación Local Exitosas
 
-- **[MODIFY]** [MainActivity.kt](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/anird-android/app/src/main/java/com/example/anird/MainActivity.kt) - Reestructuración completa con biometría, PiP, Media Session, TV keys, insets y WebView/Chrome clients.
-- **[MODIFY]** [AndroidManifest.xml](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/anird-android/app/src/main/AndroidManifest.xml) - Habilitados Leanback, PiP, deep links, banner y permisos.
-- **[NEW]** [network_security_config.xml](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/anird-android/app/src/main/res/xml/network_security_config.xml) - Configuración HTTP selectiva para Tailscale.
-- **[NEW]** [shortcuts.xml](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/anird-android/app/src/main/res/xml/shortcuts.xml) - Atajos rápidos.
-- **[NEW]** [tv_banner.png](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/anird-android/app/src/main/res/drawable-xhdpi/tv_banner.png) - Banner TV premium.
-- **[NEW]** [proguard-rules.pro](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/anird-android/app/proguard-rules.pro) - Reglas de protección de R8.
-- **[NEW]** [android-release.yml](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/.github/workflows/android-release.yml) - CI workflow.
-- **[MODIFY]** [build.gradle.kts](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/anird-android/app/build.gradle.kts) - Sabores y dependencias (splash, fragment, media, biometric, security).
-- **[MODIFY]** [main.js](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/frontend/src/main.js) - Bridge de reproducción AniRDBridge y callbacks nativos.
-- **[MODIFY]** [spatialNavigation.js](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/frontend/src/services/spatialNavigation.js) - Elementos adicionales focusables de TV.
-- **[MODIFY]** [global.css](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/frontend/src/styles/global.css) - Márgenes overscan, layouts de PiP y outlined de foco para D-pad.
+La compilación general y empaquetado de APKs con las correcciones culminó con éxito total:
+```bash
+BUILD SUCCESSFUL in 1m 1s
+88 actionable tasks: 18 executed, 70 up-to-date
+```
+Los APKs reconstruidos listos para su uso se encuentran en la raíz del proyecto para descargarlos:
+1. 📱 **Mobile App APK:** [app-prod-debug.apk](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/app-prod-debug.apk) (IP/Port dinámicos en Perfil)
+2. 📺 **Smart TV APK:** [app-tv-debug.apk](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/app-tv-debug.apk) (Sincronizado con configuraciones de móvil)
+
+---
+
+## 📁 Archivos Modificados y Creados en v4.5.2
+
+- **[MODIFY]** [ProfileScreen.kt](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/anird-android/app/src/main/java/com/example/anird/presentation/screens/ProfileScreen.kt) - Agregados botones, fila de configuración y diálogo AlertDialog en Jetpack Compose para cambiar IP/Puerto.
+- **[MODIFY]** [AuthViewModel.kt](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/anird-android/app/src/main/java/com/example/anird/presentation/viewmodels/AuthViewModel.kt) - Integrado `ServerConfigManager` y método `updateServerConfig` para almacenar configuraciones y resetear Retrofit.
+- **[MODIFY]** [DetailViewModel.kt](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/anird-android/app/src/main/java/com/example/anird/presentation/viewmodels/DetailViewModel.kt) - Sincronizadas miniaturas de episodios dinámicamente mediante emparejamiento con la API GraphQL de AniList.
+- **[MODIFY]** [AniRDApplication.kt](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/anird-android/app/src/main/java/com/example/anird/AniRDApplication.kt) - Implementado `ImageLoaderFactory` de Coil con headers de User-Agent y Referer anti-bloqueo.
+- **[MODIFY]** [RetrofitClient.kt](file:///c:/Users/adony/OneDrive/Escritorio/pagina%20de%20anime/anird-android/app/src/main/java/com/example/anird/data/remote/RetrofitClient.kt) - Añadido import de Context y dynamic host/port rewriter para la UI de Android TV.

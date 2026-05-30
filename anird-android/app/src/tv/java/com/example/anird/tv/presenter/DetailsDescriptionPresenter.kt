@@ -20,6 +20,12 @@ class DetailsDescriptionPresenter : AbstractDetailsDescriptionPresenter() {
         anime.score?.let { subtitleParts.add("★ %.1f".format(it)) }
         
         viewHolder.subtitle.text = subtitleParts.joinToString(" • ")
-        viewHolder.body.text = anime.synopsis?.takeIf { it.isNotBlank() } ?: "Sin sinopsis disponible."
+        
+        val synopsis = anime.synopsis?.takeIf { it.isNotBlank() } ?: "Sin sinopsis disponible."
+        if (anime.nextEpisodeDate != null) {
+            viewHolder.body.text = "¡Próximo! ${anime.nextEpisodeDate}\n\n$synopsis"
+        } else {
+            viewHolder.body.text = synopsis
+        }
     }
 }

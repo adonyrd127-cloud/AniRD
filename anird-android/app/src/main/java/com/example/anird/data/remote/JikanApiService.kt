@@ -43,6 +43,12 @@ interface JikanApiService {
         @Query("limit") limit: Int = 25
     ): JikanResponse<List<Anime>>
 
+    /** Calendario (Animes en emisión por día) */
+    @GET("schedules")
+    suspend fun getSchedules(
+        @Query("page") page: Int = 1
+    ): JikanResponse<List<Anime>>
+
     /** Anime doblado (productoras Crunchyroll/Funimation) */
     @GET("anime")
     suspend fun getDubbed(
@@ -63,9 +69,7 @@ interface JikanApiService {
 
     /** Detalles completos de un anime */
     @GET("anime/{id}/full")
-    suspend fun getAnimeDetails(
-        @Path("id") malId: Int
-    ): JikanResponse<Anime>
+    suspend fun getAnimeDetails(@Path("id") id: Int): JikanResponse<Anime>
 
     /** Info básica de un anime */
     @GET("anime/{id}")

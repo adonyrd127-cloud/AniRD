@@ -3,6 +3,7 @@ plugins {
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.ksp)
+  alias(libs.plugins.hilt)
 }
 
 android {
@@ -23,20 +24,20 @@ android {
             dimension = "environment"
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.0.9:8090\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000\"")
             buildConfigField("Boolean", "ENABLE_WEBVIEW_DEBUG", "true")
             buildConfigField("Boolean", "IS_TV", "false")
-            buildConfigField("String", "LOCAL_API_URL", "\"http://10.0.0.9:3005/api/v1/\"")
+            buildConfigField("String", "LOCAL_API_URL", "\"http://10.0.2.2:3000/api/v1/\"")
             buildConfigField("String", "JIKAN_BASE_URL", "\"https://api.jikan.moe/v4/\"")
             buildConfigField("String", "ANILIST_URL", "\"https://graphql.anilist.co/\"")
             buildConfigField("String", "API_KEY", "\"dev-anime1v-key\"")
         }
         create("prod") {
             dimension = "environment"
-            buildConfigField("String", "API_BASE_URL", "\"http://100.101.132.92:3005\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.0.30:3005\"")
             buildConfigField("Boolean", "ENABLE_WEBVIEW_DEBUG", "false")
             buildConfigField("Boolean", "IS_TV", "false")
-            buildConfigField("String", "LOCAL_API_URL", "\"http://100.101.132.92:3005/api/v1/\"")
+            buildConfigField("String", "LOCAL_API_URL", "\"http://10.0.0.30:3005/api/v1/\"")
             buildConfigField("String", "JIKAN_BASE_URL", "\"https://api.jikan.moe/v4/\"")
             buildConfigField("String", "ANILIST_URL", "\"https://graphql.anilist.co/\"")
             buildConfigField("String", "API_KEY", "\"dev-anime1v-key\"")
@@ -45,10 +46,10 @@ android {
             dimension = "environment"
             applicationIdSuffix = ".tv"
             versionNameSuffix = "-tv"
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.0.9:8090\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.0.30:3005\"")
             buildConfigField("Boolean", "ENABLE_WEBVIEW_DEBUG", "false")
             buildConfigField("Boolean", "IS_TV", "true")
-            buildConfigField("String", "LOCAL_API_URL", "\"http://10.0.0.9:3005/api/v1/\"")
+            buildConfigField("String", "LOCAL_API_URL", "\"http://10.0.0.30:3005/api/v1/\"")
             buildConfigField("String", "JIKAN_BASE_URL", "\"https://api.jikan.moe/v4/\"")
             buildConfigField("String", "ANILIST_URL", "\"https://graphql.anilist.co/\"")
             buildConfigField("String", "API_KEY", "\"dev-anime1v-key\"")
@@ -102,6 +103,7 @@ dependencies {
   implementation(libs.androidx.compose.ui)
   implementation(libs.androidx.compose.ui.tooling.preview)
   implementation(libs.androidx.compose.material3)
+  implementation("androidx.compose.material:material-icons-core")
   // Tooling
   debugImplementation(libs.androidx.compose.ui.tooling)
   // Instrumented tests
@@ -142,11 +144,35 @@ dependencies {
 
   // Images
   implementation(libs.glide)
+  implementation(libs.coil.compose)
 
   // Database
   implementation(libs.room.runtime)
   implementation(libs.room.ktx)
   ksp(libs.room.compiler)
+
+  // Hilt Dependency Injection
+  implementation(libs.hilt.android)
+  ksp(libs.hilt.compiler)
+  implementation(libs.hilt.navigation.compose)
+
+  // Navigation
+  implementation(libs.androidx.navigation.compose)
+
+  // Media3 (ExoPlayer & Session)
+  implementation(libs.media3.exoplayer)
+  implementation(libs.media3.session)
+  implementation(libs.media3.ui)
+
+  // DataStore
+  implementation(libs.androidx.datastore.preferences)
+
+  // Paging 3
+  implementation(libs.androidx.paging.runtime)
+  implementation(libs.androidx.paging.compose)
+
+  // WorkManager
+  implementation(libs.androidx.work.runtime.ktx)
 
   // Coroutines
   implementation(libs.kotlinx.coroutines.android)

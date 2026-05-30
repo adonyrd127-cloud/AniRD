@@ -45,6 +45,7 @@ class TvDetailsFragment : DetailsSupportFragment() {
         private const val ROW_DETAILS = 0
         private const val ROW_EPISODES = 1
         private const val ROW_RELATED = 2
+        private const val ROW_RELATIONS = 3
     }
 
     private var malId: Int = 0
@@ -60,6 +61,7 @@ class TvDetailsFragment : DetailsSupportFragment() {
     private lateinit var actionAdapter: ArrayObjectAdapter
     private lateinit var episodesAdapter: ArrayObjectAdapter
     private lateinit var relatedAdapter: ArrayObjectAdapter
+    private lateinit var relationsAdapter: ArrayObjectAdapter
 
     private lateinit var detailsRowPresenter: FullWidthDetailsOverviewRowPresenter
 
@@ -99,6 +101,7 @@ class TvDetailsFragment : DetailsSupportFragment() {
         // Inicializar carruseles vacíos listos para rellenarse
         episodesAdapter = ArrayObjectAdapter(EpisodePresenter())
         relatedAdapter = ArrayObjectAdapter(AnimeCardPresenter())
+        relationsAdapter = ArrayObjectAdapter(AnimeCardPresenter())
     }
 
     private fun setupListeners() {
@@ -270,9 +273,26 @@ class TvDetailsFragment : DetailsSupportFragment() {
                 // 3. Cargar recomendaciones relacionadas en paralelo
                 val related = runCatching { animeRepo.getAnimeRecommendations(malId) }.getOrElse { emptyList() }
 
-                // 4. Mostrar en pantalla
+                // 4. Extraer Relaciones (Precuelas / Secuelas)
+                val relationsDeferredList = mutableListOf<kotlinx.coroutines.Deferred<Anime?>>()
+                anime.relations?.forEach { rel ->
+                    rel.entry?.forEach { entry ->
+                        if (entry.type?.lowercase() == "anime") {
+                            relationsDeferredList.add(async {
+                                val basicInfo = runCatching { animeRepo.getAnimeBasicInfo(entry.malId) }.getOrNull()
+                                basicInfo?.copy(title = "${rel.relation}:\n${entry.name}")
+                                    ?: Anime(malId = entry.malId, title = "${rel.relation}:\n${entry.name}")
+                            })
+                        }
+                    }
+                }
+                
+                val relationsList = relationsDeferredList.mapNotNull { it.await() }
+
+                // 5. Mostrar en pantalla
                 bindDetails(anime)
                 bindEpisodesRow(episodesList)
+                bindRelationsRow(relationsList)
                 bindRelatedRow(related)
 
                 setupListeners()
@@ -345,6 +365,15 @@ class TvDetailsFragment : DetailsSupportFragment() {
         
         val header = HeaderItem(ROW_EPISODES.toLong(), getString(R.string.tv_episodes_header))
         rowsAdapter.add(ListRow(header, episodesAdapter))
+    }
+
+    private fun bindRelationsRow(relations: List<Anime>) {
+        if (relations.isEmpty()) return
+        relationsAdapter.clear()
+        relationsAdapter.addAll(0, relations)
+        
+        val header = HeaderItem(ROW_RELATIONS.toLong(), "Franquicia (Secuelas y Precuelas)")
+        rowsAdapter.add(ListRow(header, relationsAdapter))
     }
 
     private fun bindRelatedRow(animes: List<Anime>) {
