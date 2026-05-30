@@ -10,6 +10,8 @@ class ServerConfigManager(context: Context) {
     companion object {
         private const val KEY_IP = "server_ip"
         private const val KEY_PORT = "server_port"
+        private const val KEY_CONFIG_VERSION = "config_version"
+        private const val CURRENT_CONFIG_VERSION = 2 // Incrementar al cambiar defaults
         
         // Extraer IP y puerto por defecto desde BuildConfig (definidos en build.gradle.kts)
         private val DEFAULT_IP: String
@@ -18,8 +20,20 @@ class ServerConfigManager(context: Context) {
         init {
             val url = BuildConfig.LOCAL_API_URL.removePrefix("http://").removePrefix("https://").removeSuffix("/api/v1/")
             val parts = url.split(":")
-            DEFAULT_IP = parts.getOrNull(0) ?: "10.0.0.30"
+            DEFAULT_IP = parts.getOrNull(0) ?: "10.0.0.9"
             DEFAULT_PORT = parts.getOrNull(1) ?: "3005"
+        }
+    }
+
+    init {
+        // Migración: si la versión de config guardada es antigua, resetear a los nuevos defaults
+        val savedVersion = prefs.getInt(KEY_CONFIG_VERSION, 0)
+        if (savedVersion < CURRENT_CONFIG_VERSION) {
+            prefs.edit()
+                .putString(KEY_IP, DEFAULT_IP)
+                .putString(KEY_PORT, DEFAULT_PORT)
+                .putInt(KEY_CONFIG_VERSION, CURRENT_CONFIG_VERSION)
+                .apply()
         }
     }
 
