@@ -172,10 +172,16 @@ data class AniListResponse(
 )
 
 data class AniListData(
-    @SerializedName("Media") val media: AniListMedia? = null
+    @SerializedName("Media") val media: AniListMedia? = null,
+    @SerializedName("Page") val page: AniListPage? = null
+)
+
+data class AniListPage(
+    val media: List<AniListMedia>? = null
 )
 
 data class AniListMedia(
+    val idMal: Int = 0,
     val bannerImage: String? = null,
     val streamingEpisodes: List<AniListEpisode>? = null,
     val nextAiringEpisode: NextAiringEpisode? = null

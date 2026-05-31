@@ -3,7 +3,7 @@ package com.example.anird.domain.usecase
 import com.example.anird.data.model.Anime
 import com.example.anird.data.repository.AnimeRepository
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.supervisorScope
 import javax.inject.Inject
 
 /**
@@ -12,7 +12,7 @@ import javax.inject.Inject
 class GetHomeFeedUseCase @Inject constructor(
     private val repository: AnimeRepository
 ) {
-    suspend operator fun invoke(): HomeFeedResult = coroutineScope {
+    suspend operator fun invoke(): HomeFeedResult = supervisorScope {
         val trendingDeferred = async { repository.getTrending(page = 1) }
         val latestDeferred = async { repository.getLatest(page = 1) }
         val schedulesDeferred = async { repository.getSchedules(page = 1) }
@@ -22,6 +22,10 @@ class GetHomeFeedUseCase @Inject constructor(
         val latest = try { latestDeferred.await() } catch (e: Exception) { emptyList() }
         val schedules = try { schedulesDeferred.await() } catch (e: Exception) { emptyList() }
         val movies = try { moviesDeferred.await() } catch (e: Exception) { emptyList() }
+
+        if (trending.isEmpty() && latest.isEmpty()) {
+            throw java.io.IOException("No se pudo cargar el contenido principal de inicio")
+        }
 
         // El carrusel de héroes usa los primeros 5 animes en tendencias
         val heroCarousel = trending.take(5)

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -293,6 +294,10 @@ fun ProfileDetails(
     onLogoutClick: () -> Unit,
     onConfigureServerClick: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { context.getSharedPreferences("anird_prefs", android.content.Context.MODE_PRIVATE) }
+    var notifsEnabled by remember { mutableStateOf(prefs.getBoolean("new_episodes_notif_enabled", true)) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -377,6 +382,16 @@ fun ProfileDetails(
             shape = RoundedCornerShape(12.dp)
         ) {
             Column {
+                SettingsToggleItem(
+                    icon = Icons.Default.Notifications,
+                    title = "Notificaciones de nuevos episodios",
+                    checked = notifsEnabled,
+                    onCheckedChange = { checked ->
+                        notifsEnabled = checked
+                        prefs.edit().putBoolean("new_episodes_notif_enabled", checked).apply()
+                    }
+                )
+                HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant)
                 SettingsItem(icon = Icons.Default.Lock, title = "Seguridad de cuenta")
                 HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant) // 1.dp OutlineVariant: #2C2F35
                 SettingsItem(icon = Icons.Default.Star, title = "Calificar AniRD")
@@ -454,5 +469,47 @@ fun SettingsItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
+    )
+}
+
+@Composable
+fun SettingsToggleItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    ListItem(
+        headlineContent = {
+            Text(
+                text = title,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        leadingContent = {
+            Icon(
+                icon,
+                contentDescription = title,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant, // #A0A3A7
+                modifier = Modifier.size(20.dp)
+            )
+        },
+        trailingContent = {
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                    uncheckedThumbColor = Color.Gray,
+                    uncheckedTrackColor = Color(0xFF2C2F35)
+                )
+            )
+        },
+        colors = ListItemDefaults.colors(
+            containerColor = Color.Transparent
+        ),
+        modifier = Modifier.fillMaxWidth()
     )
 }

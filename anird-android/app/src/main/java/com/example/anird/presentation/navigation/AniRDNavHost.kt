@@ -56,6 +56,9 @@ fun AniRDNavHost(
             "detail/{malId}",
             arguments = listOf(
                 navArgument("malId") { type = NavType.IntType }
+            ),
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "anird://detail/{malId}" }
             )
         ) { backStackEntry ->
             val malId = backStackEntry.arguments?.getInt("malId") ?: 0

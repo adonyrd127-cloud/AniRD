@@ -52,7 +52,7 @@ class AnimeRepository(
     suspend fun getSchedules(page: Int = 1): List<Anime> = withContext(Dispatchers.IO) {
         val cacheKey = "schedules_$page"
         getCachedOrFetch(cacheKey) {
-            val response = jikanApi.getSeasonNow(page = page)
+            val response = jikanApi.getSchedules(page = page)
             response.data ?: emptyList()
         }
     }
@@ -123,6 +123,17 @@ class AnimeRepository(
         } catch (e: Exception) {
             Log.e(TAG, "Error obteniendo detalles de anime $malId", e)
             null
+        }
+    }
+
+    suspend fun getNextAiringBatch(malIds: List<Int>): List<com.example.anird.data.model.AniListMedia> = withContext(Dispatchers.IO) {
+        if (malIds.isEmpty()) return@withContext emptyList()
+        try {
+            val resp = anilistApi.query(AniListService.batchAiringRequest(malIds))
+            resp.data?.page?.media ?: emptyList()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error obteniendo batch de airing de AniList para $malIds", e)
+            emptyList()
         }
     }
 
@@ -272,6 +283,7 @@ class AnimeRepository(
     // --- Following ---
 
     fun getFollowingLive() = followingDao.getAllFollowing()
+    suspend fun getAllFollowingList() = withContext(Dispatchers.IO) { followingDao.getAllFollowingList() }
     fun isFollowingLive(animeId: Int) = followingDao.isFollowing(animeId)
     fun isFollowingFlow(animeId: Int) = followingDao.isFollowingFlow(animeId)
 

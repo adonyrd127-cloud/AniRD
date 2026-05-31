@@ -43,6 +43,22 @@ interface AniListService {
             }
         """
 
+        /** Query para obtener el horario de emisión en batch por MAL IDs */
+        const val BATCH_AIRING_QUERY = """
+            query (${'$'}idMals: [Int]) {
+                Page(page: 1, perPage: 50) {
+                    media(idMal_in: ${'$'}idMals, type: ANIME) {
+                        idMal
+                        nextAiringEpisode {
+                            airingAt
+                            timeUntilAiring
+                            episode
+                        }
+                    }
+                }
+            }
+        """
+
         fun bannerRequest(malId: Int) = AniListGraphQLRequest(
             query = BANNER_QUERY,
             variables = mapOf("idMal" to malId)
@@ -51,6 +67,11 @@ interface AniListService {
         fun episodesRequest(malId: Int) = AniListGraphQLRequest(
             query = EPISODES_QUERY,
             variables = mapOf("idMal" to malId)
+        )
+
+        fun batchAiringRequest(malIds: List<Int>) = AniListGraphQLRequest(
+            query = BATCH_AIRING_QUERY,
+            variables = mapOf("idMals" to malIds)
         )
     }
 }

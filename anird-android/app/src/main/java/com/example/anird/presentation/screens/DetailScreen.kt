@@ -478,7 +478,8 @@ fun DetailContent(
                     } else {
                         items(episodes) { episode ->
                             EpisodeListItem(
-                                episode = episode, 
+                                episode = episode,
+                                animeCoverUrl = anime.imageUrl,
                                 onClick = { onEpisodeClick(episode.episodeNumber) }
                             )
                         }
@@ -566,6 +567,7 @@ fun DetailActionButton(
 @Composable
 fun EpisodeListItem(
     episode: EpisodeEntity,
+    animeCoverUrl: String? = null,
     onClick: () -> Unit
 ) {
     Row(
@@ -583,6 +585,8 @@ fun EpisodeListItem(
                 .clip(RoundedCornerShape(6.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
+            val isFallback = !animeCoverUrl.isNullOrBlank() && episode.thumbnailUrl == animeCoverUrl
+            
             if (!episode.thumbnailUrl.isNullOrBlank()) {
                 AsyncImage(
                     model = episode.thumbnailUrl,
@@ -590,6 +594,27 @@ fun EpisodeListItem(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
+                
+                if (isFallback) {
+                    // Overlay semi-transparente oscuro
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.5f))
+                    )
+                    // Número de episodio en grande semi-transparente centrado
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "EP ${episode.episodeNumber}",
+                            color = Color.White.copy(alpha = 0.85f),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                    }
+                }
             } else {
                 Box(
                     modifier = Modifier.fillMaxSize(),

@@ -126,14 +126,14 @@ class DetailViewModel @Inject constructor(
                             parsedNum == ep.number
                         } ?: aniListEpisodes.getOrNull(index) // Fallback al index si no hay coincidencia exacta de número
                         
-                        val thumbUrl = matchedAniListEp?.thumbnail
-
+                        val thumbUrl = if (!matchedAniListEp?.thumbnail.isNullOrBlank()) matchedAniListEp?.thumbnail else anime.imageUrl
+ 
                         EpisodeEntity(
                             id = epId,
                             animeMalId = anime.malId,
                             episodeNumber = ep.number,
                             title = ep.title ?: "Episodio ${ep.number}",
-                            thumbnailUrl = thumbUrl, // Poblado con la miniatura de AniList!
+                            thumbnailUrl = thumbUrl, // Poblado con la miniatura de AniList o portada de fallback!
                             videoUrl = ep.url,    // Guardamos la URL de la página del episodio para resolver servidores al reproducir
                             durationSeconds = existing?.durationSeconds,
                             watchedProgressMs = existing?.watchedProgressMs,

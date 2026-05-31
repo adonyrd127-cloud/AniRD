@@ -35,7 +35,22 @@ class AniRDApplication : Application(), ImageLoaderFactory {
 
     override fun onCreate() {
         super.onCreate()
+        createNotificationChannels()
         setupBackgroundSync()
+    }
+
+    private fun createNotificationChannels() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val name = "Nuevos Episodios"
+            val descriptionText = "Notificaciones de nuevos episodios de los animes que sigues"
+            val importance = android.app.NotificationManager.IMPORTANCE_HIGH
+            val channel = android.app.NotificationChannel("new_episodes_channel", name, importance).apply {
+                description = descriptionText
+            }
+            val notificationManager: android.app.NotificationManager =
+                getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 
     private fun setupBackgroundSync() {

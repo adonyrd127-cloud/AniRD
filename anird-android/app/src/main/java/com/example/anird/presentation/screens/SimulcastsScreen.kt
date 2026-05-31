@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -139,11 +141,19 @@ fun SimulcastsScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(todayAnimeList) { anime ->
+                            val isFollowed = state.followingIds.contains(anime.malId)
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .background(Color(0xFF1E2127), RoundedCornerShape(8.dp))
                                     .clickable { onNavigateToDetail(anime.malId) }
+                                    .then(
+                                        if (isFollowed) {
+                                            Modifier.border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
+                                        } else {
+                                            Modifier
+                                        }
+                                    )
                                     .padding(8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -157,17 +167,43 @@ fun SimulcastsScreen(
                                 )
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Box(
-                                        modifier = Modifier
-                                            .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(4.dp))
-                                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                                    ) {
-                                        Text(
-                                            text = "SIMULCAST",
-                                            color = MaterialTheme.colorScheme.primary,
-                                            fontSize = 9.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(4.dp))
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = "SIMULCAST",
+                                                color = MaterialTheme.colorScheme.primary,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                        if (isFollowed) {
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Box(
+                                                modifier = Modifier
+                                                    .background(Color(0xFF2C1C16), RoundedCornerShape(4.dp))
+                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                            ) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Star,
+                                                        contentDescription = "Siguiendo",
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(10.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    Text(
+                                                        text = "SIGUIENDO",
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                        fontSize = 8.sp,
+                                                        fontWeight = FontWeight.Black
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Text(
@@ -184,6 +220,22 @@ fun SimulcastsScreen(
                                         color = Color(0xFFA0A3A7),
                                         fontSize = 12.sp
                                     )
+                                    if (anime.nextEpisodeDate != null) {
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .background(Color(0xFF162C22).copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                                                .border(1.dp, Color(0xFF2E7D32).copy(alpha = 0.6f), RoundedCornerShape(4.dp))
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = anime.nextEpisodeDate!!,
+                                                color = Color(0xFF81C784),
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }

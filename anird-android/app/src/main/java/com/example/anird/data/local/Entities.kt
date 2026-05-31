@@ -38,6 +38,7 @@ data class FollowingEntity(
     val title: String = "",
     val cover: String? = null,
     val broadcast: String? = null,
+    val lastKnownEpisode: Int = 0,
     val addedAt: Long = System.currentTimeMillis()
 )
 
