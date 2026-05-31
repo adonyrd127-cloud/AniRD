@@ -261,6 +261,7 @@ class AnimeRepository(
     // --- Favoritos ---
 
     fun getFavoritesLive() = favoriteDao.getAllFavorites()
+    suspend fun getAllFavoritesList() = withContext(Dispatchers.IO) { favoriteDao.getAllFavoritesList() }
     fun isFavoriteLive(animeId: Int) = favoriteDao.isFavorite(animeId)
     fun isFavoriteFlow(animeId: Int) = favoriteDao.isFavoriteFlow(animeId)
 

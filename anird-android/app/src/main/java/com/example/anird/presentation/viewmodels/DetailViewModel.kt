@@ -8,6 +8,7 @@ import com.example.anird.data.local.EpisodeEntity
 import com.example.anird.data.model.Anime
 import com.example.anird.data.model.AnimeCharacter
 import com.example.anird.data.repository.AnimeRepository
+import com.example.anird.data.repository.AuthRepository
 import com.example.anird.domain.usecase.DetailedAnimeResult
 import com.example.anird.domain.usecase.GetAnimeDetailsUseCase
 import com.example.anird.domain.usecase.ResolvedRelationGroup
@@ -15,7 +16,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
+ 
 sealed interface DetailUiState {
     object Loading : DetailUiState
     data class Success(
@@ -29,14 +30,15 @@ sealed interface DetailUiState {
     ) : DetailUiState
     data class Error(val message: String) : DetailUiState
 }
-
+ 
 @HiltViewModel
 class DetailViewModel @Inject constructor(
     private val getAnimeDetailsUseCase: GetAnimeDetailsUseCase,
     private val repository: AnimeRepository,
-    private val episodeDao: EpisodeDao
+    private val episodeDao: EpisodeDao,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
-
+ 
     companion object {
         private const val TAG = "DetailVM"
     }
@@ -154,6 +156,7 @@ class DetailViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 repository.toggleFavorite(anime)
+                authRepository.syncToServer()
             } catch (e: Exception) {
                 Log.e(TAG, "Error al cambiar favorito", e)
             }
@@ -164,6 +167,7 @@ class DetailViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 repository.toggleFollowing(anime)
+                authRepository.syncToServer()
             } catch (e: Exception) {
                 Log.e(TAG, "Error al cambiar seguimiento", e)
             }

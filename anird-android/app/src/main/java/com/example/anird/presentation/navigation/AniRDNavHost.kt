@@ -23,6 +23,20 @@ fun AniRDNavHost(
             HomeScreen(
                 onNavigateToDetail = { malId ->
                     navController.navigate("detail/$malId")
+                },
+                onNavigateToSearch = {
+                    navController.navigate("browse") {
+                        popUpTo("home") { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onNavigateToProfile = {
+                    navController.navigate("account") {
+                        popUpTo("home") { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 }
             )
         }

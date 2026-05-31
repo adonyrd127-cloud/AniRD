@@ -15,6 +15,8 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,10 +45,67 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomeScreen(
     onNavigateToDetail: (Int) -> Unit = {},
+    onNavigateToSearch: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val refreshing by viewModel.refreshing.collectAsState()
+ 
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { context.getSharedPreferences("anird_prefs", android.content.Context.MODE_PRIVATE) }
+    var showNotifSheet by remember { mutableStateOf(false) }
+    var notifHistory by remember { 
+        mutableStateOf(
+            run {
+                val historySet = prefs.getStringSet("notification_history_set", emptySet()) ?: emptySet()
+                historySet.mapNotNull { item ->
+                    val parts = item.split("|")
+                    if (parts.size >= 4) {
+                        NotifItem(
+                            animeId = parts[0].toIntOrNull() ?: 0,
+                            title = parts[1],
+                            episode = parts[2].toIntOrNull() ?: 0,
+                            timestamp = parts[3].toLongOrNull() ?: 0L
+                        )
+                    } else null
+                }.sortedByDescending { it.timestamp }
+            }
+        )
+    }
+
+    val lastReadNotifTime = remember { mutableStateOf(prefs.getLong("last_read_notif_time", 0L)) }
+    var hasUnreadNotifs by remember {
+        mutableStateOf(
+            notifHistory.any { it.timestamp > lastReadNotifTime.value }
+        )
+    }
+ 
+    val reloadHistory = {
+        val historySet = prefs.getStringSet("notification_history_set", emptySet()) ?: emptySet()
+        notifHistory = historySet.mapNotNull { item ->
+            val parts = item.split("|")
+            if (parts.size >= 4) {
+                NotifItem(
+                    animeId = parts[0].toIntOrNull() ?: 0,
+                    title = parts[1],
+                    episode = parts[2].toIntOrNull() ?: 0,
+                    timestamp = parts[3].toLongOrNull() ?: 0L
+                )
+            } else null
+        }.sortedByDescending { it.timestamp }
+        hasUnreadNotifs = notifHistory.any { it.timestamp > lastReadNotifTime.value }
+    }
+ 
+    LaunchedEffect(showNotifSheet) {
+        if (showNotifSheet) {
+            reloadHistory()
+            val now = System.currentTimeMillis()
+            prefs.edit().putLong("last_read_notif_time", now).apply()
+            lastReadNotifTime.value = now
+            hasUnreadNotifs = false
+        }
+    }
 
     var selectedCategory by remember { mutableStateOf("Todo") }
     val categories = listOf("Todo", "Acción", "Fantasía", "Comedia", "Drama", "Romance", "Sci-Fi", "Deportes")
@@ -73,20 +132,46 @@ fun HomeScreen(
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Black
             )
-            // Iconos Search y Profile derecha
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Profile",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
+            // Iconos Search, Notifications y Profile derecha
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onNavigateToSearch, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                IconButton(onClick = { showNotifSheet = true }, modifier = Modifier.size(32.dp)) {
+                    BadgedBox(
+                        badge = {
+                            if (hasUnreadNotifs) {
+                                Badge(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.offset(x = (-4).dp, y = 4.dp)
+                                )
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Notificaciones",
+                            tint = Color.White,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
+                IconButton(onClick = onNavigateToProfile, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Profile",
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
             }
         }
 
@@ -251,7 +336,143 @@ fun HomeScreen(
             }
         }
     }
+
+    if (showNotifSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showNotifSheet = false },
+            containerColor = Color(0xFF1E2127),
+            contentColor = Color.White,
+            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Notificaciones Recientes",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color.White
+                    )
+                    
+                    if (notifHistory.isNotEmpty()) {
+                        IconButton(
+                            onClick = {
+                                prefs.edit().putStringSet("notification_history_set", emptySet()).apply()
+                                notifHistory = emptyList()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Limpiar todas",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                if (notifHistory.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(150.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No tienes notificaciones de nuevos capítulos",
+                            color = Color(0xFFA0A3A7),
+                            fontSize = 14.sp
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp)
+                    ) {
+                        items(notifHistory) { item ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(Color(0xFF2C2F35).copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        showNotifSheet = false
+                                        onNavigateToDetail(item.animeId)
+                                    }
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Notifications,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                
+                                Spacer(modifier = Modifier.width(16.dp))
+                                
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "¡Episodio ${item.episode} ya disponible! 🎉",
+                                        color = Color.White,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "El nuevo capítulo de '${item.title}' ya se encuentra en emisión.",
+                                        color = Color(0xFFA0A3A7),
+                                        fontSize = 12.sp,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    val minutesAgo = (System.currentTimeMillis() - item.timestamp) / 60000
+                                    val timeText = if (minutesAgo < 1) {
+                                        "Ahora mismo"
+                                    } else if (minutesAgo < 60) {
+                                        "Hace $minutesAgo min"
+                                    } else {
+                                        val hoursAgo = minutesAgo / 60
+                                        if (hoursAgo < 24) "Hace $hoursAgo h" else "Hace ${hoursAgo / 24} d"
+                                    }
+                                    Text(
+                                        text = timeText,
+                                        color = Color(0xFF6B6F78),
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
+
+data class NotifItem(
+    val animeId: Int,
+    val title: String,
+    val episode: Int,
+    val timestamp: Long
+)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

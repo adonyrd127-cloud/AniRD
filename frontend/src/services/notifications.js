@@ -3,15 +3,23 @@ import { db } from './db.js';
 export const notificationService = {
   async checkNewEpisodes() {
     const followed = await db.following.toArray();
+    const favorites = await db.favorites.toArray();
+    
+    // Combinar listas únicas basadas en animeId para rastrear tanto favoritos como seguidos
+    const trackedMap = new Map();
+    favorites.forEach(a => trackedMap.set(a.animeId, a));
+    followed.forEach(a => trackedMap.set(a.animeId, a));
+    const tracked = Array.from(trackedMap.values());
+    
     let hasNew = false;
     
-    for (const anime of followed) {
+    for (const anime of tracked) {
       if (anime.status === 'Currently Airing' && anime.broadcast && anime.broadcast.day && anime.broadcast.day !== 'Unknown') {
         const lastBroadcast = this.getLastBroadcast(anime.broadcast);
         
-        // If lastBroadcast is valid and it happened AFTER our last notified timestamp
+        // Si lastBroadcast es válido y ocurrió DESPUÉS de nuestro timestamp de última notificación
         if (lastBroadcast && (!anime.lastNotified || lastBroadcast > anime.lastNotified)) {
-          // Verify we haven't already created a notification for this exact timestamp
+          // Verificar que no hayamos creado ya una notificación para este timestamp exacto
           const existing = await db.notifications.where('animeId').equals(anime.animeId).and(n => n.timestamp === lastBroadcast).first();
           
           if (!existing) {
@@ -23,7 +31,15 @@ export const notificationService = {
             hasNew = true;
           }
           
-          await db.following.update(anime.animeId, { lastNotified: lastBroadcast });
+          // Actualizar lastNotified en los almacenes correspondientes
+          const isFav = await db.favorites.get(anime.animeId);
+          if (isFav) {
+            await db.favorites.update(anime.animeId, { lastNotified: lastBroadcast });
+          }
+          const isFol = await db.following.get(anime.animeId);
+          if (isFol) {
+            await db.following.update(anime.animeId, { lastNotified: lastBroadcast });
+          }
         }
       }
     }
@@ -41,18 +57,18 @@ export const notificationService = {
     target.setHours(h, m, 0, 0);
     
     let dAdd = days[b.day] - tokyoNow.getDay();
-    // Find the NEXT broadcast time
+    // Encontrar la próxima fecha de emisión
     if (dAdd < 0 || (dAdd === 0 && target <= tokyoNow)) dAdd += 7;
     target.setDate(target.getDate() + dAdd);
     
-    // The LAST broadcast time is exactly 1 week before the next one
+    // La última emisión fue exactamente 1 semana antes de la próxima
     const nextTarget = new Date(target);
     nextTarget.setDate(nextTarget.getDate() - 7);
     
-    // Ignore if the last broadcast is in the future (should be impossible mathematically)
+    // Ignorar si la última emisión es en el futuro
     if (nextTarget > tokyoNow) return null;
 
-    // Convert back to real local ms
+    // Convertir de vuelta a ms locales reales
     const diffMs = nextTarget.getTime() - tokyoNow.getTime();
     return Date.now() + diffMs; 
   },
@@ -63,10 +79,13 @@ export const notificationService = {
 
   async getNotifications() {
     const notifs = await db.notifications.orderBy('timestamp').reverse().toArray();
-    // We need to hydrate them with anime data
     const hydrated = [];
     for (const n of notifs) {
-      const anime = await db.following.get(n.animeId);
+      // Buscar primero en seguidos, luego en favoritos
+      let anime = await db.following.get(n.animeId);
+      if (!anime) {
+        anime = await db.favorites.get(n.animeId);
+      }
       if (anime) {
         hydrated.push({ ...n, title: anime.title, cover: anime.cover });
       }
@@ -78,3 +97,4 @@ export const notificationService = {
     await db.notifications.where('isRead').equals(0).modify({ isRead: 1 });
   }
 };
+

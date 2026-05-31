@@ -19,7 +19,7 @@ import dagger.hilt.components.SingletonComponent
 
 /**
  * Worker periódico en segundo plano para sincronización bidireccional automática
- * y alerta de nuevos episodios de anime en emisión.
+ * y alerta de nuevos episodios de anime en emisión (Favoritos y Siguiendo).
  */
 class SyncWorker(
     context: Context,
@@ -47,7 +47,7 @@ class SyncWorker(
             val authRepository = entryPoint.authRepository()
             val animeRepository = entryPoint.animeRepository()
 
-            // 1. Chequear nuevos episodios de los anime que sigue el usuario
+            // 1. Chequear nuevos episodios de los anime que sigue o tiene en favoritos el usuario
             val prefs = applicationContext.getSharedPreferences("anird_prefs", Context.MODE_PRIVATE)
             val notifsEnabled = prefs.getBoolean("new_episodes_notif_enabled", true)
             if (notifsEnabled) {
@@ -75,35 +75,81 @@ class SyncWorker(
 
     private suspend fun checkForNewEpisodes(animeRepository: AnimeRepository) {
         val followingList = animeRepository.getAllFollowingList()
-        if (followingList.isEmpty()) return
+        val favoritesList = animeRepository.getAllFavoritesList()
 
-        val malIds = followingList.map { it.animeId }
-        val batchAiring = animeRepository.getNextAiringBatch(malIds)
-        val airingMap = batchAiring.associateBy { it.idMal }
+        if (followingList.isEmpty() && favoritesList.isEmpty()) return
 
         val db = AppDatabase.getInstance(applicationContext)
         val followingDao = db.followingDao()
+        val prefs = applicationContext.getSharedPreferences("anird_prefs", Context.MODE_PRIVATE)
 
-        followingList.forEach { following ->
-            val aniListMedia = airingMap[following.animeId]
+        // Combinar en un mapa único indexado por malId para evitar repeticiones y rastrear ambos tipos
+        val trackedMap = mutableMapOf<Int, TrackedInfo>()
+        
+        favoritesList.forEach { fav ->
+            trackedMap[fav.animeId] = TrackedInfo(
+                animeId = fav.animeId,
+                title = fav.title,
+                cover = fav.cover,
+                lastKnownEpisode = prefs.getInt("last_episode_${fav.animeId}", 0),
+                isFollowing = false
+            )
+        }
+        
+        followingList.forEach { fol ->
+            val existing = trackedMap[fol.animeId]
+            val lastEp = if (existing != null) {
+                maxOf(existing.lastKnownEpisode, fol.lastKnownEpisode)
+            } else {
+                fol.lastKnownEpisode
+            }
+            trackedMap[fol.animeId] = TrackedInfo(
+                animeId = fol.animeId,
+                title = fol.title,
+                cover = fol.cover,
+                lastKnownEpisode = lastEp,
+                isFollowing = true,
+                followingEntity = fol
+            )
+        }
+
+        val malIds = trackedMap.keys.toList()
+        val batchAiring = animeRepository.getNextAiringBatch(malIds)
+        val airingMap = batchAiring.associateBy { it.idMal }
+
+        trackedMap.values.forEach { tracked ->
+            val aniListMedia = airingMap[tracked.animeId]
             val nextAiring = aniListMedia?.nextAiringEpisode
-            if (nextAiring != null && nextAiring.episode > following.lastKnownEpisode) {
+            if (nextAiring != null && nextAiring.episode > tracked.lastKnownEpisode) {
                 // Si el episodio se transmite hoy, o ya se transmitió (timeUntilAiring <= 3600 segundos = 1 hora)
                 if (nextAiring.timeUntilAiring <= 3600) {
                     showNotification(
-                        animeId = following.animeId,
-                        animeTitle = following.title,
+                        animeId = tracked.animeId,
+                        animeTitle = tracked.title,
                         episodeNumber = nextAiring.episode
                     )
-                    // Actualizar el lastKnownEpisode en Room
-                    followingDao.insert(following.copy(lastKnownEpisode = nextAiring.episode))
-                    Log.d(TAG, "Notificación enviada y base de datos actualizada para ${following.title} (Episodio ${nextAiring.episode})")
+                    
+                    // Actualizar el lastKnownEpisode en Preferences
+                    prefs.edit().putInt("last_episode_${tracked.animeId}", nextAiring.episode).apply()
+
+                    // Si es un anime que sigue activamente (Following), también actualizar Room para consistencia
+                    if (tracked.isFollowing && tracked.followingEntity != null) {
+                        followingDao.insert(tracked.followingEntity.copy(lastKnownEpisode = nextAiring.episode))
+                    }
+                    Log.d(TAG, "Notificación enviada para ${tracked.title} (Episodio ${nextAiring.episode})")
                 }
             }
         }
     }
 
     private fun showNotification(animeId: Int, animeTitle: String, episodeNumber: Int) {
+        // Guardar en el historial de notificaciones locales de la app
+        val prefs = applicationContext.getSharedPreferences("anird_prefs", Context.MODE_PRIVATE)
+        val historySet = prefs.getStringSet("notification_history_set", emptySet())?.toMutableSet() ?: mutableSetOf()
+        val newItem = "$animeId|$animeTitle|$episodeNumber|${System.currentTimeMillis()}"
+        historySet.add(newItem)
+        prefs.edit().putStringSet("notification_history_set", historySet).apply()
+
         val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         // Intent para abrir el detalle del anime a través del Deep Link
@@ -121,7 +167,6 @@ class SyncWorker(
         )
 
         // Acción rápida: "VER AHORA" (abre el reproductor del nuevo episodio si se pulsa)
-        // Usamos la misma activity, pero pasamos play=true en el query param del intent
         val watchIntent = Intent(applicationContext, com.example.anird.MainActivity::class.java).apply {
             action = Intent.ACTION_VIEW
             data = Uri.parse("anird://detail/$animeId?play=true")
@@ -147,4 +192,13 @@ class SyncWorker(
 
         notificationManager.notify(animeId, notificationBuilder.build())
     }
+
+    private data class TrackedInfo(
+        val animeId: Int,
+        val title: String,
+        val cover: String?,
+        val lastKnownEpisode: Int,
+        val isFollowing: Boolean,
+        val followingEntity: com.example.anird.data.local.FollowingEntity? = null
+    )
 }

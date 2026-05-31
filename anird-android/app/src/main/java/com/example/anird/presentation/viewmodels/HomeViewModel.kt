@@ -1,11 +1,13 @@
 package com.example.anird.presentation.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.anird.data.local.HistoryEntity
 import com.example.anird.data.model.Anime
 import com.example.anird.data.repository.AnimeRepository
+import com.example.anird.data.repository.AuthRepository
 import com.example.anird.domain.usecase.GetHomeFeedUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -28,7 +30,8 @@ sealed interface HomeUiState {
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getHomeFeedUseCase: GetHomeFeedUseCase,
-    private val repository: AnimeRepository
+    private val repository: AnimeRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _refreshing = MutableStateFlow(false)
@@ -69,6 +72,19 @@ class HomeViewModel @Inject constructor(
     fun loadHomeFeed() {
         viewModelScope.launch {
             _refreshing.value = true
+            
+            // Sincronizar desde la nube en segundo plano asíncronamente
+            launch {
+                try {
+                    if (authRepository.isLoggedIn) {
+                        Log.d("HomeViewModel", "Iniciando sincronización desde servidor al cargar feed...")
+                        authRepository.syncFromServerFull()
+                    }
+                } catch (e: Exception) {
+                    Log.e("HomeViewModel", "Error en sync asíncrono", e)
+                }
+            }
+
             try {
                 val feed = getHomeFeedUseCase()
                 _apiFeedState.value = ApiFeedState(
@@ -100,3 +116,4 @@ data class ApiFeedState(
     val isError: Boolean = false,
     val errorMessage: String? = null
 )
+
