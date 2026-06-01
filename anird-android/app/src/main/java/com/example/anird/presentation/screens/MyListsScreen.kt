@@ -100,6 +100,7 @@ fun MyListsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF141519)) // Background AniRD
+            .statusBarsPadding()
     ) {
         Text(
             text = "Mis Listas",

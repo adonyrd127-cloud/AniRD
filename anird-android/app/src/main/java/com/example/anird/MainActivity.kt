@@ -2,6 +2,7 @@ package com.example.anird
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.fragment.app.FragmentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,8 @@ class MainActivity : FragmentActivity() {
         // Deshabilitar barra de título nativa programáticamente antes de inicializar la ventana
         requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
         actionBar?.hide()
+        
+        enableEdgeToEdge()
         
         super.onCreate(savedInstanceState)
         
@@ -203,7 +206,11 @@ class MainActivity : FragmentActivity() {
                         }
                     }
                 ) { innerPadding ->
-                    Box(modifier = Modifier.padding(innerPadding)) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = innerPadding.calculateBottomPadding())
+                    ) {
                         AniRDNavHost(navController = navController)
                     }
                 }

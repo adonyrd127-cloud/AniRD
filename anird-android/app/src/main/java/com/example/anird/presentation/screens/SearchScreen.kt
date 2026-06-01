@@ -44,6 +44,7 @@ fun SearchScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF141519)) // Background AniRD
+            .statusBarsPadding()
     ) {
         // SearchBar Material3 en top, full width, hint "Search anime, episodes..."
         Box(

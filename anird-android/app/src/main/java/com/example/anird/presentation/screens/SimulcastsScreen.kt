@@ -48,6 +48,7 @@ fun SimulcastsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF141519)) // Background AniRD
+            .statusBarsPadding()
     ) {
         Text(
             text = "Calendario de Simulcasts",

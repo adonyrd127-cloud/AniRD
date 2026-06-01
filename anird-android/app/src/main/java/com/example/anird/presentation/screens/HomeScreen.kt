@@ -110,73 +110,14 @@ fun HomeScreen(
     var selectedCategory by remember { mutableStateOf("Todo") }
     val categories = listOf("Todo", "Acción", "Fantasía", "Comedia", "Drama", "Romance", "Sci-Fi", "Deportes")
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF141519)) // Background AniRD
     ) {
-        // TopBar: Logo AniRD izquierda, iconos Search y Profile derecha (sin título)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .background(Color(0xFF141519))
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            // Logo izquierdo
-            Text(
-                text = "AniRD",
-                color = MaterialTheme.colorScheme.primary, // Red AniRD
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Black
-            )
-            // Iconos Search, Notifications y Profile derecha
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onNavigateToSearch, modifier = Modifier.size(32.dp)) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = Color.White,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-                IconButton(onClick = { showNotifSheet = true }, modifier = Modifier.size(32.dp)) {
-                    BadgedBox(
-                        badge = {
-                            if (hasUnreadNotifs) {
-                                Badge(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.offset(x = (-4).dp, y = 4.dp)
-                                )
-                            }
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "Notificaciones",
-                            tint = Color.White,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                }
-                IconButton(onClick = onNavigateToProfile, modifier = Modifier.size(32.dp)) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Profile",
-                        tint = Color.White,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            }
-        }
-
+        // Contenido Principal
         Box(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.fillMaxSize()
         ) {
             when (val state = uiState) {
                 is HomeUiState.Loading -> {
@@ -192,7 +133,10 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxSize().padding(24.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Column(
+                            modifier = Modifier.statusBarsPadding().padding(top = 56.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             Text(
                                 text = "Error al cargar la pantalla de inicio",
                                 color = Color.White,
@@ -215,7 +159,7 @@ fun HomeScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(bottom = 24.dp)
                         ) {
-                            // 1. Carrusel de Héroes (16:9, height 220.dp, auto-scroll 5s)
+                            // 1. Carrusel de Héroes (16:9, height 260.dp, auto-scroll 5s)
                             if (state.heroCarousel.isNotEmpty()) {
                                 item {
                                     HeroCarousel(
@@ -331,6 +275,80 @@ fun HomeScreen(
                                 Icon(Icons.Default.Refresh, contentDescription = "Actualizar")
                             }
                         }
+                    }
+                }
+            }
+        }
+
+        // Floating TopBar overlay with a premium dark gradient fade
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF141519).copy(alpha = 0.9f),
+                            Color(0xFF141519).copy(alpha = 0.5f),
+                            Color.Transparent
+                        )
+                    )
+                )
+                .statusBarsPadding()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Logo izquierdo
+                Text(
+                    text = "AniRD",
+                    color = MaterialTheme.colorScheme.primary, // Red AniRD
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Black
+                )
+                // Iconos Search, Notifications y Profile derecha
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onNavigateToSearch, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = Color.White,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    IconButton(onClick = { showNotifSheet = true }, modifier = Modifier.size(32.dp)) {
+                        BadgedBox(
+                            badge = {
+                                if (hasUnreadNotifs) {
+                                    Badge(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.offset(x = (-4).dp, y = 4.dp)
+                                    )
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Notificaciones",
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    }
+                    IconButton(onClick = onNavigateToProfile, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile",
+                            tint = Color.White,
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
                 }
             }
@@ -497,7 +515,7 @@ fun HeroCarousel(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(220.dp) // Requerido 220.dp
+            .height(260.dp)
     ) {
         HorizontalPager(
             state = pagerState,
