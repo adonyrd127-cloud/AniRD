@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -51,6 +52,7 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val refreshing by viewModel.refreshing.collectAsState()
+    val lazyListState = rememberLazyListState()
  
     val context = androidx.compose.ui.platform.LocalContext.current
     val prefs = remember { context.getSharedPreferences("anird_prefs", android.content.Context.MODE_PRIVATE) }
@@ -175,6 +177,7 @@ fun HomeScreen(
 
                     Box(modifier = Modifier.fillMaxSize()) {
                         LazyColumn(
+                            state = lazyListState,
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(bottom = 24.dp)
                         ) {
@@ -305,6 +308,15 @@ fun HomeScreen(
         }
 
         // Floating TopBar overlay with a premium dark gradient fade
+        val isScrolled by remember {
+            derivedStateOf {
+                lazyListState.firstVisibleItemIndex > 0 || lazyListState.firstVisibleItemScrollOffset > 50
+            }
+        }
+        val topBarColor by animateColorAsState(
+            targetValue = if (isScrolled) Color(0xFF141519) else Color.Transparent,
+            label = "topBarColor"
+        )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -317,6 +329,7 @@ fun HomeScreen(
                         )
                     )
                 )
+                .background(topBarColor)
                 .statusBarsPadding()
         ) {
             Row(
