@@ -52,7 +52,7 @@ class AnimeRepository(
     suspend fun getSchedules(page: Int = 1): List<Anime> = withContext(Dispatchers.IO) {
         val cacheKey = "schedules_$page"
         getCachedOrFetch(cacheKey) {
-            val response = jikanApi.getSchedules(page = page)
+            val response = jikanApi.getSeasonNow(page = page)
             response.data ?: emptyList()
         }
     }

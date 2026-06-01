@@ -154,6 +154,25 @@ fun HomeScreen(
                     }
                 }
                 is HomeUiState.Success -> {
+                    val genreMap = mapOf(
+                        "Acción" to "Action",
+                        "Fantasía" to "Fantasy",
+                        "Comedia" to "Comedy",
+                        "Drama" to "Drama",
+                        "Romance" to "Romance",
+                        "Sci-Fi" to "Sci-Fi",
+                        "Deportes" to "Sports"
+                    )
+                    val englishCategory = genreMap[selectedCategory] ?: selectedCategory
+                    val filterAnime = { list: List<Anime> -> 
+                        if (selectedCategory == "Todo") list
+                        else list.filter { anime -> anime.genreNames.any { it.contains(englishCategory, ignoreCase = true) } }
+                    }
+                    val filteredSimulcasts = filterAnime(state.simulcasts)
+                    val filteredLatest = filterAnime(state.latestEpisodes)
+                    val filteredMovies = filterAnime(state.movies)
+                    val filteredTopTen = filterAnime(state.topTen)
+
                     Box(modifier = Modifier.fillMaxSize()) {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
@@ -205,50 +224,55 @@ fun HomeScreen(
                                 item {
                                     ContinueWatchingSection(
                                         list = state.continueWatching,
-                                        onAnimeClick = onNavigateToDetail
+                                        onAnimeClick = onNavigateToDetail,
+                                        onViewAllClick = onNavigateToSearch
                                     )
                                 }
                             }
 
                             // 4. Simulcast (Emisión de esta Temporada)
-                            if (state.simulcasts.isNotEmpty()) {
+                            if (filteredSimulcasts.isNotEmpty()) {
                                 item {
                                     AnimeRowSection(
                                         title = "Simulcast de esta Temporada",
-                                        animeList = state.simulcasts,
-                                        onAnimeClick = onNavigateToDetail
+                                        animeList = filteredSimulcasts,
+                                        onAnimeClick = onNavigateToDetail,
+                                        onViewAllClick = onNavigateToSearch
                                     )
                                 }
                             }
 
                             // 5. Top 10 Popular (con números gigantes 40.sp superpuestos)
-                            if (state.topTen.isNotEmpty()) {
+                            if (filteredTopTen.isNotEmpty()) {
                                 item {
                                     TopTenSection(
-                                        animeList = state.topTen,
-                                        onAnimeClick = onNavigateToDetail
+                                        animeList = filteredTopTen,
+                                        onAnimeClick = onNavigateToDetail,
+                                        onViewAllClick = onNavigateToSearch
                                     )
                                 }
                             }
 
                             // 6. Últimos Lanzamientos
-                            if (state.latestEpisodes.isNotEmpty()) {
+                            if (filteredLatest.isNotEmpty()) {
                                 item {
                                     AnimeRowSection(
                                         title = "Últimos Lanzamientos",
-                                        animeList = state.latestEpisodes,
-                                        onAnimeClick = onNavigateToDetail
+                                        animeList = filteredLatest,
+                                        onAnimeClick = onNavigateToDetail,
+                                        onViewAllClick = onNavigateToSearch
                                     )
                                 }
                             }
 
                             // 7. Películas Populares
-                            if (state.movies.isNotEmpty()) {
+                            if (filteredMovies.isNotEmpty()) {
                                 item {
                                     AnimeRowSection(
                                         title = "Películas Populares",
-                                        animeList = state.movies,
-                                        onAnimeClick = onNavigateToDetail
+                                        animeList = filteredMovies,
+                                        onAnimeClick = onNavigateToDetail,
+                                        onViewAllClick = onNavigateToSearch
                                     )
                                 }
                             }
@@ -638,14 +662,15 @@ fun SectionHeader(
 @Composable
 fun ContinueWatchingSection(
     list: List<HistoryEntity>,
-    onAnimeClick: (Int) -> Unit
+    onAnimeClick: (Int) -> Unit,
+    onViewAllClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
-        SectionHeader(title = "Continuar Viendo")
+        SectionHeader(title = "Continuar Viendo", onViewAllClick = onViewAllClick)
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -718,14 +743,15 @@ fun ContinueWatchingSection(
 fun AnimeRowSection(
     title: String,
     animeList: List<Anime>,
-    onAnimeClick: (Int) -> Unit
+    onAnimeClick: (Int) -> Unit,
+    onViewAllClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
-        SectionHeader(title = title)
+        SectionHeader(title = title, onViewAllClick = onViewAllClick)
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -762,14 +788,15 @@ fun AnimeRowSection(
 @Composable
 fun TopTenSection(
     animeList: List<Anime>,
-    onAnimeClick: (Int) -> Unit
+    onAnimeClick: (Int) -> Unit,
+    onViewAllClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
-        SectionHeader(title = "Top 10 Popular")
+        SectionHeader(title = "Top 10 Popular", onViewAllClick = onViewAllClick)
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)

@@ -81,20 +81,19 @@ fun MyListsScreen(
         reloadHistory()
     }
 
-    // Watchlist, Colecciones, Notificaciones, History
+    // Favoritos, Siguiendo, Historial, Notificaciones
     var selectedTab by remember { 
         mutableStateOf(
             when (initialTab) {
-                "watchlist" -> 0
                 "favorites" -> 0
-                "colecciones" -> 1
-                "notificaciones" -> 2
-                "history" -> 3
+                "following" -> 1
+                "history" -> 2
+                "notificaciones" -> 3
                 else -> 0
             }
         ) 
     }
-    val tabs = listOf("Watchlist", "Colecciones", "Notificaciones", "History")
+    val tabs = listOf("Favoritos", "Siguiendo", "Historial", "Notificaciones")
 
     Column(
         modifier = Modifier
@@ -140,16 +139,11 @@ fun MyListsScreen(
 
         Box(modifier = Modifier.weight(1f)) {
             when (selectedTab) {
-                0 -> { // Watchlist (Favorites/Following)
-                    val combinedList = uiState.following + uiState.favorites.map { 
-                        // Mapeamos temporalmente para unificar el renderizado en la grilla
-                        com.example.anird.data.local.FollowingEntity(it.animeId, it.title, it.cover) 
-                    }.distinctBy { it.animeId }
-
-                    if (combinedList.isEmpty()) {
-                        EmptyListState("Tu Watchlist está vacía")
+                0 -> { // Favoritos
+                    val favoritesList = uiState.favorites
+                    if (favoritesList.isEmpty()) {
+                        EmptyListState("Tu lista de Favoritos está vacía")
                     } else {
-                        // LazyVerticalGrid de 2 columnas con gap de 12.dp
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(2),
                             contentPadding = PaddingValues(12.dp),
@@ -157,21 +151,44 @@ fun MyListsScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            items(combinedList) { item ->
+                            items(favoritesList) { item ->
                                 WatchlistCard(
                                     title = item.title,
                                     coverUrl = item.cover,
-                                    episodesText = "12 Episodios", // Simulado
+                                    episodesText = "Guardado",
                                     onClick = { onNavigateToDetail(item.animeId) }
                                 )
                             }
                         }
                     }
                 }
-                1 -> { // Colecciones
-                    EmptyListState("No tienes colecciones creadas")
+                1 -> { // Siguiendo
+                    val followingList = uiState.following
+                    if (followingList.isEmpty()) {
+                        EmptyListState("No estás siguiendo ningún anime")
+                    } else {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            contentPadding = PaddingValues(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(followingList) { item ->
+                                WatchlistCard(
+                                    title = item.title,
+                                    coverUrl = item.cover,
+                                    episodesText = "Siguiendo",
+                                    onClick = { onNavigateToDetail(item.animeId) }
+                                )
+                            }
+                        }
+                    }
                 }
-                2 -> { // Notificaciones
+                2 -> { // Historial
+                    EmptyListState("Aún no tienes historial registrado")
+                }
+                3 -> { // Notificaciones
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -284,9 +301,6 @@ fun MyListsScreen(
                             }
                         }
                     }
-                }
-                3 -> { // History
-                    EmptyListState("Aún no tienes historial registrado")
                 }
             }
         }
