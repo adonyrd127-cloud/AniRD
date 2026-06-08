@@ -1,6 +1,7 @@
 import { apiService } from '../services/api.js';
 import { dbService, db } from '../services/db.js';
 import { getRouter } from '../app.js';
+import VideoPlayer, { isDirectStreamUrl } from '../components/VideoPlayer.js';
 
 export default class WatchPage {
   constructor(params) {
@@ -21,6 +22,9 @@ export default class WatchPage {
     this.isTheater = localStorage.getItem('watch-theater-mode') === 'true';
     this.sortDesc = false;
     this.searchQuery = '';
+    
+    // Native video player instance (null = using iframe fallback)
+    this.activePlayer = null;
   }
 
   async render() {
@@ -174,7 +178,15 @@ export default class WatchPage {
           <!-- Reproductor de Video -->
           <div class="video-wrapper-v5" id="video-container" tabindex="0">
             ${this.episodeData && this.episodeData.activeServers && this.episodeData.activeServers.length > 0 
-              ? `<iframe src="${this._getAutoplayUrl(this.episodeData.activeServers[0].url)}" allowfullscreen allow="autoplay; encrypted-media"></iframe>` 
+              ? (() => {
+                  const firstUrl = this.episodeData.activeServers[0].url;
+                  if (isDirectStreamUrl(firstUrl)) {
+                    // Native player will be initialized in afterRender()
+                    return `<div id="anird-native-player"></div>`;
+                  } else {
+                    return `<iframe src="${this._getAutoplayUrl(firstUrl)}" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+                  }
+                })()
               : `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#111; gap: 15px; padding: 20px; text-align: center;">
                   <span style="font-size: 40px;">⚠️</span>
                   <h3 style="font-family:'Outfit'; font-size:18px;">Video no disponible</h3>
@@ -340,6 +352,9 @@ export default class WatchPage {
   }
 
   async afterRender() {
+    // Initialize native VideoPlayer if we have a direct stream URL
+    this._initNativePlayer();
+    
     this._initPlayerControls();
     this._initServerPills();
     this._initSynopsisExpand();
@@ -460,6 +475,39 @@ export default class WatchPage {
     window.addEventListener('keydown', this._globalKeyHandler, { capture: true });
   }
 
+  // Initialize the native HTML5 VideoPlayer for direct stream URLs
+  _initNativePlayer() {
+    const playerContainer = document.getElementById('anird-native-player');
+    if (!playerContainer) return; // No native player container = using iframe
+    
+    if (this.episodeData && this.episodeData.activeServers && this.episodeData.activeServers.length > 0) {
+      const firstUrl = this.episodeData.activeServers[0].url;
+      if (isDirectStreamUrl(firstUrl)) {
+        this.activePlayer = new VideoPlayer({
+          container: playerContainer,
+          videoUrl: firstUrl,
+          malId: this.animeId,
+          episodeNumber: this.episodeNum,
+          episodeTitle: `${this.anime?.title || ''} — Episodio ${this.episodeNum}`,
+          onEpisodeEnd: () => {
+            // Auto-navigate to next episode
+            if (this.localInfo && this.localInfo.episodes) {
+              const nextEp = this.localInfo.episodes.find(ep => ep.number === this.episodeNum + 1);
+              if (nextEp) {
+                const router = getRouter();
+                const nextPath = `/watch/${this.animeId}/${this.episodeNum + 1}/${this.lang}?title=${encodeURIComponent(this.anime?.title || '')}`;
+                if (router) router.navigate(nextPath);
+              }
+            }
+          },
+          onTimeUpdate: (currentTime, duration) => {
+            // Could be used for progress tracking integration
+          }
+        });
+      }
+    }
+  }
+
   _getAutoplayUrl(url) {
     if (!url) return '';
     const isTV = document.body.classList.contains('tv-mode') || localStorage.getItem('tvMode') === 'true';
@@ -575,6 +623,12 @@ export default class WatchPage {
       btnFullscreen.addEventListener('click', (e) => {
         e.preventDefault();
         
+        // If native player is active, delegate fullscreen to it
+        if (this.activePlayer) {
+          this.activePlayer.toggleFullscreen();
+          return;
+        }
+        
         const isTV = document.body.classList.contains('tv-mode') || localStorage.getItem('tvMode') === 'true';
         const isMobile = window.innerWidth <= 900 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const isAndroidApk = window.Android !== undefined;
@@ -633,7 +687,6 @@ export default class WatchPage {
   // 2. Control de píldoras de servidor (iframe dinámico sin recargar)
   _initServerPills() {
     const pills = document.querySelectorAll('.server-pill-v5');
-    const iframe = document.querySelector('.video-wrapper-v5 iframe');
 
     pills.forEach(pill => {
       pill.addEventListener('click', (e) => {
@@ -641,11 +694,46 @@ export default class WatchPage {
         pill.classList.add('active');
         
         const videoUrl = pill.getAttribute('data-url');
-        if (iframe && videoUrl) {
-          iframe.src = this._getAutoplayUrl(videoUrl);
+        if (!videoUrl) return;
+        
+        const container = document.getElementById('video-container');
+        
+        if (isDirectStreamUrl(videoUrl)) {
+          // Switch to native player
+          if (this.activePlayer) {
+            // Already using native player, just change source
+            this.activePlayer.changeSource(videoUrl);
+          } else {
+            // Was using iframe, switch to native player
+            container.innerHTML = '<div id="anird-native-player"></div><button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>';
+            const nativeContainer = document.getElementById('anird-native-player');
+            this.activePlayer = new VideoPlayer({
+              container: nativeContainer,
+              videoUrl: videoUrl,
+              malId: this.animeId,
+              episodeNumber: this.episodeNum,
+              episodeTitle: `${this.anime?.title || ''} — Episodio ${this.episodeNum}`,
+              onEpisodeEnd: () => {
+                if (this.localInfo && this.localInfo.episodes) {
+                  const nextEp = this.localInfo.episodes.find(ep => ep.number === this.episodeNum + 1);
+                  if (nextEp) {
+                    const router = getRouter();
+                    const nextPath = `/watch/${this.animeId}/${this.episodeNum + 1}/${this.lang}?title=${encodeURIComponent(this.anime?.title || '')}`;
+                    if (router) router.navigate(nextPath);
+                  }
+                }
+              }
+            });
+          }
+        } else {
+          // Switch to iframe
+          if (this.activePlayer) {
+            this.activePlayer.destroy();
+            this.activePlayer = null;
+          }
+          container.innerHTML = `<iframe src="${this._getAutoplayUrl(videoUrl)}" allowfullscreen allow="autoplay; encrypted-media"></iframe><button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>`;
           
-          // Micro-animación de carga en el reproductor
-          const container = document.getElementById('video-container');
+          // Micro-animation
           container.style.opacity = '0.5';
           setTimeout(() => container.style.opacity = '1', 500);
         }
@@ -656,6 +744,12 @@ export default class WatchPage {
     const langPills = document.querySelectorAll('.lang-pill-v5');
     langPills.forEach(pill => {
       pill.addEventListener('click', (e) => {
+        // Cleanup native player before navigating
+        if (this.activePlayer) {
+          this.activePlayer.destroy();
+          this.activePlayer = null;
+        }
+        
         const selectedLang = pill.getAttribute('data-lang');
         const watchPath = `/watch/${this.animeId}/${this.episodeNum}/${selectedLang}?title=${this.anime ? encodeURIComponent(this.anime.title) : ''}`;
         
@@ -979,6 +1073,14 @@ export default class WatchPage {
           this.renderEpisodes();
         }
       });
+    }
+  }
+
+  // Cleanup when navigating away from WatchPage
+  destroy() {
+    if (this.activePlayer) {
+      this.activePlayer.destroy();
+      this.activePlayer = null;
     }
   }
 }

@@ -1,4 +1,5 @@
 import './styles/global.css';
+import './styles/videoPlayer.css';
 
 // Desactivar y desinstalar cualquier Service Worker previo para evitar bloqueos agresivos de caché
 import { AppRouter } from './app.js';
