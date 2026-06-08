@@ -85,26 +85,6 @@ router.get(
   })
 );
 
-router.get(
-  "/resolve",
-  asyncHandler(async (req, res) => {
-    if (!req.query.url) {
-      throw new ApiError(400, "El parámetro url es requerido");
-    }
-    const resolvedUrl = await downloadService.resolveEmbedUrl(req.query.url, null, null);
-    
-    if (!resolvedUrl || resolvedUrl === req.query.url) {
-      res.status(400).json({ success: false, message: "No se pudo extraer el video directo", original: req.query.url });
-      return;
-    }
-    
-    res.status(200).json({
-      success: true,
-      url: resolvedUrl
-    });
-  })
-);
-
 router.post(
   "/download",
   asyncHandler(async (req, res) => {

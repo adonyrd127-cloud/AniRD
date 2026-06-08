@@ -1387,5 +1387,4 @@ module.exports = {
   createBatch,
   getBatch,
   getDownloadsDir,
-  resolveEmbedUrl,
 };
