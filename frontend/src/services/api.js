@@ -84,6 +84,10 @@ class LocalApiClient {
       return { success: false, message: e.message };
     }
   }
+
+  async resolveEmbed(url) {
+    return await this.request('/anime/resolve', { url });
+  }
 }
 
 export class AnimeAPI {

@@ -178,15 +178,12 @@ export default class WatchPage {
           <!-- Reproductor de Video -->
           <div class="video-wrapper-v5" id="video-container" tabindex="0">
             ${this.episodeData && this.episodeData.activeServers && this.episodeData.activeServers.length > 0 
-              ? (() => {
-                  const firstUrl = this.episodeData.activeServers[0].url;
-                  if (isDirectStreamUrl(firstUrl)) {
-                    // Native player will be initialized in afterRender()
-                    return `<div id="anird-native-player"></div>`;
-                  } else {
-                    return `<iframe src="${this._getAutoplayUrl(firstUrl)}" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
-                  }
-                })()
+              ? `<div class="native-loader-v5" id="initial-video-loader" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#000;">
+                  <div style="text-align:center; color:var(--text-muted); font-family:'Outfit';">
+                      <div class="loading-spinner" style="margin: 0 auto 15px auto; width: 40px; height: 40px; border: 3px solid #333; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                      <p>Obteniendo mejor calidad de video...</p>
+                  </div>
+                 </div>`
               : `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#111; gap: 15px; padding: 20px; text-align: center;">
                   <span style="font-size: 40px;">⚠️</span>
                   <h3 style="font-family:'Outfit'; font-size:18px;">Video no disponible</h3>
@@ -476,16 +473,13 @@ export default class WatchPage {
   }
 
   // Initialize the native HTML5 VideoPlayer for direct stream URLs
-  _initNativePlayer() {
+  _initNativePlayer(videoUrl) {
     const playerContainer = document.getElementById('anird-native-player');
-    if (!playerContainer) return; // No native player container = using iframe
+    if (!playerContainer || !videoUrl) return; // No native player container = using iframe
     
-    if (this.episodeData && this.episodeData.activeServers && this.episodeData.activeServers.length > 0) {
-      const firstUrl = this.episodeData.activeServers[0].url;
-      if (isDirectStreamUrl(firstUrl)) {
-        this.activePlayer = new VideoPlayer({
-          container: playerContainer,
-          videoUrl: firstUrl,
+    this.activePlayer = new VideoPlayer({
+      container: playerContainer,
+      videoUrl: videoUrl,
           malId: this.animeId,
           episodeNumber: this.episodeNum,
           episodeTitle: `${this.anime?.title || ''} — Episodio ${this.episodeNum}`,
@@ -499,13 +493,11 @@ export default class WatchPage {
                 if (router) router.navigate(nextPath);
               }
             }
-          },
-          onTimeUpdate: (currentTime, duration) => {
-            // Could be used for progress tracking integration
-          }
-        });
+      },
+      onTimeUpdate: (currentTime, duration) => {
+        // Could be used for progress tracking integration
       }
-    }
+    });
   }
 
   _getAutoplayUrl(url) {
@@ -689,7 +681,7 @@ export default class WatchPage {
     const pills = document.querySelectorAll('.server-pill-v5');
 
     pills.forEach(pill => {
-      pill.addEventListener('click', (e) => {
+      pill.addEventListener('click', async (e) => {
         pills.forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
         
@@ -698,41 +690,46 @@ export default class WatchPage {
         
         const container = document.getElementById('video-container');
         
-        if (isDirectStreamUrl(videoUrl)) {
-          // Switch to native player
-          if (this.activePlayer) {
-            // Already using native player, just change source
-            this.activePlayer.changeSource(videoUrl);
-          } else {
-            // Was using iframe, switch to native player
-            container.innerHTML = '<div id="anird-native-player"></div><button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>';
-            const nativeContainer = document.getElementById('anird-native-player');
-            this.activePlayer = new VideoPlayer({
-              container: nativeContainer,
-              videoUrl: videoUrl,
-              malId: this.animeId,
-              episodeNumber: this.episodeNum,
-              episodeTitle: `${this.anime?.title || ''} — Episodio ${this.episodeNum}`,
-              onEpisodeEnd: () => {
-                if (this.localInfo && this.localInfo.episodes) {
-                  const nextEp = this.localInfo.episodes.find(ep => ep.number === this.episodeNum + 1);
-                  if (nextEp) {
-                    const router = getRouter();
-                    const nextPath = `/watch/${this.animeId}/${this.episodeNum + 1}/${this.lang}?title=${encodeURIComponent(this.anime?.title || '')}`;
-                    if (router) router.navigate(nextPath);
-                  }
-                }
-              }
-            });
+        // Show loader
+        if (this.activePlayer) {
+          this.activePlayer.destroy();
+          this.activePlayer = null;
+        }
+        container.innerHTML = `
+          <div class="native-loader-v5" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#000;">
+            <div style="text-align:center; color:var(--text-muted); font-family:'Outfit';">
+              <div class="loading-spinner" style="margin: 0 auto 15px auto; width: 40px; height: 40px; border: 3px solid #333; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+              <p>Obteniendo mejor calidad de video...</p>
+            </div>
+          </div>
+          <button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>
+        `;
+
+        let finalUrl = videoUrl;
+        let isDirect = isDirectStreamUrl(finalUrl);
+
+        if (!isDirect) {
+          try {
+            const res = await apiService.resolveEmbed(finalUrl);
+            if (res && res.success && res.url) {
+              finalUrl = res.url;
+              isDirect = true; // successfully resolved to direct!
+            }
+          } catch(err) {
+            console.warn("Failed to resolve embed natively, falling back to iframe", err);
           }
+        }
+        
+        // Ensure container still exists and pill is still active (user didn't click another fast)
+        if (!document.getElementById('video-container') || !pill.classList.contains('active')) return;
+        
+        if (isDirect) {
+          // Init Native Player
+          container.innerHTML = '<div id="anird-native-player"></div><button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>';
+          this._initNativePlayer(finalUrl);
         } else {
-          // Switch to iframe
-          if (this.activePlayer) {
-            this.activePlayer.destroy();
-            this.activePlayer = null;
-          }
-          container.innerHTML = `<iframe src="${this._getAutoplayUrl(videoUrl)}" allowfullscreen allow="autoplay; encrypted-media"></iframe><button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>`;
-          
+          // Fallback to iframe
+          container.innerHTML = `<iframe src="${this._getAutoplayUrl(finalUrl)}" allowfullscreen allow="autoplay; encrypted-media"></iframe><button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>`;
           // Micro-animation
           container.style.opacity = '0.5';
           setTimeout(() => container.style.opacity = '1', 500);
