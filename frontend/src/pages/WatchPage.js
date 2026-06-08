@@ -163,6 +163,17 @@ export default class WatchPage {
       }
     }
 
+    // INJECT TEST SERVER FOR TESTING NATIVE PLAYER
+    if (this.episodeData && this.episodeData.activeServers) {
+      const hasTestServer = this.episodeData.activeServers.find(s => s.server === "TEST NATIVE");
+      if (!hasTestServer) {
+        this.episodeData.activeServers.unshift({
+          server: "TEST NATIVE",
+          url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+        });
+      }
+    }
+
     container.innerHTML = `
       <!-- Resplandor dinámico de fondo (Modo Ambiente) -->
       <div class="ambient-glow" id="ambient-glow" style="background-image: url('${bannerUrl}')"></div>
@@ -880,6 +891,7 @@ export default class WatchPage {
 
           const isActive = ep.number === this.episodeNum;
           const isWatched = this.watchedEpisodes.has(ep.number);
+
           const href = `/watch/${this.animeId}/${ep.number}/${this.lang}?title=${encodeURIComponent(titleHint)}`;
 
           const badgeHtml = isWatched ? `<div class="ep-watched-badge-v5">✓ Visto</div>` : '';
