@@ -91,6 +91,15 @@ export default class WatchPage {
                 this.episodeData = epRes.data;
                 const serverList = this.episodeData.servers[this.lang] || this.episodeData.servers.sub || [];
                 this.episodeData.activeServers = serverList;
+                
+                // INJECT TEST SERVER FOR TESTING NATIVE PLAYER
+                const hasTestServer = this.episodeData.activeServers.find(s => s.server === "TEST NATIVE");
+                if (!hasTestServer) {
+                  this.episodeData.activeServers.unshift({
+                    server: "TEST NATIVE",
+                    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                  });
+                }
               }
             }
           }
@@ -160,17 +169,6 @@ export default class WatchPage {
           `;
           this._startCountdownTimer(target, tokyoNow);
         }
-      }
-    }
-
-    // INJECT TEST SERVER FOR TESTING NATIVE PLAYER
-    if (this.episodeData && this.episodeData.activeServers) {
-      const hasTestServer = this.episodeData.activeServers.find(s => s.server === "TEST NATIVE");
-      if (!hasTestServer) {
-        this.episodeData.activeServers.unshift({
-          server: "TEST NATIVE",
-          url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-        });
       }
     }
 
