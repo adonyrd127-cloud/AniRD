@@ -710,7 +710,17 @@ export default class WatchPage {
 
         if (!isDirect) {
           try {
-            const res = await apiService.resolveEmbed(finalUrl);
+            // Añadir un timeout estricto de 5 segundos para no dejar al usuario esperando eternamente
+            // si Puppeteer se queda atascado en la Orange Pi.
+            const timeoutPromise = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error("Timeout resolviendo enlace nativo")), 5000)
+            );
+            
+            const res = await Promise.race([
+              apiService.resolveEmbed(finalUrl),
+              timeoutPromise
+            ]);
+            
             if (res && res.success && res.url) {
               finalUrl = res.url;
               isDirect = true; // successfully resolved to direct!
