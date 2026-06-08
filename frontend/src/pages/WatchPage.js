@@ -88,6 +88,7 @@ export default class WatchPage {
             if (targetEpisode && targetEpisode.url) {
               const epRes = await apiService.getEpisode(targetEpisode.url);
               if (epRes.success && epRes.data) {
+                this.episodeData = epRes.data;
                 const serverList = this.episodeData.servers[this.lang] || this.episodeData.servers.sub || [];
                 this.episodeData.activeServers = serverList;
               }
@@ -250,21 +251,14 @@ export default class WatchPage {
             <div class="server-selection-v5">
               <span class="selection-label-v5">Servidores Disponibles</span>
               <div class="server-pills-v5" id="server-pills">
-                ${(() => {
-                  const srvs = this.episodeData && this.episodeData.activeServers ? [...this.episodeData.activeServers] : [];
-                  if (!srvs.find(s => s.server === "TEST NATIVE")) {
-                    srvs.unshift({server: "TEST NATIVE", url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"});
-                  }
-                  if (this.episodeData) this.episodeData.activeServers = srvs; // update state so video iframe uses it
-                  
-                  return srvs.length > 0 
-                  ? srvs.map((s, idx) => `
+                ${this.episodeData && this.episodeData.activeServers && this.episodeData.activeServers.length > 0 
+                  ? this.episodeData.activeServers.map((s, idx) => `
                       <button class="server-pill-v5 ${idx === 0 ? 'active' : ''}" data-url="${s.url}">
                         🚀 ${s.server}
                       </button>
                     `).join('')
-                  : '<span style="color:var(--text-muted); font-size:12px;">No hay servidores disponibles</span>';
-                })()}
+                  : '<span style="color:var(--text-muted); font-size:12px;">No hay servidores disponibles</span>'
+                }
               </div>
             </div>
             
