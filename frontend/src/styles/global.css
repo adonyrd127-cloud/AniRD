@@ -2733,7 +2733,7 @@ body.tv-mode #app {
   display: block !important;
   position: absolute !important;
   top: 70px !important;
-  left: 320px !important;
+  left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
   padding: 40px !important;
@@ -2764,7 +2764,7 @@ body.tv-mode .nav-v4 {
   align-items: center !important;
   justify-content: space-between !important;
   height: 70px !important;
-  left: 320px !important;
+  left: 0 !important;
   padding: 20px 40px !important;
   background: rgba(5, 5, 8, 0.8) !important;
   backdrop-filter: blur(20px) !important;
@@ -3193,10 +3193,10 @@ body.tv-mode .anime-grid {
 /* En desktop regular (no TV mode): offset por el ancho del sidebar */
 @media (min-width: 768px) {
   body:not(.tv-mode):not(.sidebar-collapsed) #app {
-    margin-left: 260px !important;
+    margin-left: 0 !important;
   }
   body:not(.tv-mode):not(.sidebar-collapsed) .nav-v4 {
-    left: 260px !important;
+    left: 0 !important;
   }
 }
 
@@ -3205,7 +3205,7 @@ body.tv-mode #app {
   display: block !important;
   position: fixed !important;       /* ✅ fixed en vez de absolute para mayor estabilidad */
   top: 70px !important;
-  left: 320px !important;
+  left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
   padding: 0 !important;            /* ✅ FIX: padding 0 aquí (el contenido tiene el suyo propio) */
@@ -3265,7 +3265,7 @@ body.tv-mode .desktop-sidebar {
 body.tv-mode .nav-v4 {
   position: fixed !important;
   top: 0 !important;
-  left: 320px !important;
+  left: 0 !important;
   right: 0 !important;
   height: 70px !important;
   z-index: 1000 !important;
@@ -3371,7 +3371,7 @@ body.tv-mode .nav-v4 {
 
 /* Ocultar la sidebar deslizándola hacia la izquierda */
 body.tv-mode.sidebar-collapsed .desktop-sidebar {
-  transform: translateX(-320px) !important;
+  transform: translateX(0) !important;
 }
 
 /* Expandir #app a todo el ancho */
@@ -3614,7 +3614,7 @@ body.tv-mode {
     --tv-safe-v: max(5vh, 30px);
 }
 body.tv-mode .nav-v4 {
-    padding-left: calc(320px + var(--tv-safe-h)) !important;
+    padding-left: var(--tv-safe-h) !important;
     padding-right: var(--tv-safe-h) !important;
 }
 body.tv-mode.sidebar-collapsed .nav-v4 {
