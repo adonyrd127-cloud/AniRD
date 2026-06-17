@@ -13,254 +13,97 @@ const appContainer = document.getElementById('app');
 const router = getRouter(appContainer);
 const searchPalette = new SearchPalette(router);
 
-// Navbar Premium UI v3.10
+// Navbar Premium UI v5
 const header = document.createElement('header');
 header.innerHTML = `
-  <nav class="nav-v4" id="main-navbar">
-    <!-- Contenedor izquierdo: Botón de colapsar, Logo y divisor para escritorio -->
-    <div class="nav-left-container" style="display: flex; align-items: center; gap: 15px;">
-      <button id="sidebar-collapse-btn" class="sidebar-collapse-btn" title="Colapsar Barra Lateral">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-      </button>
-      <a href="/" data-link class="nav-logo">AniRD <span class="logo-cloud">☁️</span></a>
-      <div class="nav-divider-desktop"></div>
-    </div>
-    
-    <!-- Contenedor de Categorías en Header (visible solo al colapsar barra lateral en PC) -->
-    <div class="header-categories-v4" id="header-categories">
-      <a href="/category/popular" data-link class="header-cat-link">🔥 Populares</a>
-      <a href="/category/movies" data-link class="header-cat-link">🎬 Películas</a>
-      <a href="/category/dub" data-link class="header-cat-link">🎙️ Latino</a>
+  <nav class="nav-v5 fixed top-0 left-0 right-0 z-50 bg-zinc-950/70 backdrop-blur-xl border-b border-white/[0.06]" style="position: fixed; top: 0; left: 0; right: 0; z-index: 50; background: rgba(9,9,11,0.7); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid rgba(255,255,255,0.06);">
+    <div style="max-width: 1920px; margin: 0 auto; padding: 0 5%; height: 70px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 24px;">
+        <a href="/" data-link style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: #dc2626; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(220,38,38,0.3);">
+            <span style="color: white; font-weight: 900; font-size: 14px; font-family: 'Outfit';">A</span>
+          </div>
+          <span class="nav-logo-text" style="font-size: 20px; font-weight: 900; letter-spacing: -0.05em; color: white; font-family: 'Outfit'; display: block;">
+            Ani<span style="color: #ef4444;">RD</span>
+          </span>
+        </a>
+        <div class="nav-links-v5" style="display: flex; align-items: center; gap: 4px;">
+          <a href="/" data-link class="nav-link-v5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Inicio</a>
+          <a href="/category/popular" data-link class="nav-link-v5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Populares</a>
+          <a href="/category/movies" data-link class="nav-link-v5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7h4"/><path d="M3 17h4"/><path d="M17 3v18"/><path d="M17 7h4"/><path d="M17 17h4"/></svg>Películas</a>
+          <a href="/category/dub" data-link class="nav-link-v5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>Latino</a>
+          <a href="/calendar" data-link class="nav-link-v5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>Calendario</a>
+        </div>
+      </div>
       
-      <!-- Dropdown de Géneros en Cabecera -->
-      <div class="header-cat-dropdown">
-        <button class="header-cat-btn" id="header-genres-trigger">
-          Géneros <span style="font-size: 10px; margin-left: 4px;">▼</span>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button id="desktop-search-trigger" style="display: flex; align-items: center; justify-content: space-between; width: 220px; border-radius: 9999px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; color: #a1a1aa; font-size: 13px; cursor: pointer; transition: all 0.2s;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span>Buscar anime...</span>
+          </div>
+          <kbd style="display: inline-flex; font-family: monospace; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; font-size: 10px;">⌘K</kbd>
         </button>
-        <div class="header-cat-dropdown-content" id="header-genres-dropdown">
-          <a href="/category/action" data-link class="header-genre-sublink">Acción</a>
-          <a href="/category/adventure" data-link class="header-genre-sublink">Aventura</a>
-          <a href="/category/comedy" data-link class="header-genre-sublink">Comedia</a>
-          <a href="/category/drama" data-link class="header-genre-sublink">Drama</a>
-          <a href="/category/fantasy" data-link class="header-genre-sublink">Fantasía</a>
-          <a href="/category/music" data-link class="header-genre-sublink">Musical</a>
-          <a href="/category/romance" data-link class="header-genre-sublink">Romance</a>
-          <a href="/category/sci-fi" data-link class="header-genre-sublink">Ciencia Ficción</a>
-          <a href="/category/seinen" data-link class="header-genre-sublink">Seinen</a>
-          <a href="/category/shoujo" data-link class="header-genre-sublink">Shoujo</a>
-          <a href="/category/shounen" data-link class="header-genre-sublink">Shounen</a>
-          <a href="/category/slice-of-life" data-link class="header-genre-sublink">Recuentos de la Vida</a>
-          <a href="/category/sports" data-link class="header-genre-sublink">Deportes</a>
-          <a href="/category/supernatural" data-link class="header-genre-sublink">Sobrenatural</a>
-          <a href="/category/thriller" data-link class="header-genre-sublink">Thriller</a>
+
+        <div class="nav-notifications" id="nav-notifications" style="position: relative; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%; transition: all 0.3s ease; color: #a1a1aa;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span id="notif-badge" style="display:none; position: absolute; top: 8px; right: 8px; background: #ef4444; width: 8px; height: 8px; border-radius: 50%;"></span>
+          
+          <div id="notif-dropdown" style="display:none; position: absolute; top: 45px; right: 0; width: 320px; background: rgba(9,9,11,0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px; z-index: 100; cursor: default; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+               <h4 style="margin: 0; color: white; font-family: 'Outfit';">Notificaciones</h4>
+               <span id="mark-read-btn" style="font-size: 11px; color: #ef4444; cursor: pointer; font-weight: 800;">Marcar Leídas</span>
+             </div>
+             <div id="notif-list" style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
+               <div style="color:var(--text-muted); font-size:12px; text-align:center; padding: 20px 0;">No hay notificaciones nuevas</div>
+             </div>
+          </div>
         </div>
+
+        <a id="profile-link" href="/auth" data-link style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #ef4444, #b91c1c); display: flex; align-items: center; justify-content: center; color: white; text-decoration: none; box-shadow: 0 4px 14px rgba(220,38,38,0.2);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="14" cy="7" r="4"/></svg>
+        </a>
       </div>
-    </div>
-
-    <!-- Contenedor del centro: Barra de búsqueda simulada para escritorio -->
-    <div class="nav-center-container">
-      <div class="search-bar-desktop" id="desktop-search-trigger">
-        <svg class="search-icon-desktop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <span>Buscar anime...</span>
-      </div>
-    </div>
-
-    <!-- Contenedor derecho: Notificaciones y perfil dinámico -->
-    <div class="nav-right" style="display: flex; align-items: center;">
-
-      <!-- Campana de Notificaciones original intacta -->
-      <div class="nav-notifications" id="nav-notifications" style="position: relative; margin-right: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.05); transition: all 0.3s ease;">
-        <span style="font-size: 18px; filter: grayscale(1) contrast(2);">🔔</span>
-        <span id="notif-badge" style="display:none; position: absolute; top: 8px; right: 8px; background: #ff0000; width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 10px #ff0000;"></span>
-        
-        <div id="notif-dropdown" style="display:none; position: absolute; top: 50px; right: 0; width: 320px; background: rgba(15,15,15,0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px; z-index: 100; cursor: default; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
-           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-             <h4 style="margin: 0; color: white; font-family: 'Outfit';">Notificaciones</h4>
-             <span id="mark-read-btn" style="font-size: 11px; color: var(--accent); cursor: pointer; font-weight: 800;">Marcar Leídas</span>
-           </div>
-           <div id="notif-list" style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
-             <div style="color:var(--text-muted); font-size:12px; text-align:center; padding: 20px 0;">No hay notificaciones nuevas</div>
-           </div>
-        </div>
-      </div>
-
-      <!-- Barra de búsqueda clásica pill para móvil/compatibilidad -->
-      <div class="search-pill" id="open-search-btn" style="display: none;">
-        <span>🔍 Buscar...</span>
-      </div>
-
-      <!-- Botón de Perfil Premium (Escritorio y adaptado) -->
-      <a id="profile-link" href="/auth" data-link class="header-profile-btn">
-        <div class="header-profile-avatar-container" id="profile-avatar-container">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-        </div>
-        <span class="header-profile-username" id="profile-username-text">Entrar</span>
-      </a>
     </div>
   </nav>
 
-  <!-- Navegación móvil bottom-nav intacta -->
-  <nav class="mobile-nav bottom-nav" id="bottomNav">
-     <a href="/" data-link class="nav-item">
-       <div class="nav-icon">
-         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-           <polyline points="9 22 9 12 15 12 15 22"/>
-         </svg>
-       </div>
-       <div class="nav-label">Inicio</div>
+  <style>
+    .nav-link-v5 {
+      display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; color: #a1a1aa; text-decoration: none; transition: all 0.2s;
+    }
+    .nav-link-v5 svg { width: 16px; height: 16px; }
+    .nav-link-v5:hover, .nav-link-v5.active { background: rgba(255,255,255,0.05); color: white; }
+    #desktop-search-trigger:hover { background: rgba(255,255,255,0.08) !important; border-color: rgba(255,255,255,0.2) !important; color: white !important; }
+    .nav-notifications:hover { background: rgba(255,255,255,0.1); color: white !important; }
+    
+    @media (max-width: 768px) {
+      .nav-links-v5 { display: none !important; }
+      #desktop-search-trigger { width: auto !important; padding: 8px !important; border-radius: 50% !important; justify-content: center !important; }
+      #desktop-search-trigger span, #desktop-search-trigger kbd { display: none !important; }
+      .nav-logo-text { display: none !important; }
+    }
+  </style>
+
+  <nav class="mobile-nav bottom-nav" id="bottomNav" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; background: rgba(9,9,11,0.9); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-top: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-around; padding: 8px 16px; display: none;">
+     <a href="/" data-link class="nav-item" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #a1a1aa; text-decoration: none; transition: color 0.2s;">
+       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+       <span style="font-size: 10px; font-weight: 500;">Inicio</span>
      </a>
-     <a href="#" class="nav-item" id="mobile-search-btn">
-       <div class="nav-icon">
-         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-           <circle cx="11" cy="11" r="8"/>
-           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-         </svg>
-       </div>
-       <div class="nav-label">Buscar</div>
+     <a href="#" class="nav-item" id="mobile-search-btn" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #a1a1aa; text-decoration: none; transition: color 0.2s;">
+       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+       <span style="font-size: 10px; font-weight: 500;">Buscar</span>
      </a>
-     <a href="/favorites" data-link class="nav-item">
-       <div class="nav-icon">
-         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-           <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-         </svg>
-       </div>
-       <div class="nav-label">Fav</div>
+     <a href="/favorites" data-link class="nav-item" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #a1a1aa; text-decoration: none; transition: color 0.2s;">
+       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+       <span style="font-size: 10px; font-weight: 500;">Favs</span>
      </a>
-     <a id="mobile-profile-link" href="/auth" data-link class="nav-item">
-       <div class="nav-icon">
-         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-           <circle cx="12" cy="7" r="4"/>
-         </svg>
-       </div>
-       <div class="nav-label">Entrar</div>
+     <a id="mobile-profile-link" href="/auth" data-link class="nav-item" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #a1a1aa; text-decoration: none; transition: color 0.2s;">
+       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="14" cy="7" r="4"/></svg>
+       <span class="nav-label" style="font-size: 10px; font-weight: 500;">Perfil</span>
      </a>
   </nav>
 `;
 document.body.insertBefore(header, appContainer);
-
-// Inyectar Barra Lateral Premium de Escritorio
-const sidebar = document.createElement('aside');
-sidebar.className = 'desktop-sidebar';
-sidebar.innerHTML = `
-  <div class="sidebar-logo">
-    <a href="/" data-link class="sidebar-logo-link">AniRD <span class="logo-cloud">☁️</span></a>
-  </div>
-  
-  <ul class="sidebar-menu">
-    <li>
-      <a href="/" data-link class="sidebar-link" data-route="/">
-        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        <span>Inicio</span>
-      </a>
-    </li>
-    <li>
-      <a href="#" class="sidebar-link" id="sidebar-search-btn">
-        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <span>Explorar</span>
-      </a>
-    </li>
-    <li>
-      <a href="/favorites" data-link class="sidebar-link" data-route="/favorites">
-        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-        </svg>
-        <span>Favoritos</span>
-      </a>
-    </li>
-    <li>
-      <a href="/history" data-link class="sidebar-link" data-route="/history">
-        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
-        </svg>
-        <span>Historial</span>
-      </a>
-    </li>
-    <li>
-      <a href="/calendar" data-link class="sidebar-link" data-route="/calendar">
-        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-          <line x1="16" y1="2" x2="16" y2="6"/>
-          <line x1="8" y1="2" x2="8" y2="6"/>
-          <line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-        <span>Calendario</span>
-      </a>
-    </li>
-    <li>
-      <a id="sidebar-profile-link" href="/auth" data-link class="sidebar-link" data-route="/profile">
-        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
-        <span>Mi Perfil</span>
-      </a>
-    </li>
-    <li class="sidebar-dropdown">
-      <button class="sidebar-link sidebar-dropdown-trigger" id="sidebar-categories-trigger">
-        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="7" height="9"></rect>
-          <rect x="14" y="3" width="7" height="5"></rect>
-          <rect x="14" y="12" width="7" height="9"></rect>
-          <rect x="3" y="16" width="7" height="5"></rect>
-        </svg>
-        <span>Categorías</span>
-        <svg class="dropdown-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-      <div class="sidebar-dropdown-content" id="sidebar-categories-dropdown">
-        <div class="sidebar-dropdown-inner">
-          <a href="/category/popular" data-link class="sidebar-sublink">🔥 Populares</a>
-          <a href="/category/movies" data-link class="sidebar-sublink">🎬 Películas</a>
-          <a href="/category/dub" data-link class="sidebar-sublink">🎙️ Latino</a>
-          <div class="sidebar-sublink-divider">GÉNEROS</div>
-          <a href="/category/action" data-link class="sidebar-sublink">Acción</a>
-          <a href="/category/adventure" data-link class="sidebar-sublink">Aventura</a>
-          <a href="/category/comedy" data-link class="sidebar-sublink">Comedia</a>
-          <a href="/category/drama" data-link class="sidebar-sublink">Drama</a>
-          <a href="/category/fantasy" data-link class="sidebar-sublink">Fantasía</a>
-          <a href="/category/music" data-link class="sidebar-sublink">Musical</a>
-          <a href="/category/romance" data-link class="sidebar-sublink">Romance</a>
-          <a href="/category/sci-fi" data-link class="sidebar-sublink">Ciencia Ficción</a>
-          <a href="/category/seinen" data-link class="sidebar-sublink">Seinen</a>
-          <a href="/category/shoujo" data-link class="sidebar-sublink">Shoujo</a>
-          <a href="/category/shounen" data-link class="sidebar-sublink">Shounen</a>
-          <a href="/category/slice-of-life" data-link class="sidebar-sublink">Recuentos de la Vida</a>
-          <a href="/category/sports" data-link class="sidebar-sublink">Deportes</a>
-          <a href="/category/supernatural" data-link class="sidebar-sublink">Sobrenatural</a>
-          <a href="/category/thriller" data-link class="sidebar-sublink">Thriller</a>
-        </div>
-      </div>
-    </li>
-  </ul>
-
-  <hr class="sidebar-divider">
-
-  <div class="sidebar-section-title">SIGUIENDO</div>
-  <div class="sidebar-following-list" id="sidebar-following-list">
-    <div style="color: rgba(255,255,255,0.3); font-size: 11px; padding: 10px 20px; text-align: center;">Cargando lista...</div>
-  </div>
-`;
-document.body.insertBefore(sidebar, appContainer);
 
 const updateNavbarAuth = () => {
   const profileLink = document.getElementById('profile-link');
@@ -323,77 +166,11 @@ const updateMobileNavActive = (route) => {
   }
 };
 
-const updateSidebarActive = (route) => {
-  const sidebarEl = document.querySelector('.desktop-sidebar');
-  if (!sidebarEl) return;
-  const links = sidebarEl.querySelectorAll('.sidebar-link');
-  links.forEach(link => link.classList.remove('active'));
 
-  let activeRoute = '/';
-  if (route === '/' || route.startsWith('/anime/') || route.startsWith('/watch/') || route.startsWith('/category/') || route === '/calendar') {
-    activeRoute = '/';
-  } else if (route === '/favorites') {
-    activeRoute = '/favorites';
-  } else if (route === '/history' || route === '/my-anird') {
-    activeRoute = '/history';
-  } else if (route === '/profile' || route === '/auth') {
-    activeRoute = '/profile';
-  }
-
-  const activeLink = sidebarEl.querySelector(`.sidebar-link[data-route="${activeRoute}"]`);
-  if (activeLink) {
-    activeLink.classList.add('active');
-  }
-};
-
-const renderSidebarFollowing = async () => {
-  const listContainer = document.getElementById('sidebar-following-list');
-  if (!listContainer) return;
-
-  try {
-    const following = await dbService.getFollowing();
-    if (following.length === 0) {
-      listContainer.innerHTML = `
-        <div class="sidebar-following-empty">
-          Aún no sigues ningún anime. Haz clic en "Seguir" en la ficha del anime para agregarlo aquí.
-        </div>
-      `;
-      return;
-    }
-
-    // Obtener el último episodio reproducido en el historial de forma rápida
-    const history = await db.history.orderBy('updatedAt').reverse().toArray();
-    const lastEpMap = new Map();
-    history.forEach(item => {
-      if (!lastEpMap.has(item.animeId)) {
-        lastEpMap.set(item.animeId, item.episodeId);
-      }
-    });
-
-    listContainer.innerHTML = following.slice(0, 5).map(anime => {
-      const animeId = Number(anime.animeId);
-      const lastEp = lastEpMap.get(animeId);
-      const epText = lastEp ? `Ep. ${lastEp}` : 'Ver ahora';
-      return `
-        <a href="/anime/${animeId}" data-link class="sidebar-following-item">
-          <img class="sidebar-following-cover" src="${anime.cover}" alt="${anime.title}" loading="lazy">
-          <div class="sidebar-following-info">
-            <div class="sidebar-following-title">${anime.title}</div>
-            <div class="sidebar-following-ep">${epText}</div>
-          </div>
-        </a>
-      `;
-    }).join('');
-  } catch (err) {
-    console.error("Error al renderizar siguiendo en la barra lateral:", err);
-  }
-};
 
 // Suscribirse a cambios de ruta de Zustand
 useAppStore.subscribe((state) => {
   updateMobileNavActive(state.currentRoute);
-  updateSidebarActive(state.currentRoute);
-  renderSidebarFollowing();
   
   if (spatialNavigation.isActive) {
     setTimeout(() => {
@@ -406,8 +183,6 @@ useAppStore.subscribe((state) => {
 window.updateNavbarAuth = updateNavbarAuth;
 updateNavbarAuth();
 updateMobileNavActive(window.location.pathname);
-updateSidebarActive(window.location.pathname);
-renderSidebarFollowing();
 
 // Listeners de búsqueda simulada e interactiva
 const triggerSearch = (e) => {
@@ -427,36 +202,7 @@ const mobileSearchBtn = document.getElementById('mobile-search-btn');
 if (mobileSearchBtn) {
   mobileSearchBtn.addEventListener('click', triggerSearch);
 }
-const sidebarSearchBtn = document.getElementById('sidebar-search-btn');
-if (sidebarSearchBtn) {
-  sidebarSearchBtn.addEventListener('click', triggerSearch);
-}
 
-// Lógica interactiva para el acordeón de categorías colapsable de la barra lateral
-const categoriesTrigger = document.getElementById('sidebar-categories-trigger');
-const categoriesDropdown = document.getElementById('sidebar-categories-dropdown');
-if (categoriesTrigger && categoriesDropdown) {
-  categoriesTrigger.addEventListener('click', (e) => {
-    e.preventDefault();
-    categoriesTrigger.classList.toggle('expanded');
-    categoriesDropdown.classList.toggle('expanded');
-  });
-}
-
-// Lógica para colapsar y ocultar la barra lateral en PC con persistencia
-const sidebarCollapseBtn = document.getElementById('sidebar-collapse-btn');
-if (sidebarCollapseBtn) {
-  const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-  if (isCollapsed) {
-    document.body.classList.add('sidebar-collapsed');
-  }
-
-  sidebarCollapseBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const currentlyCollapsed = document.body.classList.toggle('sidebar-collapsed');
-    localStorage.setItem('sidebarCollapsed', currentlyCollapsed ? 'true' : 'false');
-  });
-}
 
 import { notificationService } from './services/notifications.js';
 

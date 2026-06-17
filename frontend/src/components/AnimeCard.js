@@ -16,126 +16,176 @@ export class AnimeCard extends HTMLElement {
       <style>
         :host { display: block; width: ${isThumbnail ? '320px' : '185px'}; flex-shrink: 0; }
         @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        .sk { background: linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite ease-in-out; border-radius: 22px; }
-        .sk-img { width: 100%; aspect-ratio: ${isThumbnail ? '16/9' : '2/3'}; margin-bottom: 12px; }
-        .sk-t { height: 14px; border-radius: 7px; margin-bottom: 6px; }
-        .sk-t2 { height: 10px; width: 60%; border-radius: 5px; }
+        .sk { background: linear-gradient(90deg, #18181b 25%, #27272a 50%, #18181b 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite ease-in-out; border-radius: 16px; }
+        .sk-img { width: 100%; aspect-ratio: ${isThumbnail ? '16/9' : '3/4.2'}; margin-bottom: 12px; }
       </style>
-      <div><div class="sk sk-img"></div><div class="sk sk-t"></div><div class="sk sk-t2"></div></div>
+      <div class="sk sk-img"></div>
     `;
   }
 
   render() {
     if(!this._anime) return;
     const isThumbnail = this.getAttribute('mode') === 'thumbnail';
-    const imgUrl = this._anime.images?.jpg?.large_image_url || this._anime.images?.jpg?.image_url || this._anime.image || this._anime.thumbnail || '';
-    const title = this._anime.title || 'Anime';
+    const imgUrl = this._anime.images?.webp?.large_image_url || this._anime.images?.jpg?.large_image_url || this._anime.images?.jpg?.image_url || this._anime.image || this._anime.thumbnail || '';
+    const title = this._anime.title_english || this._anime.title || 'Anime';
     const id = this._anime.mal_id || this._anime.id;
     const score = this._anime.score || this._anime.rating || '?.?';
+    const type = this._anime.type || 'TV';
+    const eps = this._anime.episodes ? \`\${this._anime.episodes} eps\` : '';
     const progress = this._anime.progress || 0;
     const duration = this._anime.duration_watched || 0;
     const progressPct = duration > 0 ? Math.min((progress / duration) * 100, 100) : 0;
     
-    let nextEpText = this._anime.nextEpisodeText || '';
-    if (!nextEpText && this._anime.status === 'Currently Airing' && this._anime.broadcast && this._anime.broadcast.time) {
-      const b = this._anime.broadcast;
-      const days = { 'Sundays': 0, 'Mondays': 1, 'Tuesdays': 2, 'Wednesdays': 3, 'Thursdays': 4, 'Fridays': 5, 'Saturdays': 6 };
-      if (days[b.day] !== undefined) {
-        const [h, m] = b.time.split(':').map(Number);
-        const tokyoNow = new Date(new Date().toLocaleString("en-US", {timeZone: b.timezone || 'Asia/Tokyo'}));
-        let target = new Date(tokyoNow);
-        target.setHours(h, m, 0, 0);
-        let dAdd = days[b.day] - tokyoNow.getDay();
-        if (dAdd < 0 || (dAdd === 0 && target < tokyoNow)) dAdd += 7;
-        target.setDate(target.getDate() + dAdd);
-        const diffMs = target - tokyoNow;
-        if (diffMs > 0) {
-          const d = Math.floor(diffMs / 86400000);
-          const hrs = Math.floor((diffMs / 3600000) % 24);
-          if (d > 0) nextEpText = `${d}d ${hrs}h para nuevo cap.`;
-          else if (hrs > 0) nextEpText = `${hrs}h para nuevo cap.`;
-          else nextEpText = `¡Nuevo cap en breve!`;
-        }
-      }
-    }
+    const isAiring = this._anime.status === "Currently Airing";
 
     this.shadowRoot.innerHTML = `
       <style>
         :host {
           display: block;
-          width: ${isThumbnail ? '320px' : '185px'};
+          width: ${isThumbnail ? '280px' : '185px'};
           flex-shrink: 0;
+          cursor: pointer;
         }
         @media (max-width: 768px) {
-          :host {
-            width: ${isThumbnail ? '180px' : '135px'} !important;
-          }
-          .img-box {
-            border-radius: 14px !important;
-            margin-bottom: 8px !important;
-          }
-          .title-v4 {
-            font-size: 11px !important;
-          }
-          .meta-v4 {
-            font-size: 8px !important;
-          }
-          .rating-v4 {
-            top: 6px !important;
-            left: 6px !important;
-            padding: 2px 6px !important;
-            font-size: 9px !important;
-            border-radius: 6px !important;
-          }
+          :host { width: ${isThumbnail ? '240px' : '145px'}; }
         }
-        .card-v4 {
+        .card-inner {
           position: relative;
-          cursor: pointer;
-          transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-          text-decoration: none;
-          color: white;
-          display: flex;
-          flex-direction: column;
-        }
-        .card-v4:hover {
-          transform: translateY(-8px);
-        }
-        .img-box {
-          width: 100%;
-          aspect-ratio: ${isThumbnail ? '16/9' : '2/3'};
-          border-radius: 22px;
           overflow: hidden;
-          background: #111;
-          border: 1px solid rgba(255, 255, 255, 0.05);
-          margin-bottom: 12px;
-          position: relative;
-          box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+          border-radius: 16px;
+          background: #18181b;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+          transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+          text-decoration: none;
+          display: block;
+          transform: translateY(0);
+        }
+        :host(:hover) .card-inner {
+          transform: scale(1.05) translateY(-8px);
+        }
+        .img-container {
+          aspect-ratio: ${isThumbnail ? '16/9' : '3/4.2'};
+          width: 100%;
+        }
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.5s ease;
+        }
+        :host(:hover) img {
+          transform: scale(1.1);
+        }
+        .gradient-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 40%, transparent 100%);
+          opacity: 0.8;
+          pointer-events: none;
+        }
+        .hover-border {
+          position: absolute;
+          inset: 0;
+          border-radius: 16px;
+          border: 2px solid transparent;
           transition: border-color 0.3s ease;
+          pointer-events: none;
+          z-index: 10;
         }
-        .card-v4:hover .img-box {
-          border-color: rgba(255, 0, 0, 0.5);
-          box-shadow: 0 20px 40px rgba(255, 0, 0, 0.15);
+        :host(:hover) .hover-border {
+          border-color: rgba(239, 68, 68, 0.5); /* border-red-500/50 */
         }
-        img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
-        .card-v4:hover img { transform: scale(1.08); }
-
-        .rating-v4 {
+        
+        .badge-score {
           position: absolute;
           top: 10px;
           left: 10px;
-          background: rgba(0, 0, 0, 0.6);
-          backdrop-filter: blur(10px);
-          padding: 4px 10px;
-          border-radius: 50px;
-          font-size: 10px;
-          font-weight: 900;
-          color: white;
-          border: 1px solid rgba(255, 255, 255, 0.1);
           display: flex;
           align-items: center;
           gap: 4px;
+          border-radius: 9999px;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          padding: 2px 8px;
+          z-index: 5;
+        }
+        .badge-score svg { width: 12px; height: 12px; fill: #fbbf24; color: #fbbf24; }
+        .badge-score span { font-size: 11px; font-weight: 700; color: white; font-family: 'Inter', sans-serif; }
+
+        .badge-airing {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          border-radius: 9999px;
+          background: rgba(220, 38, 38, 0.9);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          padding: 2px 8px;
+          z-index: 5;
+          font-size: 10px;
+          font-weight: 600;
+          color: white;
+          font-family: 'Inter', sans-serif;
+        }
+        .dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: white;
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: .4; }
         }
 
+        .info-bottom {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          padding: 12px;
+          padding-top: 32px;
+          z-index: 5;
+        }
+        .title {
+          font-family: 'Inter', sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          color: white;
+          line-height: 1.2;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          margin: 0;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .meta {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 6px;
+        }
+        .meta-type {
+          font-size: 10px;
+          font-weight: 500;
+          color: #d4d4d8;
+          text-transform: uppercase;
+          letter-spacing: 0.02em;
+        }
+        .meta-dot {
+          color: #52525b;
+        }
+        .meta-eps {
+          font-size: 10px;
+          color: #a1a1aa;
+        }
+        
         .progress-bar {
           position: absolute;
           bottom: 0;
@@ -143,49 +193,45 @@ export class AnimeCard extends HTMLElement {
           right: 0;
           height: 4px;
           background: rgba(255, 255, 255, 0.1);
+          z-index: 10;
         }
         .progress-fill {
           height: 100%;
-          background: #ff0000;
+          background: #dc2626;
           border-radius: 0 2px 2px 0;
-          transition: width 0.3s ease;
-        }
-
-        .info-v4 { padding: 0 4px; }
-        .title-v4 {
-          font-family: 'Outfit', sans-serif;
-          font-size: 13px;
-          font-weight: 700;
-          line-height: 1.3;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-          margin: 0 0 4px 0;
-          color: #f4f4f5;
-        }
-        .meta-v4 {
-          font-size: 9px;
-          color: #71717a;
-          text-transform: uppercase;
-          font-weight: 800;
-          letter-spacing: 0.05em;
         }
       </style>
-      <a href="/anime/${id}" data-link class="card-v4">
-        <div class="img-box">
+      <a href="/anime/${id}" data-link class="card-inner">
+        <div class="img-container">
           <img src="${imgUrl}" alt="${title}" loading="lazy" referrerpolicy="no-referrer">
-          <div class="rating-v4"><span style="color:#ff0000">★</span> ${score}</div>
-          ${progressPct > 0 ? `<div class="progress-bar"><div class="progress-fill" style="width:${progressPct}%"></div></div>` : ''}
         </div>
-        <div class="info-v4">
-          <div class="meta-v4">${this._anime.type || 'TV'} • ${this._anime.status || 'EN EMISIÓN'}</div>
-          <h3 class="title-v4">${title}</h3>
-          ${this._anime.currentEpisode ? `<div style="font-size: 10px; color: #ff0000; font-weight: 800; margin-top: 2px;">Visto Ep. ${this._anime.currentEpisode}</div>` : ''}
-          ${nextEpText ? `<div style="font-size: 10px; color: #00ff88; font-weight: 800; margin-top: 2px;">⏱ ${nextEpText}</div>` : ''}
+        <div class="gradient-overlay"></div>
+        <div class="hover-border"></div>
+        
+        ${score !== '?.?' ? \`
+        <div class="badge-score">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>\${score}</span>
+        </div>\` : ''}
+
+        ${isAiring ? \`
+        <div class="badge-airing">
+          <div class="dot"></div>
+          EN EMISIÓN
+        </div>\` : ''}
+
+        <div class="info-bottom">
+          <h3 class="title">\${title}</h3>
+          <div class="meta">
+            \${type ? \`<span class="meta-type">\${type}</span>\` : ''}
+            \${type && eps ? \`<span class="meta-dot">·</span>\` : ''}
+            \${eps ? \`<span class="meta-eps">\${eps}</span>\` : ''}
+          </div>
         </div>
+
+        \${progressPct > 0 ? \`<div class="progress-bar"><div class="progress-fill" style="width:\${progressPct}%"></div></div>\` : ''}
       </a>
-    `;
+    \`;
   }
 }
 customElements.define('anime-card', AnimeCard);

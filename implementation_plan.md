@@ -4,6 +4,19 @@ Este plan describe las mejoras de arquitectura, rendimiento y experiencia de usu
 
 ---
 
+### PHASE 4: Anime Detail Sheet [COMPLETED]
+- [x] Port `AnimeDetailSheet.tsx` layout to Vanilla JS.
+- [x] Integrate with existing routing (`/anime/:id` opens the sheet with a cinematic blurred background).
+- [x] Implement tabs (Info, Episodes, Characters, Recommendations).
+- [x] Implement slide-in/slide-out animations.
+
+### PHASE 5: Polish & Validation [COMPLETED]
+- [x] Ensure performance remains smooth without React overhead.
+- [x] Verify API integration with Jikan/Anilist remains functional.
+- [x] Validate responsive behavior on mobile and desktop.
+
+---
+
 ## 📌 Principio Rector: Zero-Downtime
 
 Para asegurar que la aplicación siga funcionando en todo momento, seguiremos estas reglas estrictas:
