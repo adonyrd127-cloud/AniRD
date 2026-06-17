@@ -31,7 +31,7 @@ export class AnimeCard extends HTMLElement {
     const id = this._anime.mal_id || this._anime.id;
     const score = this._anime.score || this._anime.rating || '?.?';
     const type = this._anime.type || 'TV';
-    const eps = this._anime.episodes ? \`\${this._anime.episodes} eps\` : '';
+    const eps = this._anime.episodes ? `${this._anime.episodes} eps` : '';
     const progress = this._anime.progress || 0;
     const duration = this._anime.duration_watched || 0;
     const progressPct = duration > 0 ? Math.min((progress / duration) * 100, 100) : 0;
@@ -208,30 +208,30 @@ export class AnimeCard extends HTMLElement {
         <div class="gradient-overlay"></div>
         <div class="hover-border"></div>
         
-        ${score !== '?.?' ? \`
+        ${score !== '?.?' ? `
         <div class="badge-score">
           <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          <span>\${score}</span>
-        </div>\` : ''}
+          <span>${score}</span>
+        </div>` : ''}
 
-        ${isAiring ? \`
+        ${isAiring ? `
         <div class="badge-airing">
           <div class="dot"></div>
           EN EMISIÓN
-        </div>\` : ''}
+        </div>` : ''}
 
         <div class="info-bottom">
-          <h3 class="title">\${title}</h3>
+          <h3 class="title">${title}</h3>
           <div class="meta">
-            \${type ? \`<span class="meta-type">\${type}</span>\` : ''}
-            \${type && eps ? \`<span class="meta-dot">·</span>\` : ''}
-            \${eps ? \`<span class="meta-eps">\${eps}</span>\` : ''}
+            ${type ? `<span class="meta-type">${type}</span>` : ''}
+            ${type && eps ? `<span class="meta-dot">·</span>` : ''}
+            ${eps ? `<span class="meta-eps">${eps}</span>` : ''}
           </div>
         </div>
 
-        \${progressPct > 0 ? \`<div class="progress-bar"><div class="progress-fill" style="width:\${progressPct}%"></div></div>\` : ''}
+        ${progressPct > 0 ? `<div class="progress-bar"><div class="progress-fill" style="width:${progressPct}%"></div></div>` : ''}
       </a>
-    \`;
+    `;
   }
 }
 customElements.define('anime-card', AnimeCard);

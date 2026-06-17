@@ -346,10 +346,10 @@ export default class AnimeDetailPage {
          overlay.style.animation = 'fadeOut 0.3s forwards';
          
          const style = document.createElement('style');
-         style.innerHTML = \`
+         style.innerHTML = `
            @keyframes slideOut { from { transform: translateX(0); } to { transform: translateX(100%); } }
            @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-         \`;
+         `;
          document.head.appendChild(style);
          
          setTimeout(() => {
@@ -426,21 +426,21 @@ export default class AnimeDetailPage {
     const thumb = this.anime.images?.jpg?.large_image_url || '';
     const titleParam = `?title=${encodeURIComponent(this.anime.title)}`;
     
-    epContainer.innerHTML = \`
+    epContainer.innerHTML = `
       <div class="episodes-grid">
-        \${Array.from({length: epCount}, (_, i) => i + 1).map(num => {
+        ${Array.from({length: epCount}, (_, i) => i + 1).map(num => {
           const isWatched = watchedSet.has(num);
-          return \`
-            <a href="/watch/\${this.animeId}/\${num}/\${userLang}\${titleParam}" data-link class="ep-card">
-              <img src="\${thumb}" loading="lazy" style="\${isWatched ? 'opacity: 0.5; filter: grayscale(1);' : ''}">
+          return `
+            <a href="/watch/${this.animeId}/${num}/${userLang}${titleParam}" data-link class="ep-card">
+              <img src="${thumb}" loading="lazy" style="${isWatched ? 'opacity: 0.5; filter: grayscale(1);' : ''}">
               <div class="ep-card-overlay">
-                <span class="ep-card-title">Ep. \${num}</span>
+                <span class="ep-card-title">Ep. ${num}</span>
               </div>
-              \${isWatched ? '<div class="ep-watched-badge">Visto</div>' : ''}
+              ${isWatched ? '<div class="ep-watched-badge">Visto</div>' : ''}
             </a>
-          \`;
+          `;
         }).join('')}
       </div>
-    \`;
+    `;
   }
 }
