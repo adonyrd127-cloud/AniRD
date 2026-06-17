@@ -1,5 +1,8 @@
 package com.example.anird.presentation.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -9,6 +12,8 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.example.anird.presentation.screens.*
 
+private const val TRANSITION_DURATION = 300
+
 @Composable
 fun AniRDNavHost(
     navController: NavHostController,
@@ -16,7 +21,31 @@ fun AniRDNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = startDestination,
+        enterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { (it * 0.25).toInt() },
+                animationSpec = tween(TRANSITION_DURATION)
+            )
+        },
+        exitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { -(it * 0.10).toInt() },
+                animationSpec = tween(TRANSITION_DURATION)
+            )
+        },
+        popEnterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { -(it * 0.25).toInt() },
+                animationSpec = tween(TRANSITION_DURATION)
+            )
+        },
+        popExitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { (it * 0.10).toInt() },
+                animationSpec = tween(TRANSITION_DURATION)
+            )
+        }
     ) {
         // Bottom Nav destinations
         composable("home") {

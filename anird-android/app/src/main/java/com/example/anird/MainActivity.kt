@@ -3,32 +3,55 @@ package com.example.anird
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.fragment.app.FragmentActivity
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.DateRange
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.navigation.compose.rememberNavController
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.anird.presentation.navigation.AniRDNavHost
+import com.example.anird.theme.AniRDGlassHeavy
+import com.example.anird.theme.AniRDBorder
+import com.example.anird.theme.AniRDPrimary
+import com.example.anird.theme.AniRDTextTertiary
 import com.example.anird.theme.AniRDTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -36,173 +59,37 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Deshabilitar barra de título nativa programáticamente antes de inicializar la ventana
         requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
         actionBar?.hide()
-        
+
         enableEdgeToEdge()
-        
+
         super.onCreate(savedInstanceState)
-        
+
         setContent {
             AniRDTheme {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route ?: "home"
 
+                val isBottomBarVisible = currentRoute in listOf(
+                    "home", "lists", "browse", "simulcasts", "account"
+                )
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
-                        // Ocultamos la barra en pantallas secundarias (como Detail o Player)
-                        if (currentRoute in listOf("home", "lists", "browse", "simulcasts", "account")) {
-                            Column {
-                                // Divider superior de 1.dp con OutlineVariant (#2C2F35)
-                                HorizontalDivider(
-                                    thickness = 1.dp,
-                                    color = MaterialTheme.colorScheme.outlineVariant
-                                )
-                                NavigationBar(
-                                    containerColor = MaterialTheme.colorScheme.surface,
-                                    tonalElevation = 3.dp,
-                                    modifier = Modifier.height(80.dp)
-                                ) {
-                                    // 1. Home
-                                    val homeSelected = currentRoute == "home"
-                                    NavigationBarItem(
-                                        selected = homeSelected,
-                                        alwaysShowLabel = true,
-                                        onClick = { 
-                                            navController.navigate("home") { 
-                                                popUpTo("home") { saveState = true }
-                                                launchSingleTop = true
-                                                restoreState = true 
-                                            } 
-                                        },
-                                        icon = { 
-                                            Icon(
-                                                imageVector = if (homeSelected) Icons.Filled.Home else Icons.Outlined.Home,
-                                                contentDescription = "Home"
-                                            ) 
-                                        },
-                                        label = { Text("Home", style = MaterialTheme.typography.labelSmall) },
-                                        colors = NavigationBarItemDefaults.colors(
-                                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                                            unselectedIconColor = Color(0xFF6B6F78),
-                                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                                            unselectedTextColor = Color(0xFF6B6F78),
-                                            indicatorColor = Color.Transparent // Evita la píldora genérica
-                                        )
-                                    )
-                                    // 2. My Lists
-                                    val listsSelected = currentRoute == "lists"
-                                    NavigationBarItem(
-                                        selected = listsSelected,
-                                        alwaysShowLabel = true,
-                                        onClick = { 
-                                            navController.navigate("lists") { 
-                                                popUpTo("home") { saveState = true }
-                                                launchSingleTop = true
-                                                restoreState = true 
-                                            } 
-                                        },
-                                        icon = { 
-                                            Icon(
-                                                imageVector = if (listsSelected) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                                contentDescription = "My Lists"
-                                            ) 
-                                        },
-                                        label = { Text("My Lists", style = MaterialTheme.typography.labelSmall) },
-                                        colors = NavigationBarItemDefaults.colors(
-                                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                                            unselectedIconColor = Color(0xFF6B6F78),
-                                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                                            unselectedTextColor = Color(0xFF6B6F78),
-                                            indicatorColor = Color.Transparent
-                                        )
-                                    )
-                                    // 3. Browse
-                                    val browseSelected = currentRoute == "browse"
-                                    NavigationBarItem(
-                                        selected = browseSelected,
-                                        alwaysShowLabel = true,
-                                        onClick = { 
-                                            navController.navigate("browse") { 
-                                                popUpTo("home") { saveState = true }
-                                                launchSingleTop = true
-                                                restoreState = true 
-                                            } 
-                                        },
-                                        icon = { 
-                                            Icon(
-                                                imageVector = if (browseSelected) Icons.Filled.Search else Icons.Outlined.Search,
-                                                contentDescription = "Browse"
-                                            ) 
-                                        },
-                                        label = { Text("Browse", style = MaterialTheme.typography.labelSmall) },
-                                        colors = NavigationBarItemDefaults.colors(
-                                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                                            unselectedIconColor = Color(0xFF6B6F78),
-                                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                                            unselectedTextColor = Color(0xFF6B6F78),
-                                            indicatorColor = Color.Transparent
-                                        )
-                                    )
-                                    // 4. Simulcasts (Calendario)
-                                    val simulcastsSelected = currentRoute == "simulcasts"
-                                    NavigationBarItem(
-                                        selected = simulcastsSelected,
-                                        alwaysShowLabel = true,
-                                        onClick = { 
-                                            navController.navigate("simulcasts") { 
-                                                popUpTo("home") { saveState = true }
-                                                launchSingleTop = true
-                                                restoreState = true 
-                                            } 
-                                        },
-                                        icon = { 
-                                            Icon(
-                                                imageVector = if (simulcastsSelected) Icons.Filled.DateRange else Icons.Outlined.DateRange,
-                                                contentDescription = "Simulcasts"
-                                            ) 
-                                        },
-                                        label = { Text("Simulcasts", style = MaterialTheme.typography.labelSmall) },
-                                        colors = NavigationBarItemDefaults.colors(
-                                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                                            unselectedIconColor = Color(0xFF6B6F78),
-                                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                                            unselectedTextColor = Color(0xFF6B6F78),
-                                            indicatorColor = Color.Transparent
-                                        )
-                                    )
-                                    // 5. Account (Perfil)
-                                    val accountSelected = currentRoute == "account"
-                                    NavigationBarItem(
-                                        selected = accountSelected,
-                                        alwaysShowLabel = true,
-                                        onClick = { 
-                                            navController.navigate("account") { 
-                                                popUpTo("home") { saveState = true }
-                                                launchSingleTop = true
-                                                restoreState = true 
-                                            } 
-                                        },
-                                        icon = { 
-                                            Icon(
-                                                imageVector = if (accountSelected) Icons.Filled.Person else Icons.Outlined.Person,
-                                                contentDescription = "Account"
-                                            ) 
-                                        },
-                                        label = { Text("Account", style = MaterialTheme.typography.labelSmall) },
-                                        colors = NavigationBarItemDefaults.colors(
-                                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                                            unselectedIconColor = Color(0xFF6B6F78),
-                                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                                            unselectedTextColor = Color(0xFF6B6F78),
-                                            indicatorColor = Color.Transparent
-                                        )
-                                    )
+                        if (isBottomBarVisible) {
+                            PremiumBottomBar(
+                                currentRoute = currentRoute,
+                                onNavigate = { route ->
+                                    navController.navigate(route) {
+                                        popUpTo("home") { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
-                            }
+                            )
                         }
                     }
                 ) { innerPadding ->
@@ -217,4 +104,141 @@ class MainActivity : FragmentActivity() {
             }
         }
     }
+}
+
+@Composable
+private fun PremiumBottomBar(
+    currentRoute: String,
+    onNavigate: (String) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(AniRDGlassHeavy)
+            .navigationBarsPadding()
+    ) {
+        // Gradient divider line: transparent → border → transparent
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            AniRDBorder,
+                            Color.Transparent,
+                        )
+                    )
+                )
+        )
+
+        NavigationBar(
+            containerColor = Color.Transparent,
+            tonalElevation = 0.dp,
+            modifier = Modifier.height(72.dp),
+        ) {
+            PremiumNavItem(
+                selected = currentRoute == "home",
+                onClick = { onNavigate("home") },
+                selectedIcon = Icons.Filled.Home,
+                unselectedIcon = Icons.Outlined.Home,
+                label = "Home",
+            )
+            PremiumNavItem(
+                selected = currentRoute == "lists",
+                onClick = { onNavigate("lists") },
+                selectedIcon = Icons.Filled.Favorite,
+                unselectedIcon = Icons.Outlined.FavoriteBorder,
+                label = "Lists",
+            )
+            PremiumNavItem(
+                selected = currentRoute == "browse",
+                onClick = { onNavigate("browse") },
+                selectedIcon = Icons.Filled.Search,
+                unselectedIcon = Icons.Outlined.Search,
+                label = "Browse",
+            )
+            PremiumNavItem(
+                selected = currentRoute == "simulcasts",
+                onClick = { onNavigate("simulcasts") },
+                selectedIcon = Icons.Filled.DateRange,
+                unselectedIcon = Icons.Outlined.DateRange,
+                label = "Simulcasts",
+            )
+            PremiumNavItem(
+                selected = currentRoute == "account",
+                onClick = { onNavigate("account") },
+                selectedIcon = Icons.Filled.Person,
+                unselectedIcon = Icons.Outlined.Person,
+                label = "Account",
+            )
+        }
+    }
+}
+
+@Composable
+private fun RowScope.PremiumNavItem(
+    selected: Boolean,
+    onClick: () -> Unit,
+    selectedIcon: androidx.compose.ui.graphics.vector.ImageVector,
+    unselectedIcon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+) {
+    val iconColor by animateColorAsState(
+        targetValue = if (selected) AniRDPrimary else AniRDTextTertiary,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "navIconColor",
+    )
+    val labelColor by animateColorAsState(
+        targetValue = if (selected) AniRDPrimary else AniRDTextTertiary,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "navLabelColor",
+    )
+    val dotScale by animateFloatAsState(
+        targetValue = if (selected) 1f else 0f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "navDotScale",
+    )
+
+    NavigationBarItem(
+        selected = selected,
+        alwaysShowLabel = true,
+        onClick = onClick,
+        icon = {
+            Icon(
+                imageVector = if (selected) selectedIcon else unselectedIcon,
+                contentDescription = label,
+                tint = iconColor,
+            )
+        },
+        label = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = label,
+                    color = labelColor,
+                )
+                // Dot indicator below label
+                Spacer(modifier = Modifier.height(2.dp))
+                Box(
+                    modifier = Modifier
+                        .size(height = 3.dp, width = 3.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(
+                            color = AniRDPrimary.copy(alpha = dotScale),
+                        )
+                )
+            }
+        },
+        colors = NavigationBarItemDefaults.colors(
+            selectedIconColor = Color.Transparent,
+            unselectedIconColor = Color.Transparent,
+            selectedTextColor = Color.Transparent,
+            unselectedTextColor = Color.Transparent,
+            indicatorColor = Color.Transparent,
+        ),
+    )
 }
