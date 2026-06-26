@@ -1,4 +1,4 @@
-import{a as s}from"./page-homepage-ENQx0n2_.js";import"./vendor-DIPEJTOH.js";class l{constructor(e){this.query=e.q}async render(){const e=document.createElement("div");return e.innerHTML=`
+import{a as s}from"./page-homepage-CrySyT2k.js";import"./vendor-DIPEJTOH.js";class l{constructor(e){this.query=e.q}async render(){const e=document.createElement("div");return e.innerHTML=`
       <style>
         .page-container {
           padding: 40px 4%;
