@@ -17,33 +17,90 @@ export default class AnimeDetailPage {
   }
 
   async render() {
+    const container = document.createElement('div');
+    container.className = 'page-enter';
+    // Mostrar un spinner inmediatamente para que la pantalla no quede en negro
+    container.innerHTML = `
+      <div style="position:fixed;inset:0;z-index:0;background:#09090b;"></div>
+      <div style="position:fixed;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;">
+        <div class="loader-spinner" style="width:50px;height:50px;border:3px solid #ef4444;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></div>
+        <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
+      </div>
+    `;
+
+    // Iniciar la carga de datos sin bloquear el renderizado inicial
+    this.loadData(container);
+    return container;
+  }
+
+  async loadData(container) {
     const userLang = await dbService.getSetting('audio_pref', 'sub');
     
-    // Fetch all data in parallel
-    const [animeRes, charsRes, recsRes, isFav, isFoll, relationsRes] = await Promise.all([
-      apiService.getAnimeInfo(this.animeId),
-      apiService.providers.jikan.request(`/anime/${this.animeId}/characters`).catch(() => ({ data: [] })),
-      apiService.providers.jikan.request(`/anime/${this.animeId}/recommendations`).catch(() => ({ data: [] })),
-      dbService.isFavorite(this.animeId),
-      dbService.isFollowing(this.animeId),
-      apiService.getAnimeRelations(this.animeId).catch(() => ({ data: [] }))
+    // Fetch all data in parallel with timeout to prevent infinite hangs
+    const timeoutPromise = (promise, ms = 15000) => Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
     ]);
 
-    this.anime = animeRes.data;
+    let animeRes, charsRes, recsRes, isFav, isFoll, relationsRes;
+    try {
+      [animeRes, charsRes, recsRes, isFav, isFoll, relationsRes] = await timeoutPromise(
+        Promise.all([
+          apiService.getAnimeInfo(this.animeId),
+          apiService.providers.jikan.request(`/anime/${this.animeId}/characters`).catch(() => ({ data: [] })),
+          apiService.providers.jikan.request(`/anime/${this.animeId}/recommendations`).catch(() => ({ data: [] })),
+          dbService.isFavorite(this.animeId).catch(() => false),
+          dbService.isFollowing(this.animeId).catch(() => false),
+          apiService.getAnimeRelations(this.animeId).catch(() => ({ data: [] }))
+        ])
+      );
+    } catch (err) {
+      console.error('[AnimeDetailPage] Error fetching data:', err);
+      animeRes = { data: null };
+      charsRes = { data: [] };
+      recsRes = { data: [] };
+      isFav = false;
+      isFoll = false;
+      relationsRes = { data: [] };
+    }
+
+    this.anime = animeRes?.data || null;
     this.characters = charsRes?.data || [];
     this.recommendations = recsRes?.data || [];
-    this.isFavorite = isFav;
-    this.isFollowing = isFoll;
+    this.isFavorite = isFav || false;
+    this.isFollowing = isFoll || false;
     this.relations = relationsRes?.data || [];
+
+    // If anime data is null, show error page
+    if (!this.anime) {
+      console.error('[AnimeDetailPage] No se pudo cargar anime con ID:', this.animeId);
+      container.innerHTML = `
+        <div style="position:fixed;inset:0;z-index:0;background:#09090b;"></div>
+        <div style="position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;">
+          <div style="font-size:64px;margin-bottom:20px;filter:drop-shadow(0 0 20px rgba(229,9,20,0.3));">😵</div>
+          <h2 style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:800;color:white;margin:0 0 12px;">No se pudo cargar el anime</h2>
+          <p style="color:#a1a1aa;font-size:14px;max-width:400px;line-height:1.6;margin:0 0 30px;">
+            Hubo un error al obtener la información. Puede ser un problema de conexión o el servidor Jikan no respondió a tiempo.
+          </p>
+          <div style="display:flex;gap:12px;">
+            <button onclick="window.location.reload()" style="padding:12px 28px;border-radius:50px;background:#dc2626;color:white;border:none;font-weight:700;font-size:14px;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(220,38,38,0.3);">
+              🔄 Reintentar
+            </button>
+            <button onclick="window.history.back()" style="padding:12px 28px;border-radius:50px;background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.1);font-weight:600;font-size:14px;cursor:pointer;font-family:'Outfit',sans-serif;">
+              ← Volver
+            </button>
+          </div>
+        </div>
+      `;
+      document.title = 'Error — AniRD';
+      return;
+    }
     
-    const banner = await apiService.getAnilistBanner(this.animeId) || this.anime.images?.jpg?.large_image_url || '';
+    const banner = await apiService.getAnilistBanner(this.animeId).catch(() => null) || this.anime.images?.jpg?.large_image_url || '';
 
     // SEO: Dynamic title
     document.title = `${this.anime.title_english || this.anime.title} — AniRD`;
 
-    const container = document.createElement('div');
-    container.className = 'page-enter';
-    
     container.innerHTML = `
       <style>
         .page-bg {
@@ -397,7 +454,10 @@ export default class AnimeDetailPage {
       </div>
     `;
 
-    return container;
+    // Bind events manually since app.js called afterRender too early
+    setTimeout(() => {
+      this.afterRender();
+    }, 50);
   }
 
   async afterRender() {
