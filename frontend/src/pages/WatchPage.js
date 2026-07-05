@@ -1,6 +1,7 @@
 import { apiService } from '../services/api.js';
 import { dbService, db } from '../services/db.js';
 import { getRouter } from '../app.js';
+import { Toast } from '../components/Toast.js';
 
 export default class WatchPage {
   constructor(params) {
@@ -201,6 +202,24 @@ export default class WatchPage {
               </button>
             </div>
             <div class="player-controls-right">
+              <!-- Speed Control -->
+              <div class="speed-control-wrapper" id="speed-control-wrapper">
+                <button class="control-btn-v5" id="btn-speed" title="Velocidad de reproducción">
+                  ⏱️ <span id="speed-text">1x</span>
+                </button>
+                <div class="speed-dropdown" id="speed-dropdown">
+                  ${['0.25','0.5','0.75','1','1.25','1.5','1.75','2'].map(s => `
+                    <button class="speed-option ${s === '1' ? 'active' : ''}" data-speed="${s}">${s}x</button>
+                  `).join('')}
+                </div>
+              </div>
+              <!-- Skip Intro/Outro -->
+              <button class="control-btn-v5" id="btn-skip-intro" title="Saltar Intro (OP)">
+                ⏩ <span>OP</span>
+              </button>
+              <button class="control-btn-v5" id="btn-skip-outro" title="Saltar Outro (ED)">
+                ⏭️ <span>ED</span>
+              </button>
               <button class="control-btn-v5" id="btn-fullscreen-watch">
                 📺 <span>Pantalla Completa</span>
               </button>
@@ -341,6 +360,7 @@ export default class WatchPage {
 
   async afterRender() {
     this._initPlayerControls();
+    this._initPlayerEnhancements();
     this._initServerPills();
     this._initSynopsisExpand();
     this._initWatchedToggleControls();
@@ -458,6 +478,95 @@ export default class WatchPage {
       }
     };
     window.addEventListener('keydown', this._globalKeyHandler, { capture: true });
+  }
+
+  // New: Enhanced Player Controls (Speed, Skip Intro/Outro)
+  _initPlayerEnhancements() {
+    const iframe = document.querySelector('.video-wrapper-v5 iframe');
+
+    // Speed Control
+    const btnSpeed = document.getElementById('btn-speed');
+    const speedDropdown = document.getElementById('speed-dropdown');
+    const speedText = document.getElementById('speed-text');
+
+    if (btnSpeed && speedDropdown) {
+      btnSpeed.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = speedDropdown.classList.contains('open');
+        speedDropdown.classList.toggle('open', !isOpen);
+      });
+
+      speedDropdown.querySelectorAll('.speed-option').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const speed = parseFloat(btn.dataset.speed);
+          speedDropdown.querySelectorAll('.speed-option').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          if (speedText) speedText.textContent = `${speed}x`;
+          speedDropdown.classList.remove('open');
+
+          // Apply speed to iframe via postMessage
+          if (iframe && iframe.contentWindow) {
+            try {
+              iframe.contentWindow.postMessage(JSON.stringify({
+                event: 'command', func: 'setPlaybackRate', args: [speed]
+              }), '*');
+            } catch (err) { /* cross-origin */ }
+          }
+
+          // Save preference
+          await dbService.setSetting('playback_speed', speed);
+          Toast.info(`Velocidad: ${speed}x`, speed === 1 ? 'Velocidad normal' : `Reproduciendo a ${speed}x`);
+        });
+      });
+
+      // Restore saved speed
+      dbService.getSetting('playback_speed', 1).then(saved => {
+        if (saved && saved !== 1) {
+          if (speedText) speedText.textContent = `${saved}x`;
+          speedDropdown.querySelectorAll('.speed-option').forEach(b => {
+            b.classList.toggle('active', parseFloat(b.dataset.speed) === saved);
+          });
+        }
+      });
+
+      // Close on outside click
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#speed-control-wrapper')) {
+          speedDropdown.classList.remove('open');
+        }
+      });
+    }
+
+    // Skip Intro (jump forward ~85 seconds)
+    const btnSkipIntro = document.getElementById('btn-skip-intro');
+    if (btnSkipIntro) {
+      btnSkipIntro.addEventListener('click', () => {
+        if (iframe && iframe.contentWindow) {
+          try {
+            iframe.contentWindow.postMessage(JSON.stringify({
+              event: 'command', func: 'seekTo', args: [85]
+            }), '*');
+            Toast.info('Saltando OP', 'Avanzando al minuto 1:25');
+          } catch (err) { /* cross-origin */ }
+        }
+      });
+    }
+
+    // Skip Outro (jump to end - 30 seconds of a typical 24min episode = ~21:30 = 1290 seconds)
+    const btnSkipOutro = document.getElementById('btn-skip-outro');
+    if (btnSkipOutro) {
+      btnSkipOutro.addEventListener('click', () => {
+        if (iframe && iframe.contentWindow) {
+          try {
+            iframe.contentWindow.postMessage(JSON.stringify({
+              event: 'command', func: 'seekTo', args: [1290]
+            }), '*');
+            Toast.info('Saltando ED', 'Avanzando al minuto 21:30');
+          } catch (err) { /* cross-origin */ }
+        }
+      });
+    }
   }
 
   _getAutoplayUrl(url) {

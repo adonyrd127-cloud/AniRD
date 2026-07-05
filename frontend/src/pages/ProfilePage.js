@@ -147,6 +147,7 @@ export default class ProfilePage {
       <nav class="profile-tabs-v5">
         <button class="tab-btn-v5 active" data-tab="list">MI LISTA</button>
         <button class="tab-btn-v5" data-tab="favs">FAVORITOS</button>
+        <button class="tab-btn-v5" data-tab="my-lists">MIS LISTAS</button>
         <button class="tab-btn-v5" data-tab="settings">AJUSTES</button>
       </nav>
 
@@ -265,6 +266,29 @@ export default class ProfilePage {
             });
           });
         } else { tabContent.innerHTML = '<p style="color:var(--text-muted)">Aún no tienes favoritos.</p>'; }
+      }
+
+      if (tabName === 'my-lists') {
+        const allLists = await db.lists.orderBy('createdAt').reverse().toArray();
+        tabContent.innerHTML = `
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
+            ${allLists.map(list => `
+              <a href="/lists" data-link class="glass-card-hover" style="display: flex; align-items: center; gap: 14px; padding: 16px 20px; text-decoration: none; min-width: 200px; flex: 1; max-width: 300px;">
+                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(229,9,20,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e50914" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </div>
+                <div>
+                  <div style="color: white; font-size: 14px; font-weight: 700; font-family: 'Outfit';">${list.name}</div>
+                  <div style="color: var(--text-muted); font-size: 11px; font-weight: 600;">${(list.animeIds || []).length} anime${(list.animeIds || []).length !== 1 ? 's' : ''}</div>
+                </div>
+              </a>
+            `).join('')}
+          </div>
+          <a href="/lists" data-link class="btn-v4-primary" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; padding: 12px 24px; border-radius: 14px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Gestionar Listas
+          </a>
+        `;
       }
 
       if (tabName === 'settings') {

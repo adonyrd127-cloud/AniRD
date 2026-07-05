@@ -33,6 +33,7 @@ header.innerHTML = `
           <a href="/category/movies" data-link class="nav-link-v5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7h4"/><path d="M3 17h4"/><path d="M17 3v18"/><path d="M17 7h4"/><path d="M17 17h4"/></svg>Películas</a>
           <a href="/category/dub" data-link class="nav-link-v5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>Latino</a>
           <a href="/calendar" data-link class="nav-link-v5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>Calendario</a>
+          <a href="/lists" data-link class="nav-link-v5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Listas</a>
         </div>
       </div>
       
@@ -97,6 +98,10 @@ header.innerHTML = `
        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
        <span style="font-size: 10px; font-weight: 500;">Favs</span>
      </a>
+     <a href="/lists" data-link class="nav-item" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #a1a1aa; text-decoration: none; transition: color 0.2s;">
+       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+       <span style="font-size: 10px; font-weight: 500;">Listas</span>
+     </a>
      <a id="mobile-profile-link" href="/auth" data-link class="nav-item" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #a1a1aa; text-decoration: none; transition: color 0.2s;">
        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="14" cy="7" r="4"/></svg>
        <span class="nav-label" style="font-size: 10px; font-weight: 500;">Perfil</span>
@@ -152,11 +157,13 @@ const updateMobileNavActive = (route) => {
 
   let activeIndex = -1;
   if (route === '/' || route.startsWith('/anime/') || route.startsWith('/category/') || route.startsWith('/watch/') || route === '/calendar') {
-    activeIndex = 0; // Inicio (o categorías/reproductor/calendario que pertenecen a la sección de Inicio/Exploración)
+    activeIndex = 0;
   } else if (route === '/favorites') {
-    activeIndex = 2; // Fav
+    activeIndex = 2;
+  } else if (route === '/lists') {
+    activeIndex = 3;
   } else if (route === '/profile' || route === '/auth') {
-    activeIndex = 3; // Perfil / Entrar
+    activeIndex = 4;
   }
 
   if (activeIndex !== -1 && items[activeIndex]) {
@@ -205,6 +212,7 @@ if (mobileSearchBtn) {
 
 
 import { notificationService } from './services/notifications.js';
+import { Toast } from './components/Toast.js';
 
 const initNotifications = async () => {
   const notifBtn = document.getElementById('nav-notifications');
@@ -229,21 +237,42 @@ const initNotifications = async () => {
   const renderDropdown = async () => {
     const notifs = await notificationService.getNotifications();
     if (notifs.length === 0) {
-      notifList.innerHTML = '<div style="color:var(--text-muted); font-size:12px; text-align:center; padding: 20px 0;">No hay notificaciones nuevas</div>';
+      notifList.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 30px 10px; color: var(--text-muted);">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; opacity: 0.4;"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span style="font-size: 12px; font-weight: 600;">Sin notificaciones</span>
+        </div>
+      `;
       return;
     }
 
-    notifList.innerHTML = notifs.map(n => `
-      <a href="/anime/${n.animeId}" data-link style="display: flex; gap: 10px; padding: 10px; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.05); ${n.isRead ? 'opacity: 0.6;' : 'background: rgba(255,0,0,0.05);'}">
-        <img src="${n.cover}" style="width: 40px; height: 55px; object-fit: cover; border-radius: 6px;">
-        <div style="flex: 1;">
-          <div style="color: white; font-size: 12px; font-weight: 700; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${n.title}</div>
-          <div style="color: var(--accent); font-size: 10px; font-weight: 800;">¡Nuevo episodio disponible!</div>
-          <div style="color: var(--text-muted); font-size: 9px; margin-top: 4px;">${new Date(n.timestamp).toLocaleDateString()}</div>
+    notifList.innerHTML = notifs.slice(0, 8).map(n => `
+      <a href="/anime/${n.animeId}" data-link style="display: flex; gap: 12px; padding: 12px 10px; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.04); border-radius: 12px; transition: background 0.2s; ${n.isRead ? 'opacity: 0.5;' : ''}" onmouseenter="this.style.background='rgba(255,255,255,0.04)'" onmouseleave="this.style.background='transparent'">
+        <img src="${n.cover}" style="width: 44px; height: 60px; object-fit: cover; border-radius: 8px; flex-shrink: 0;" loading="lazy">
+        <div style="flex: 1; min-width: 0;">
+          <div style="color: white; font-size: 12px; font-weight: 700; margin-bottom: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-family: 'Inter', sans-serif;">${n.title}</div>
+          <div style="color: var(--accent); font-size: 10px; font-weight: 800; display: flex; align-items: center; gap: 4px;">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--accent); ${n.isRead ? 'opacity: 0;' : ''}"></span>
+            Nuevo episodio
+          </div>
+          <div style="color: var(--text-muted); font-size: 9px; margin-top: 4px; font-weight: 500;">${_timeAgo(n.timestamp)}</div>
         </div>
       </a>
     `).join('');
   };
+
+  // Helper function for relative time
+  function _timeAgo(timestamp) {
+    const diff = Date.now() - timestamp;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Ahora mismo';
+    if (mins < 60) return `Hace ${mins} min`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `Hace ${hours}h`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `Hace ${days}d`;
+    return new Date(timestamp).toLocaleDateString();
+  }
 
   notifBtn.addEventListener('click', async (e) => {
     if (e.target === markReadBtn) return;
@@ -259,6 +288,7 @@ const initNotifications = async () => {
     await notificationService.markAllAsRead();
     await updateUI();
     await renderDropdown();
+    Toast.success('Notificaciones leídas', 'Se marcaron todas como leídas');
   });
 
   document.addEventListener('click', (e) => {
@@ -269,7 +299,18 @@ const initNotifications = async () => {
 
   // Check for new episodes silently
   if (authService.isLoggedIn()) {
-    await notificationService.checkNewEpisodes();
+    const hasNew = await notificationService.checkNewEpisodes();
+    if (hasNew) {
+      const unreadCount = await notificationService.getUnreadCount();
+      if (unreadCount > 0) {
+        Toast.notify('Nuevos episodios', `Tienes ${unreadCount} episodio${unreadCount > 1 ? 's' : ''} nuevo${unreadCount > 1 ? 's' : ''} disponible${unreadCount > 1 ? 's' : ''}`, {
+          label: 'Ver',
+          onClick: () => {
+            notifBtn.click();
+          }
+        });
+      }
+    }
   }
   await updateUI();
 };

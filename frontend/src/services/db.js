@@ -157,13 +157,14 @@ export const dbService = {
       favorites: await db.favorites.toArray(),
       following: await db.following.toArray(),
       history: await db.history.toArray(),
+      lists: await db.lists.toArray(),
     };
   },
 
   async syncFromServer(serverData) {
     if (!serverData) return;
 
-    return await db.transaction('rw', [db.favorites, db.following, db.history], async () => {
+    return await db.transaction('rw', [db.favorites, db.following, db.history, db.lists], async () => {
       // --- 1. HISTORIAL DE REPRODUCCIÓN (HISTORY) ---
       const localHistory = await db.history.toArray();
       const serverHistory = serverData.history || [];
@@ -249,7 +250,33 @@ export const dbService = {
         needsUpload = true;
       }
 
-      // --- 4. APLICAR CAMBIOS ---
+      // --- 4. LISTAS PERSONALIZADAS (LISTS) ---
+      const localLists = await db.lists.toArray();
+      const serverLists = serverData.lists || [];
+      const listsMap = new Map();
+
+      localLists.forEach(item => listsMap.set(item.id, item));
+      serverLists.forEach(srvItem => {
+        const id = srvItem.id;
+        const locItem = listsMap.get(id);
+        if (!locItem) {
+          listsMap.set(id, srvItem);
+        } else {
+          const srvTime = srvItem.createdAt || 0;
+          const locTime = locItem.createdAt || 0;
+          if (srvTime > locTime) {
+            listsMap.set(id, srvItem);
+          } else if (locTime > srvTime) {
+            needsUpload = true;
+          }
+        }
+      });
+
+      if (localLists.length !== listsMap.size) {
+        needsUpload = true;
+      }
+
+      // --- 5. APLICAR CAMBIOS ---
       await db.history.clear();
       const cleanHistory = Array.from(historyMap.values()).map(item => {
         const { id, ...rest } = item;
@@ -263,7 +290,10 @@ export const dbService = {
       await db.following.clear();
       await db.following.bulkAdd(Array.from(followingMap.values()));
 
-      // --- 5. SUBIR SI HAY CAMBIOS MÁS RECIENTES ---
+      await db.lists.clear();
+      await db.lists.bulkAdd(Array.from(listsMap.values()));
+
+      // --- 6. SUBIR SI HAY CAMBIOS MÁS RECIENTES ---
       if (needsUpload) {
         console.log("[Sync] Detectados cambios locales más recientes. Subiendo fusión al servidor...");
         setTimeout(() => this.triggerSync(), 0);

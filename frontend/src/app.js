@@ -12,6 +12,7 @@ const routes = {
   '/my-anird': () => import('./pages/HistoryPage.js'),
   '/auth': () => import('./pages/AuthPage.js'),
   '/profile': () => import('./pages/ProfilePage.js'),
+  '/lists': () => import('./pages/MyListsPage.js'),
 };
 
 export class AppRouter {
@@ -89,6 +90,9 @@ export class AppRouter {
     } else if (path === '/favorites') {
        routeKey = '/favorites';
        document.title = `Favoritos — AniRD`;
+    } else if (path === '/lists') {
+       routeKey = '/lists';
+       document.title = `Mis Listas — AniRD`;
     } else if (routes[path]) {
        routeKey = path;
        document.title = `AniRD — Tu plataforma de anime`;
