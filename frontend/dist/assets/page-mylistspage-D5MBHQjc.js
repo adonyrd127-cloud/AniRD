@@ -1,4 +1,4 @@
-import{b as l,a as h}from"./page-homepage-hw3Gvt4E.js";import{T as c,p as g,c as u}from"./page-animedetailpage-C2e-AQQF.js";import"./vendor-DIPEJTOH.js";const x=document.createElement("style");x.textContent=`
+import{b as l,a as h}from"./page-homepage-hw3Gvt4E.js";import{T as c,p as g,c as u}from"./page-animedetailpage-L2pJW0ER.js";import"./vendor-DIPEJTOH.js";const x=document.createElement("style");x.textContent=`
   .anird-tooltip {
     position: absolute; z-index: 9000;
     background: rgba(24, 24, 27, 0.97);

@@ -1,4 +1,4 @@
-import{d as x,a as u,b as $}from"./page-homepage-hw3Gvt4E.js";let v=null,S=[],E=!1;const A={success:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',error:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',info:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',warning:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',notification:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>'},B={success:{bg:"rgba(70, 211, 105, 0.12)",border:"rgba(70, 211, 105, 0.3)",text:"#46d369",icon:"#46d369"},error:{bg:"rgba(229, 9, 20, 0.12)",border:"rgba(229, 9, 20, 0.3)",text:"#e50914",icon:"#e50914"},info:{bg:"rgba(59, 130, 246, 0.12)",border:"rgba(59, 130, 246, 0.3)",text:"#60a5fa",icon:"#60a5fa"},warning:{bg:"rgba(232, 124, 3, 0.12)",border:"rgba(232, 124, 3, 0.3)",text:"#e87c03",icon:"#e87c03"},notification:{bg:"rgba(229, 9, 20, 0.12)",border:"rgba(229, 9, 20, 0.25)",text:"#ffffff",icon:"#e50914"}};function q(){return v||(v=document.createElement("div"),v.id="anird-toast-container",v.innerHTML=`<style>
+import{d as u,a as f,b as B}from"./page-homepage-hw3Gvt4E.js";let v=null,$=[],L=!1;const S={success:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',error:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',info:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',warning:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',notification:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>'},z={success:{bg:"rgba(70, 211, 105, 0.12)",border:"rgba(70, 211, 105, 0.3)",text:"#46d369",icon:"#46d369"},error:{bg:"rgba(229, 9, 20, 0.12)",border:"rgba(229, 9, 20, 0.3)",text:"#e50914",icon:"#e50914"},info:{bg:"rgba(59, 130, 246, 0.12)",border:"rgba(59, 130, 246, 0.3)",text:"#60a5fa",icon:"#60a5fa"},warning:{bg:"rgba(232, 124, 3, 0.12)",border:"rgba(232, 124, 3, 0.3)",text:"#e87c03",icon:"#e87c03"},notification:{bg:"rgba(229, 9, 20, 0.12)",border:"rgba(229, 9, 20, 0.25)",text:"#ffffff",icon:"#e50914"}};function O(){return v||(v=document.createElement("div"),v.id="anird-toast-container",v.innerHTML=`<style>
     #anird-toast-container {
       position: fixed; top: 84px; right: 20px; z-index: 9999;
       display: flex; flex-direction: column; gap: 10px;
@@ -71,18 +71,18 @@ import{d as x,a as u,b as $}from"./page-homepage-hw3Gvt4E.js";let v=null,S=[],E=
       #anird-toast-container { right: 10px; left: 10px; max-width: none; }
       .anird-toast { padding: 12px 14px; }
     }
-  </style>`,document.body.appendChild(v),v)}function j(){if(E||S.length===0)return;E=!0;const r=S.shift();T(r)}function T({type:r="info",title:o="",message:n="",duration:l=4e3,action:i=null,onClose:d=null}){const g=q(),e=B[r]||B.info,c=A[r]||A.info,t=document.createElement("div");t.className="anird-toast",t.style.background=e.bg,t.style.borderColor=e.border,t.style.setProperty("--duration",`${l}ms`);let s="";i&&(s=`<button class="toast-action" data-toast-action style="background: ${e.border}; color: ${e.text};">${i.label}</button>`),t.innerHTML=`
+  </style>`,document.body.appendChild(v),v)}function E(){if(L||$.length===0)return;L=!0;const n=$.shift();_(n)}function _({type:n="info",title:a="",message:r="",duration:l=4e3,action:i=null,onClose:s=null}){const d=O(),e=z[n]||z.info,c=S[n]||S.info,t=document.createElement("div");t.className="anird-toast",t.style.background=e.bg,t.style.borderColor=e.border,t.style.setProperty("--duration",`${l}ms`);let h="";i&&(h=`<button class="toast-action" data-toast-action style="background: ${e.border}; color: ${e.text};">${i.label}</button>`),t.innerHTML=`
     <div class="toast-icon" style="background: ${e.bg}; color: ${e.icon};">${c}</div>
     <div class="toast-content">
-      ${o?`<div class="toast-title">${o}</div>`:""}
-      ${n?`<div class="toast-message">${n}</div>`:""}
-      ${s}
+      ${a?`<div class="toast-title">${a}</div>`:""}
+      ${r?`<div class="toast-message">${r}</div>`:""}
+      ${h}
     </div>
     <button class="toast-close" data-toast-close>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
     <div class="toast-progress" style="background: ${e.icon};"></div>
-  `;const h=t.querySelector("[data-toast-action]");h&&i&&i.onClick&&h.addEventListener("click",a=>{a.stopPropagation(),i.onClick(),L(t,d)}),t.querySelector("[data-toast-close]").addEventListener("click",()=>L(t,d)),g.appendChild(t);const f=setTimeout(()=>L(t,d),l);t._timeout=f,t.addEventListener("mouseenter",()=>{clearTimeout(t._timeout),t.querySelector(".toast-progress").style.animationPlayState="paused"}),t.addEventListener("mouseleave",()=>{t._timeout=setTimeout(()=>L(t,d),2e3),t.querySelector(".toast-progress").style.animationPlayState="running"})}function L(r,o){r._removed||(r._removed=!0,clearTimeout(r._timeout),r.classList.add("removing"),setTimeout(()=>{r.remove(),o&&o(),E=!1,j()},350))}const z={show(r){S.push(r),j()},success(r,o,n){this.show({type:"success",title:r,message:o,duration:n})},error(r,o,n){this.show({type:"error",title:r,message:o,duration:n||5e3})},info(r,o,n){this.show({type:"info",title:r,message:o,duration:n})},warning(r,o,n){this.show({type:"warning",title:r,message:o,duration:n})},notify(r,o,n,l){this.show({type:"notification",title:r,message:o,action:n,duration:l||6e3})}};let k=null;const O=`
+  `;const g=t.querySelector("[data-toast-action]");g&&i&&i.onClick&&g.addEventListener("click",o=>{o.stopPropagation(),i.onClick(),k(t,s)}),t.querySelector("[data-toast-close]").addEventListener("click",()=>k(t,s)),d.appendChild(t);const x=setTimeout(()=>k(t,s),l);t._timeout=x,t.addEventListener("mouseenter",()=>{clearTimeout(t._timeout),t.querySelector(".toast-progress").style.animationPlayState="paused"}),t.addEventListener("mouseleave",()=>{t._timeout=setTimeout(()=>k(t,s),2e3),t.querySelector(".toast-progress").style.animationPlayState="running"})}function k(n,a){n._removed||(n._removed=!0,clearTimeout(n._timeout),n.classList.add("removing"),setTimeout(()=>{n.remove(),a&&a(),L=!1,E()},350))}const C={show(n){$.push(n),E()},success(n,a,r){this.show({type:"success",title:n,message:a,duration:r})},error(n,a,r){this.show({type:"error",title:n,message:a,duration:r||5e3})},info(n,a,r){this.show({type:"info",title:n,message:a,duration:r})},warning(n,a,r){this.show({type:"warning",title:n,message:a,duration:r})},notify(n,a,r,l){this.show({type:"notification",title:n,message:a,action:r,duration:l||6e3})}};let y=null;const T=`
   <style>
     .anird-modal-overlay {
       position: fixed; inset: 0; z-index: 10000;
@@ -170,24 +170,24 @@ import{d as x,a as u,b as $}from"./page-homepage-hw3Gvt4E.js";let v=null,S=[],E=
       .anird-modal-footer { padding: 12px 18px; }
     }
   </style>
-`;function C({title:r="",content:o="",size:n="",danger:l=!1,footer:i="",onClose:d=null,closeOnOverlay:g=!0}){k&&y();const e=document.createElement("div");e.className="anird-modal-overlay",e.innerHTML=`
-    ${O}
-    <div class="anird-modal ${n?"size-"+n:""} ${l?"danger":""}">
+`;function I({title:n="",content:a="",size:r="",danger:l=!1,footer:i="",onClose:s=null,closeOnOverlay:d=!0}){y&&w();const e=document.createElement("div");e.className="anird-modal-overlay",e.innerHTML=`
+    ${T}
+    <div class="anird-modal ${r?"size-"+r:""} ${l?"danger":""}">
       <div class="anird-modal-header">
-        <h3 class="anird-modal-title">${r}</h3>
+        <h3 class="anird-modal-title">${n}</h3>
         <button class="anird-modal-close" data-modal-close>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      <div class="anird-modal-body">${o}</div>
+      <div class="anird-modal-body">${a}</div>
       ${i?`<div class="anird-modal-footer">${i}</div>`:""}
     </div>
-  `;const c=e.querySelector(".anird-modal"),t=()=>{e.classList.add("closing"),c.classList.add("closing"),setTimeout(()=>{e.remove(),k=null,d&&d()},200)};g&&e.addEventListener("click",h=>{h.target===e&&t()}),e.querySelector("[data-modal-close]").addEventListener("click",t);const s=h=>{h.key==="Escape"&&(t(),document.removeEventListener("keydown",s))};return document.addEventListener("keydown",s),k={overlay:e,close:t},document.body.appendChild(e),document.body.style.overflow="hidden",e._cleanup=()=>{document.body.style.overflow=""},{close:t,el:c}}function y(){k&&(k.close(),document.body.style.overflow="",k=null)}function P({title:r,message:o,confirmText:n="Confirmar",cancelText:l="Cancelar",danger:i=!1}){return new Promise(d=>{const g=`
+  `;const c=e.querySelector(".anird-modal"),t=()=>{e.classList.add("closing"),c.classList.add("closing"),setTimeout(()=>{e.remove(),y=null,s&&s()},200)};d&&e.addEventListener("click",g=>{g.target===e&&t()}),e.querySelector("[data-modal-close]").addEventListener("click",t);const h=g=>{g.key==="Escape"&&(t(),document.removeEventListener("keydown",h))};return document.addEventListener("keydown",h),y={overlay:e,close:t},document.body.appendChild(e),document.body.style.overflow="hidden",e._cleanup=()=>{document.body.style.overflow=""},{close:t,el:c}}function w(){y&&(y.close(),document.body.style.overflow="",y=null)}function P({title:n,message:a,confirmText:r="Confirmar",cancelText:l="Cancelar",danger:i=!1}){return new Promise(s=>{const d=`
       <button class="btn-v4-secondary" data-modal-cancel style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 600;">${l}</button>
-      <button class="btn-v4-primary" data-modal-confirm style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700; ${i?"background: #e50914; border-color: #e50914;":""}">${n}</button>
-    `,{el:e}=C({title:r,content:`<p style="color: #a1a1aa; font-size: 14px; line-height: 1.6;">${o}</p>`,footer:g,danger:i,size:"sm",onClose:()=>d(!1)});e.querySelector("[data-modal-confirm]").addEventListener("click",()=>{y(),d(!0)}),e.querySelector("[data-modal-cancel]").addEventListener("click",()=>{y(),d(!1)})})}function F({title:r,message:o,placeholder:n="",defaultValue:l="",confirmText:i="Aceptar"}){return new Promise(d=>{const g=`
-      <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">${o}</p>
-      <input type="text" id="anird-modal-input" placeholder="${n}" value="${l}"
+      <button class="btn-v4-primary" data-modal-confirm style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700; ${i?"background: #e50914; border-color: #e50914;":""}">${r}</button>
+    `,{el:e}=I({title:n,content:`<p style="color: #a1a1aa; font-size: 14px; line-height: 1.6;">${a}</p>`,footer:d,danger:i,size:"sm",onClose:()=>s(!1)});e.querySelector("[data-modal-confirm]").addEventListener("click",()=>{w(),s(!0)}),e.querySelector("[data-modal-cancel]").addEventListener("click",()=>{w(),s(!1)})})}function F({title:n,message:a,placeholder:r="",defaultValue:l="",confirmText:i="Aceptar"}){return new Promise(s=>{const d=`
+      <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">${a}</p>
+      <input type="text" id="anird-modal-input" placeholder="${r}" value="${l}"
         style="width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
         background: rgba(255,255,255,0.05); color: white; font-size: 14px; font-family: 'Inter', sans-serif;
         outline: none; transition: border-color 0.2s;"
@@ -196,7 +196,7 @@ import{d as x,a as u,b as $}from"./page-homepage-hw3Gvt4E.js";let v=null,S=[],E=
     `,e=`
       <button class="btn-v4-secondary" data-modal-cancel style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 600;">Cancelar</button>
       <button class="btn-v4-primary" data-modal-confirm style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700;">${i}</button>
-    `,{el:c}=C({title:r,content:g,footer:e,size:"sm",onClose:()=>d(null)}),t=c.querySelector("#anird-modal-input");setTimeout(()=>t.focus(),400);const s=()=>{const h=t.value.trim();y(),d(h||null)};c.querySelector("[data-modal-confirm]").addEventListener("click",s),c.querySelector("[data-modal-cancel]").addEventListener("click",()=>{y(),d(null)}),t.addEventListener("keydown",h=>{h.key==="Enter"&&s()})})}class _{constructor(o){this.params=o,this.animeId=o.id,this.anime=null,this.characters=[],this.recommendations=[],this.relations=[],this.isFavorite=!1,this.isFollowing=!1}async render(){var s,h,f;const o=await x.getSetting("audio_pref","sub"),[n,l,i,d,g,e]=await Promise.all([u.getAnimeInfo(this.animeId),u.providers.jikan.request(`/anime/${this.animeId}/characters`).catch(()=>({data:[]})),u.providers.jikan.request(`/anime/${this.animeId}/recommendations`).catch(()=>({data:[]})),x.isFavorite(this.animeId),x.isFollowing(this.animeId),u.getAnimeRelations(this.animeId).catch(()=>({data:[]}))]);this.anime=n.data,this.characters=(l==null?void 0:l.data)||[],this.recommendations=(i==null?void 0:i.data)||[],this.isFavorite=d,this.isFollowing=g,this.relations=(e==null?void 0:e.data)||[];const c=await u.getAnilistBanner(this.animeId)||((h=(s=this.anime.images)==null?void 0:s.jpg)==null?void 0:h.large_image_url)||"";document.title=`${this.anime.title_english||this.anime.title} — AniRD`;const t=document.createElement("div");return t.className="page-enter",t.innerHTML=`
+    `,{el:c}=I({title:n,content:d,footer:e,size:"sm",onClose:()=>s(null)}),t=c.querySelector("#anird-modal-input");setTimeout(()=>t.focus(),400);const h=()=>{const g=t.value.trim();w(),s(g||null)};c.querySelector("[data-modal-confirm]").addEventListener("click",h),c.querySelector("[data-modal-cancel]").addEventListener("click",()=>{w(),s(null)}),t.addEventListener("keydown",g=>{g.key==="Enter"&&h()})})}class q{constructor(a){this.params=a,this.animeId=a.id,this.anime=null,this.characters=[],this.recommendations=[],this.relations=[],this.isFavorite=!1,this.isFollowing=!1}async render(){var h,g,x;const a=await u.getSetting("audio_pref","sub"),[r,l,i,s,d,e]=await Promise.all([f.getAnimeInfo(this.animeId),f.providers.jikan.request(`/anime/${this.animeId}/characters`).catch(()=>({data:[]})),f.providers.jikan.request(`/anime/${this.animeId}/recommendations`).catch(()=>({data:[]})),u.isFavorite(this.animeId),u.isFollowing(this.animeId),f.getAnimeRelations(this.animeId).catch(()=>({data:[]}))]);this.anime=r.data,this.characters=(l==null?void 0:l.data)||[],this.recommendations=(i==null?void 0:i.data)||[],this.isFavorite=s,this.isFollowing=d,this.relations=(e==null?void 0:e.data)||[];const c=await f.getAnilistBanner(this.animeId)||((g=(h=this.anime.images)==null?void 0:h.jpg)==null?void 0:g.large_image_url)||"";document.title=`${this.anime.title_english||this.anime.title} — AniRD`;const t=document.createElement("div");return t.className="page-enter",t.innerHTML=`
       <style>
         .page-bg {
           position: fixed; inset: 0; z-index: 0;
@@ -428,18 +428,15 @@ import{d as x,a as u,b as $}from"./page-homepage-hw3Gvt4E.js";let v=null,S=[],E=
         </div>
 
         <div class="sheet-actions">
-          <a href="/watch/${this.animeId}/1/${o}?title=${encodeURIComponent(this.anime.title)}" data-link class="btn-play-sheet">
+          <a href="/watch/${this.animeId}/1/${a}?title=${encodeURIComponent(this.anime.title)}" data-link class="btn-play-sheet">
             <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" style="width:18px;height:18px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             Reproducir
           </a>
           <button class="btn-icon-sheet ${this.isFavorite?"active":""}" id="fav-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
           </button>
-          <button class="btn-icon-sheet ${this.isFollowing?"active":""}" id="follow-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-          </button>
-          <button class="btn-icon-sheet" id="add-to-list-btn" title="Agregar a lista">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+          <button class="btn-icon-sheet" id="share-btn" title="Compartir">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
           </button>
         </div>
 
@@ -480,16 +477,16 @@ import{d as x,a as u,b as $}from"./page-homepage-hw3Gvt4E.js";let v=null,S=[],E=
               ${this.anime.source?`<div class="badge-pill">${this.anime.source}</div>`:""}
             </div>
 
-            ${((f=this.anime.studios)==null?void 0:f.length)>0?`
+            ${((x=this.anime.studios)==null?void 0:x.length)>0?`
               <h4 class="section-heading">Estudio</h4>
               <div class="badge-list">
-                ${this.anime.studios.map(a=>`<div class="badge-pill">${a.name}</div>`).join("")}
+                ${this.anime.studios.map(o=>`<div class="badge-pill">${o.name}</div>`).join("")}
               </div>
             `:""}
 
             <h4 class="section-heading">Géneros</h4>
             <div class="badge-list">
-              ${this.anime.genres.map(a=>`<div class="badge-pill" style="background: rgba(220,38,38,0.1); color: #fca5a5; border-color: rgba(220,38,38,0.2);">${a.name}</div>`).join("")}
+              ${this.anime.genres.map(o=>`<div class="badge-pill" style="background: rgba(220,38,38,0.1); color: #fca5a5; border-color: rgba(220,38,38,0.2);">${o.name}</div>`).join("")}
             </div>
 
             <h4 class="section-heading" style="margin-top: 8px;">Sinopsis</h4>
@@ -505,12 +502,12 @@ import{d as x,a as u,b as $}from"./page-homepage-hw3Gvt4E.js";let v=null,S=[],E=
           <div class="tab-panel" id="tab-characters">
             ${this.characters.length>0?`
               <div class="chars-grid">
-                ${this.characters.slice(0,20).map(a=>{var p,b;return`
+                ${this.characters.slice(0,20).map(o=>{var p,b;return`
                   <div class="char-card">
-                    <img class="char-img" src="${(b=(p=a.character.images)==null?void 0:p.jpg)==null?void 0:b.image_url}" alt="${a.character.name}">
+                    <img class="char-img" src="${(b=(p=o.character.images)==null?void 0:p.jpg)==null?void 0:b.image_url}" alt="${o.character.name}">
                     <div class="char-info">
-                      <div class="char-name">${a.character.name}</div>
-                      <div class="char-role">${a.role}</div>
+                      <div class="char-name">${o.character.name}</div>
+                      <div class="char-role">${o.role}</div>
                     </div>
                   </div>
                 `}).join("")}
@@ -522,8 +519,8 @@ import{d as x,a as u,b as $}from"./page-homepage-hw3Gvt4E.js";let v=null,S=[],E=
           <div class="tab-panel" id="tab-recommendations">
             ${this.recommendations.length>0?`
               <div class="recs-grid">
-                ${this.recommendations.slice(0,10).map(a=>`
-                  <anime-card data='${JSON.stringify({mal_id:a.entry.mal_id,title:a.entry.title,images:a.entry.images,score:"?.?"}).replace(/'/g,"&#39;")}'></anime-card>
+                ${this.recommendations.slice(0,10).map(o=>`
+                  <anime-card data='${JSON.stringify({mal_id:o.entry.mal_id,title:o.entry.title,images:o.entry.images,score:"?.?"}).replace(/'/g,"&#39;")}'></anime-card>
                 `).join("")}
               </div>
             `:'<div style="color:#71717a;text-align:center;padding:20px;">No hay recomendaciones.</div>'}
@@ -545,38 +542,24 @@ import{d as x,a as u,b as $}from"./page-homepage-hw3Gvt4E.js";let v=null,S=[],E=
           ${this.renderRelationsHtml()}
         </div>
       </div>
-    `,t}async afterRender(){const o=document.getElementById("fav-btn"),n=document.getElementById("follow-btn");o&&o.addEventListener("click",async()=>{this.isFavorite?(await x.removeFavorite(this.animeId),this.isFavorite=!1,o.classList.remove("active")):(await x.addFavorite({...this.anime,addedAt:Date.now()}),this.isFavorite=!0,o.classList.add("active"))}),n&&n.addEventListener("click",async()=>{this.isFollowing?(await x.toggleFollowing({...this.anime,addedAt:Date.now()}),this.isFollowing=!1,n.classList.remove("active"),z.info("Dejaste de seguir",this.anime.title)):(await x.toggleFollowing({...this.anime,addedAt:Date.now()}),this.isFollowing=!0,n.classList.add("active"),z.success("Siguiendo",`Ahora sigues ${this.anime.title}`))});const l=document.getElementById("add-to-list-btn");l&&l.addEventListener("click",async()=>{const e=await $.lists.toArray();if(e.length===0){z.warning("Sin listas",'Crea tu primera lista desde la sección "Mis Listas"');return}const c=e.map(s=>({...s,hasAnime:(s.animeIds||[]).includes(Number(this.animeId))})),t=`
-          <p style="color: #a1a1aa; font-size: 13px; margin-bottom: 16px;">Selecciona las listas donde quieras agregar <strong style="color: white;">${this.anime.title}</strong>:</p>
-          <div style="display: flex; flex-direction: column; gap: 6px;" id="list-checkboxes">
-            ${c.map(s=>`
-              <label style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; background: ${s.hasAnime?"rgba(229,9,20,0.08)":"rgba(255,255,255,0.03)"}; border: 1px solid ${s.hasAnime?"rgba(229,9,20,0.2)":"rgba(255,255,255,0.06)"}; cursor: pointer; transition: all 0.2s;">
-                <input type="checkbox" data-list-id="${s.id}" ${s.hasAnime?"checked":""} style="accent-color: #e50914; width: 16px; height: 16px;">
-                <span style="flex: 1; color: white; font-size: 14px; font-weight: 600;">${s.name}</span>
-                <span style="font-size: 11px; color: #6b6b6b;">${(s.animeIds||[]).length} anime${(s.animeIds||[]).length!==1?"s":""}</span>
-              </label>
-            `).join("")}
-          </div>
-        `;C({title:"Agregar a Lista",content:t,size:"sm",footer:`
-            <button class="btn-v4-secondary" data-modal-cancel style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 600;">Cancelar</button>
-            <button class="btn-v4-primary" id="save-list-selection" style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700;">Guardar</button>
-          `}),setTimeout(()=>{const s=document.getElementById("save-list-selection"),h=document.querySelector("[data-modal-cancel]");s&&s.addEventListener("click",async()=>{const f=document.querySelectorAll('#list-checkboxes input[type="checkbox"]');for(const a of f){const p=parseInt(a.dataset.listId),m=(await $.lists.get(p)).animeIds||[],w=Number(this.animeId);a.checked&&!m.includes(w)?(m.push(w),await $.lists.update(p,{animeIds:m})):!a.checked&&m.includes(w)&&await $.lists.update(p,{animeIds:m.filter(I=>I!==w)})}y(),z.success("Listas actualizadas",`${this.anime.title} se guardó en tus listas`),l.classList.add("active")}),h&&h.addEventListener("click",()=>y())},100)});const i=document.querySelectorAll(".sheet-tab"),d=document.querySelectorAll(".tab-panel");i.forEach(e=>{e.addEventListener("click",()=>{i.forEach(c=>c.classList.remove("active")),d.forEach(c=>c.classList.remove("active")),e.classList.add("active"),document.getElementById("tab-"+e.dataset.tab).classList.add("active")})});const g=()=>{const e=document.querySelector(".sheet-panel"),c=document.querySelector(".sheet-overlay"),t=document.querySelector(".relations-panel");if(e&&c){e.style.animation="slideOut 0.3s forwards",c.style.animation="fadeOut 0.3s forwards",t&&(t.style.animation="fadeOut 0.3s forwards");const s=document.createElement("style");s.innerHTML=`
+    `,t}async afterRender(){const a=document.getElementById("fav-btn"),r=document.getElementById("follow-btn");a&&a.addEventListener("click",async()=>{this.isFavorite?(await u.removeFavorite(this.animeId),this.isFavorite=!1,a.classList.remove("active")):(await u.addFavorite({...this.anime,addedAt:Date.now()}),this.isFavorite=!0,a.classList.add("active"))}),r&&r.addEventListener("click",async()=>{this.isFollowing?(await u.toggleFollowing({...this.anime,addedAt:Date.now()}),this.isFollowing=!1,r.classList.remove("active"),C.info("Dejaste de seguir",this.anime.title)):(await u.toggleFollowing({...this.anime,addedAt:Date.now()}),this.isFollowing=!0,r.classList.add("active"),C.success("Siguiendo",`Ahora sigues ${this.anime.title}`))});const l=document.querySelectorAll(".sheet-tab"),i=document.querySelectorAll(".tab-panel");l.forEach(d=>{d.addEventListener("click",()=>{l.forEach(e=>e.classList.remove("active")),i.forEach(e=>e.classList.remove("active")),d.classList.add("active"),document.getElementById("tab-"+d.dataset.tab).classList.add("active")})});const s=()=>{const d=document.querySelector(".sheet-panel"),e=document.querySelector(".sheet-overlay"),c=document.querySelector(".relations-panel");if(d&&e){d.style.animation="slideOut 0.3s forwards",e.style.animation="fadeOut 0.3s forwards",c&&(c.style.animation="fadeOut 0.3s forwards");const t=document.createElement("style");t.innerHTML=`
            @keyframes slideOut { from { transform: translateX(0); } to { transform: translateX(-100%); } }
            @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-         `,document.head.appendChild(s),setTimeout(()=>{window.history.back()},300)}else window.history.back()};document.getElementById("sheet-close").addEventListener("click",g),document.getElementById("sheet-overlay").addEventListener("click",g),this.loadEpisodes()}async loadEpisodes(){var e,c,t,s,h,f;const o=document.getElementById("episodes-container"),n=await x.getSetting("audio_pref","sub");let l=new Set;try{const a=await $.history.where({animeId:String(this.animeId)}).toArray();l=new Set(a.map(p=>Number(p.episodeId)))}catch{}let i=null;try{const a=[this.anime.title,this.anime.title_english,this.anime.title_japanese,...this.anime.title_synonyms||[]].filter(Boolean);let p=null;for(const b of a){const m=await u.searchLocal(b);if(m!=null&&m.success&&((c=(e=m.data)==null?void 0:e.results)==null?void 0:c.length)>0){p=m;break}}if(p){const b=p.data.results.find(w=>a.some(I=>w.title.toLowerCase().includes(I.toLowerCase())))||p.data.results[0],m=await u.getAnimeInfo(b.url);(t=m==null?void 0:m.data)!=null&&t.episodes&&(i=m.data.episodes.length)}}catch{}if(!i){if(this.anime.status==="Currently Airing")try{const a=await u.providers.jikan.request(`/anime/${this.animeId}/episodes`);if(((s=a==null?void 0:a.data)==null?void 0:s.length)>0){const p=a.pagination.last_visible_page;if(p>1){const b=await u.providers.jikan.request(`/anime/${this.animeId}/episodes?page=${p}`);i=b.data[b.data.length-1].mal_id}else i=a.data[a.data.length-1].mal_id}}catch{}i||(i=this.anime.episodes||12)}const d=((f=(h=this.anime.images)==null?void 0:h.jpg)==null?void 0:f.large_image_url)||"",g=`?title=${encodeURIComponent(this.anime.title)}`;o.innerHTML=`
+         `,document.head.appendChild(t),setTimeout(()=>{window.history.back()},300)}else window.history.back()};document.getElementById("sheet-close").addEventListener("click",s),document.getElementById("sheet-overlay").addEventListener("click",s),this.loadEpisodes()}async loadEpisodes(){var e,c,t,h,g,x;const a=document.getElementById("episodes-container"),r=await u.getSetting("audio_pref","sub");let l=new Set;try{const o=await B.history.where({animeId:String(this.animeId)}).toArray();l=new Set(o.map(p=>Number(p.episodeId)))}catch{}let i=null;try{const o=[this.anime.title,this.anime.title_english,this.anime.title_japanese,...this.anime.title_synonyms||[]].filter(Boolean);let p=null;for(const b of o){const m=await f.searchLocal(b);if(m!=null&&m.success&&((c=(e=m.data)==null?void 0:e.results)==null?void 0:c.length)>0){p=m;break}}if(p){const b=p.data.results.find(A=>o.some(j=>A.title.toLowerCase().includes(j.toLowerCase())))||p.data.results[0],m=await f.getAnimeInfo(b.url);(t=m==null?void 0:m.data)!=null&&t.episodes&&(i=m.data.episodes.length)}}catch{}if(!i){if(this.anime.status==="Currently Airing")try{const o=await f.providers.jikan.request(`/anime/${this.animeId}/episodes`);if(((h=o==null?void 0:o.data)==null?void 0:h.length)>0){const p=o.pagination.last_visible_page;if(p>1){const b=await f.providers.jikan.request(`/anime/${this.animeId}/episodes?page=${p}`);i=b.data[b.data.length-1].mal_id}else i=o.data[o.data.length-1].mal_id}}catch{}i||(i=this.anime.episodes||12)}const s=((x=(g=this.anime.images)==null?void 0:g.jpg)==null?void 0:x.large_image_url)||"",d=`?title=${encodeURIComponent(this.anime.title)}`;a.innerHTML=`
       <div class="episodes-grid">
-        ${Array.from({length:i},(a,p)=>p+1).map(a=>{const p=l.has(a);return`
-            <a href="/watch/${this.animeId}/${a}/${n}${g}" data-link class="ep-card">
-              <img src="${d}" loading="lazy" style="${p?"opacity: 0.5; filter: grayscale(1);":""}">
+        ${Array.from({length:i},(o,p)=>p+1).map(o=>{const p=l.has(o);return`
+            <a href="/watch/${this.animeId}/${o}/${r}${d}" data-link class="ep-card">
+              <img src="${s}" loading="lazy" style="${p?"opacity: 0.5; filter: grayscale(1);":""}">
               <div class="ep-card-overlay">
-                <span class="ep-card-title">Ep. ${a}</span>
+                <span class="ep-card-title">Ep. ${o}</span>
               </div>
               ${p?'<div class="ep-watched-badge">Visto</div>':""}
             </a>
           `}).join("")}
-    `}renderRelationsHtml(){if(!this.relations||this.relations.length===0)return'<div class="no-relations-message">No se encontraron precuelas, secuelas u otras conexiones.</div>';let o="";const n=[...this.relations].sort((l,i)=>{const d=l.relation.toLowerCase(),g=i.relation.toLowerCase();return d==="prequel"||d==="sequel"?-1:g==="prequel"||g==="sequel"?1:0});for(const l of n){const i=l.relation,d=i.toLowerCase()==="prequel"?"prequel":i.toLowerCase()==="sequel"?"sequel":"other",g=i==="Prequel"?"Precuela":i==="Sequel"?"Secuela":i==="Alternative version"?"Versión Alternativa":i==="Side story"?"Historia Paralela":i==="Spin-off"?"Spin-off":i==="Parent story"?"Historia Principal":i==="Summary"?"Resumen":i;for(const e of l.entry){const c=e.type==="anime",t=c?`/anime/${e.mal_id}`:e.url;o+=`
+    `}renderRelationsHtml(){if(!this.relations||this.relations.length===0)return'<div class="no-relations-message">No se encontraron precuelas, secuelas u otras conexiones.</div>';let a="";const r=[...this.relations].sort((l,i)=>{const s=l.relation.toLowerCase(),d=i.relation.toLowerCase();return s==="prequel"||s==="sequel"?-1:d==="prequel"||d==="sequel"?1:0});for(const l of r){const i=l.relation,s=i.toLowerCase()==="prequel"?"prequel":i.toLowerCase()==="sequel"?"sequel":"other",d=i==="Prequel"?"Precuela":i==="Sequel"?"Secuela":i==="Alternative version"?"Versión Alternativa":i==="Side story"?"Historia Paralela":i==="Spin-off"?"Spin-off":i==="Parent story"?"Historia Principal":i==="Summary"?"Resumen":i;for(const e of l.entry){const c=e.type==="anime",t=c?`/anime/${e.mal_id}`:e.url;a+=`
           <a href="${t}" ${c?"data-link":'target="_blank" rel="noopener noreferrer"'} class="relation-item-card">
-            <span class="relation-badge ${d}">${g}</span>
+            <span class="relation-badge ${s}">${d}</span>
             <div class="relation-item-title">${e.name}</div>
             <div class="relation-item-meta">${e.type.toUpperCase()}</div>
           </a>
-        `}}return o}}const R=Object.freeze(Object.defineProperty({__proto__:null,default:_},Symbol.toStringTag,{value:"Module"}));export{R as A,z as T,P as c,F as p};
+        `}}return a}}const R=Object.freeze(Object.defineProperty({__proto__:null,default:q},Symbol.toStringTag,{value:"Module"}));export{R as A,C as T,P as c,F as p};

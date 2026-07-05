@@ -283,11 +283,8 @@ export default class AnimeDetailPage {
           <button class="btn-icon-sheet ${this.isFavorite ? 'active' : ''}" id="fav-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
           </button>
-          <button class="btn-icon-sheet ${this.isFollowing ? 'active' : ''}" id="follow-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-          </button>
-          <button class="btn-icon-sheet" id="add-to-list-btn" title="Agregar a lista">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+          <button class="btn-icon-sheet" id="share-btn" title="Compartir">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
           </button>
         </div>
 
@@ -438,77 +435,6 @@ export default class AnimeDetailPage {
       });
     }
 
-    // Add to List button
-    const addToListBtn = document.getElementById('add-to-list-btn');
-    if (addToListBtn) {
-      addToListBtn.addEventListener('click', async () => {
-        const lists = await db.lists.toArray();
-        if (lists.length === 0) {
-          Toast.warning('Sin listas', 'Crea tu primera lista desde la sección "Mis Listas"');
-          return;
-        }
-
-        // Check which lists already contain this anime
-        const listStates = lists.map(list => ({
-          ...list,
-          hasAnime: (list.animeIds || []).includes(Number(this.animeId))
-        }));
-
-        const content = `
-          <p style="color: #a1a1aa; font-size: 13px; margin-bottom: 16px;">Selecciona las listas donde quieras agregar <strong style="color: white;">${this.anime.title}</strong>:</p>
-          <div style="display: flex; flex-direction: column; gap: 6px;" id="list-checkboxes">
-            ${listStates.map(list => `
-              <label style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; background: ${list.hasAnime ? 'rgba(229,9,20,0.08)' : 'rgba(255,255,255,0.03)'}; border: 1px solid ${list.hasAnime ? 'rgba(229,9,20,0.2)' : 'rgba(255,255,255,0.06)'}; cursor: pointer; transition: all 0.2s;">
-                <input type="checkbox" data-list-id="${list.id}" ${list.hasAnime ? 'checked' : ''} style="accent-color: #e50914; width: 16px; height: 16px;">
-                <span style="flex: 1; color: white; font-size: 14px; font-weight: 600;">${list.name}</span>
-                <span style="font-size: 11px; color: #6b6b6b;">${(list.animeIds || []).length} anime${(list.animeIds || []).length !== 1 ? 's' : ''}</span>
-              </label>
-            `).join('')}
-          </div>
-        `;
-
-        openModal({
-          title: 'Agregar a Lista',
-          content,
-          size: 'sm',
-          footer: `
-            <button class="btn-v4-secondary" data-modal-cancel style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 600;">Cancelar</button>
-            <button class="btn-v4-primary" id="save-list-selection" style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700;">Guardar</button>
-          `
-        });
-
-        // Bind save
-        setTimeout(() => {
-          const saveBtn = document.getElementById('save-list-selection');
-          const cancelBtn = document.querySelector('[data-modal-cancel]');
-          if (saveBtn) {
-            saveBtn.addEventListener('click', async () => {
-              const checkboxes = document.querySelectorAll('#list-checkboxes input[type="checkbox"]');
-              for (const cb of checkboxes) {
-                const listId = parseInt(cb.dataset.listId);
-                const list = await db.lists.get(listId);
-                const ids = list.animeIds || [];
-                const animeId = Number(this.animeId);
-
-                if (cb.checked && !ids.includes(animeId)) {
-                  ids.push(animeId);
-                  await db.lists.update(listId, { animeIds: ids });
-                } else if (!cb.checked && ids.includes(animeId)) {
-                  await db.lists.update(listId, { animeIds: ids.filter(id => id !== animeId) });
-                }
-              }
-              closeModal();
-              Toast.success('Listas actualizadas', `${this.anime.title} se guardó en tus listas`);
-              // Update button visual
-              addToListBtn.classList.add('active');
-            });
-          }
-          if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => closeModal());
-          }
-        }, 100);
-      });
-    }
 
     // Tabs
     const tabs = document.querySelectorAll('.sheet-tab');
