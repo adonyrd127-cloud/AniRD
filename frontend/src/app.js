@@ -24,9 +24,7 @@ export class AppRouter {
   init() {
     window.addEventListener('popstate', () => this.handleRoute());
     document.body.addEventListener('click', e => {
-      // Usar composedPath para encontrar 'a[data-link]' cruzando los límites del Shadow DOM
-      const path = e.composedPath();
-      const link = path.find(el => el.tagName === 'A' && el.hasAttribute('data-link'));
+      const link = e.target.closest('a[data-link]');
       if (link) {
         e.preventDefault();
         this.navigate(link.getAttribute('href'));
@@ -60,21 +58,14 @@ export class AppRouter {
 
     if (path.startsWith('/anime/')) {
        routeKey = '/anime';
-       params.id = path.substring(7);
+       params.id = path.split('/')[2];
        document.title = `Cargando... — AniRD`;
     } else if (path.startsWith('/watch/')) {
        routeKey = '/watch';
-       const watchContent = path.substring(7);
-       const parts = watchContent.split('/');
-       if (parts.length >= 3) {
-         params.lang = parts[parts.length - 1];
-         params.ep = parts[parts.length - 2];
-         params.id = parts.slice(0, parts.length - 2).join('/');
-       } else {
-         params.id = parts[0];
-         params.ep = parts[1] || '1';
-         params.lang = parts[2] || 'sub';
-       }
+       const parts = path.split('/');
+       params.id = parts[2];
+       params.ep = parts[3];
+       params.lang = parts[4] || 'sub';
        document.title = `Ep. ${params.ep} — AniRD`;
     } else if (path.startsWith('/category/')) {
        routeKey = '/category';
