@@ -410,30 +410,28 @@ export default class AnimeDetailPage {
     
     if (favBtn) {
       favBtn.addEventListener('click', async () => {
-        if (this.isFavorite) {
-          await dbService.removeFavorite(this.animeId);
-          this.isFavorite = false;
-          favBtn.classList.remove('active');
-        } else {
-          await dbService.addFavorite({ ...this.anime, addedAt: Date.now() });
-          this.isFavorite = true;
+        const added = await dbService.toggleFavorite({ ...this.anime, addedAt: Date.now() });
+        this.isFavorite = added;
+        if (added) {
           favBtn.classList.add('active');
+          Toast.success('Guardado', `Añadiste ${this.anime.title} a favoritos`);
+        } else {
+          favBtn.classList.remove('active');
+          Toast.info('Quitado', `Eliminaste ${this.anime.title} de favoritos`);
         }
       });
     }
 
     if (followBtn) {
       followBtn.addEventListener('click', async () => {
-        if (this.isFollowing) {
-          await dbService.toggleFollowing({ ...this.anime, addedAt: Date.now() });
-          this.isFollowing = false;
-          followBtn.classList.remove('active');
-          Toast.info('Dejaste de seguir', this.anime.title);
-        } else {
-          await dbService.toggleFollowing({ ...this.anime, addedAt: Date.now() });
-          this.isFollowing = true;
+        const added = await dbService.toggleFollowing({ ...this.anime, addedAt: Date.now() });
+        this.isFollowing = added;
+        if (added) {
           followBtn.classList.add('active');
           Toast.success('Siguiendo', `Ahora sigues ${this.anime.title}`);
+        } else {
+          followBtn.classList.remove('active');
+          Toast.info('Dejaste de seguir', this.anime.title);
         }
       });
     }

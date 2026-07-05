@@ -58,14 +58,21 @@ export class AppRouter {
 
     if (path.startsWith('/anime/')) {
        routeKey = '/anime';
-       params.id = path.split('/')[2];
+       params.id = path.substring(7);
        document.title = `Cargando... — AniRD`;
     } else if (path.startsWith('/watch/')) {
        routeKey = '/watch';
-       const parts = path.split('/');
-       params.id = parts[2];
-       params.ep = parts[3];
-       params.lang = parts[4] || 'sub';
+       const watchContent = path.substring(7);
+       const parts = watchContent.split('/');
+       if (parts.length >= 3) {
+         params.lang = parts[parts.length - 1];
+         params.ep = parts[parts.length - 2];
+         params.id = parts.slice(0, parts.length - 2).join('/');
+       } else {
+         params.id = parts[0];
+         params.ep = parts[1] || '1';
+         params.lang = parts[2] || 'sub';
+       }
        document.title = `Ep. ${params.ep} — AniRD`;
     } else if (path.startsWith('/category/')) {
        routeKey = '/category';
