@@ -24,7 +24,9 @@ export class AppRouter {
   init() {
     window.addEventListener('popstate', () => this.handleRoute());
     document.body.addEventListener('click', e => {
-      const link = e.target.closest('a[data-link]');
+      // Usar composedPath para encontrar 'a[data-link]' cruzando los límites del Shadow DOM
+      const path = e.composedPath();
+      const link = path.find(el => el.tagName === 'A' && el.hasAttribute('data-link'));
       if (link) {
         e.preventDefault();
         this.navigate(link.getAttribute('href'));

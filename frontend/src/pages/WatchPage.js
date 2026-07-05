@@ -6,7 +6,7 @@ import { Toast } from '../components/Toast.js';
 export default class WatchPage {
   constructor(params) {
     this.params = params;
-    this.animeId = parseInt(params.id);
+    this.animeId = isNaN(Number(params.id)) ? params.id : parseInt(params.id);
     this.episodeNum = parseInt(params.ep) || 1;
     this.lang = params.lang || 'sub';
     
