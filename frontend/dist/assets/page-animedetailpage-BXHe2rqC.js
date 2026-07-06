@@ -182,10 +182,10 @@ import{d as u,a as b,b as T}from"./page-homepage-hw3Gvt4E.js";let v=null,z=[],L=
       <div class="anird-modal-body">${a}</div>
       ${t?`<div class="anird-modal-footer">${t}</div>`:""}
     </div>
-  `;const d=e.querySelector(".anird-modal"),i=()=>{e.classList.add("closing"),d.classList.add("closing"),setTimeout(()=>{e.remove(),y=null,r&&r()},200)};p&&e.addEventListener("click",h=>{h.target===e&&i()}),e.querySelector("[data-modal-close]").addEventListener("click",i);const g=h=>{h.key==="Escape"&&(i(),document.removeEventListener("keydown",g))};return document.addEventListener("keydown",g),y={overlay:e,close:i},document.body.appendChild(e),document.body.style.overflow="hidden",e._cleanup=()=>{document.body.style.overflow=""},{close:i,el:d}}function w(){y&&(y.close(),document.body.style.overflow="",y=null)}function M({title:s,message:a,confirmText:n="Confirmar",cancelText:l="Cancelar",danger:t=!1}){return new Promise(r=>{const p=`
+  `;const d=e.querySelector(".anird-modal"),i=()=>{e.classList.add("closing"),d.classList.add("closing"),setTimeout(()=>{e.remove(),y=null,r&&r()},200)};p&&e.addEventListener("click",h=>{h.target===e&&i()}),e.querySelector("[data-modal-close]").addEventListener("click",i);const g=h=>{h.key==="Escape"&&(i(),document.removeEventListener("keydown",g))};return document.addEventListener("keydown",g),y={overlay:e,close:i},document.body.appendChild(e),document.body.style.overflow="hidden",e._cleanup=()=>{document.body.style.overflow=""},{close:i,el:d}}function w(){y&&(y.close(),document.body.style.overflow="",y=null)}function q({title:s,message:a,confirmText:n="Confirmar",cancelText:l="Cancelar",danger:t=!1}){return new Promise(r=>{const p=`
       <button class="btn-v4-secondary" data-modal-cancel style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 600;">${l}</button>
       <button class="btn-v4-primary" data-modal-confirm style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700; ${t?"background: #e50914; border-color: #e50914;":""}">${n}</button>
-    `,{el:e}=A({title:s,content:`<p style="color: #a1a1aa; font-size: 14px; line-height: 1.6;">${a}</p>`,footer:p,danger:t,size:"sm",onClose:()=>r(!1)});e.querySelector("[data-modal-confirm]").addEventListener("click",()=>{w(),r(!0)}),e.querySelector("[data-modal-cancel]").addEventListener("click",()=>{w(),r(!1)})})}function R({title:s,message:a,placeholder:n="",defaultValue:l="",confirmText:t="Aceptar"}){return new Promise(r=>{const p=`
+    `,{el:e}=A({title:s,content:`<p style="color: #a1a1aa; font-size: 14px; line-height: 1.6;">${a}</p>`,footer:p,danger:t,size:"sm",onClose:()=>r(!1)});e.querySelector("[data-modal-confirm]").addEventListener("click",()=>{w(),r(!0)}),e.querySelector("[data-modal-cancel]").addEventListener("click",()=>{w(),r(!1)})})}function F({title:s,message:a,placeholder:n="",defaultValue:l="",confirmText:t="Aceptar"}){return new Promise(r=>{const p=`
       <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">${a}</p>
       <input type="text" id="anird-modal-input" placeholder="${n}" value="${l}"
         style="width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
@@ -458,8 +458,11 @@ import{d as u,a as b,b as T}from"./page-homepage-hw3Gvt4E.js";let v=null,z=[],L=
           <button class="btn-icon-sheet ${this.isFavorite?"active":""}" id="fav-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
           </button>
-          <button class="btn-icon-sheet" id="share-btn" title="Compartir">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
+          <button class="btn-icon-sheet ${this.isFollowing?"active":""}" id="follow-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          </button>
+          <button class="btn-icon-sheet" id="add-to-list-btn" title="Agregar a lista">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
           </button>
         </div>
 
@@ -585,4 +588,4 @@ import{d as u,a as b,b as T}from"./page-homepage-hw3Gvt4E.js";let v=null,z=[],L=
             <div class="relation-item-title">${e.name}</div>
             <div class="relation-item-meta">${e.type.toUpperCase()}</div>
           </a>
-        `}}return a}}const F=Object.freeze(Object.defineProperty({__proto__:null,default:P},Symbol.toStringTag,{value:"Module"}));export{F as A,C as T,M as c,R as p};
+        `}}return a}}const R=Object.freeze(Object.defineProperty({__proto__:null,default:P},Symbol.toStringTag,{value:"Module"}));export{R as A,C as T,q as c,F as p};
