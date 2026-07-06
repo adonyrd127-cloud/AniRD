@@ -86,7 +86,22 @@ export default class WatchPage {
               const epRes = await apiService.getEpisode(targetEpisode.url);
               if (epRes.success && epRes.data) {
                 this.episodeData = epRes.data;
-                const serverList = this.episodeData.servers[this.lang] || this.episodeData.servers.sub || [];
+                
+                let serverList = this.episodeData.servers[this.lang];
+                if (!serverList || serverList.length === 0) {
+                  if (this.lang === 'dub' && this.episodeData.servers.sub && this.episodeData.servers.sub.length > 0) {
+                    this.lang = 'sub';
+                    serverList = this.episodeData.servers.sub;
+                    Toast.show('El episodio no tiene doblaje disponible. Reproduciendo subtitulado.', 'info');
+                    
+                    // Actualizar URL sin recargar
+                    const newUrl = window.location.href.replace('/dub', '/sub');
+                    window.history.replaceState({}, '', newUrl);
+                  } else {
+                    serverList = this.episodeData.servers.sub || [];
+                  }
+                }
+                
                 this.episodeData.activeServers = serverList;
               }
             }
