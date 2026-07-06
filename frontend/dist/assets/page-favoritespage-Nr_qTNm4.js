@@ -1,5 +1,5 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/page-homepage-hw3Gvt4E.js","assets/vendor-DIPEJTOH.js"])))=>i.map(i=>d[i]);
-import{_ as s}from"./page-watchpage-DW4-bHYW.js";import{d}from"./page-homepage-hw3Gvt4E.js";import"./vendor-DIPEJTOH.js";import"./page-animedetailpage-BXHe2rqC.js";class u{async render(){const a=document.createElement("div");return a.innerHTML=`
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/page-homepage-C3Zysmtu.js","assets/vendor-DIPEJTOH.js"])))=>i.map(i=>d[i]);
+import{_ as s}from"./page-watchpage-BifNB-n2.js";import{d}from"./page-homepage-C3Zysmtu.js";import"./vendor-DIPEJTOH.js";import"./page-animedetailpage-B3saHh-C.js";class u{async render(){const a=document.createElement("div");return a.innerHTML=`
       <style>
         .page-container {
           padding: 40px 4%;
@@ -34,4 +34,4 @@ import{_ as s}from"./page-watchpage-DW4-bHYW.js";import{d}from"./page-homepage-h
           <p style="color: var(--text-secondary);">Explora el catálogo y guarda los animes que más te gusten.</p>
           <a href="/" data-link class="btn-play" style="margin-top:20px; display:inline-block; background:var(--accent); color:black; padding:12px 25px; border-radius:8px; font-weight:700; text-decoration:none;">Explorar Inicio</a>
         </div>
-      `;return}a.innerHTML="",o.forEach(t=>{const i=document.createElement("anime-card"),n={mal_id:t.animeId,title:t.title,images:{jpg:{large_image_url:t.cover}},type:t.type,score:t.score,episodes:t.episodes,status:t.status,broadcast:t.broadcast};i.data=n,a.appendChild(i),s(async()=>{const{apiService:r}=await import("./page-homepage-hw3Gvt4E.js").then(e=>e.f);return{apiService:r}},__vite__mapDeps([0,1])).then(({apiService:r})=>{r.getAnimeInfo(t.animeId).then(e=>{e&&e.data&&(i.data={...n,status:e.data.status,broadcast:e.data.broadcast,episodes:e.data.episodes,score:e.data.score})})})})}}export{u as default};
+      `;return}a.innerHTML="",o.forEach(t=>{const i=document.createElement("anime-card"),n={mal_id:t.animeId,title:t.title,images:{jpg:{large_image_url:t.cover}},type:t.type,score:t.score,episodes:t.episodes,status:t.status,broadcast:t.broadcast};i.data=n,a.appendChild(i),s(async()=>{const{apiService:r}=await import("./page-homepage-C3Zysmtu.js").then(e=>e.f);return{apiService:r}},__vite__mapDeps([0,1])).then(({apiService:r})=>{r.getAnimeInfo(t.animeId).then(e=>{e&&e.data&&(i.data={...n,status:e.data.status,broadcast:e.data.broadcast,episodes:e.data.episodes,score:e.data.score})})})})}}export{u as default};

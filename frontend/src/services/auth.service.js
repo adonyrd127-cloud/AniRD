@@ -35,7 +35,10 @@ class AuthService {
       return data;
     } catch (err) {
       console.error('Fetch error:', err);
-      throw new Error(`Error de conexión al servidor (${this.baseUrl}).`);
+      if (err instanceof TypeError) {
+        throw new Error(`Error de conexión al servidor (${this.baseUrl}).`);
+      }
+      throw err;
     }
   }
 
@@ -54,7 +57,10 @@ class AuthService {
       return data;
     } catch (err) {
       console.error('Fetch error:', err);
-      throw new Error(`Error de conexión al servidor (${this.baseUrl}). Asegúrate de que el puerto 3005 esté abierto.`);
+      if (err instanceof TypeError) {
+        throw new Error(`Error de conexión al servidor (${this.baseUrl}). Asegúrate de que el puerto 3005 esté abierto.`);
+      }
+      throw err;
     }
   }
 
