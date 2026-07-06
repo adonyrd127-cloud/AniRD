@@ -18,11 +18,14 @@ export default class AnimeDetailPage {
 
   async render() {
     const container = document.createElement('div');
+    // Using position: fixed on the container fixes the height: 0px issue caused by the .page-enter transform
     container.className = 'page-enter';
+    container.style.cssText = 'position: fixed; inset: 0; z-index: 100;';
+
     // Mostrar un spinner inmediatamente para que la pantalla no quede en negro
     container.innerHTML = `
-      <div style="position:fixed;inset:0;z-index:0;background:#09090b;"></div>
-      <div style="position:fixed;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;">
+      <div style="position:absolute;inset:0;z-index:0;background:#09090b;"></div>
+      <div style="position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;">
         <div class="loader-spinner" style="width:50px;height:50px;border:3px solid #ef4444;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></div>
         <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
       </div>
@@ -34,7 +37,12 @@ export default class AnimeDetailPage {
   }
 
   async loadData(container) {
-    const userLang = await dbService.getSetting('audio_pref', 'sub');
+    let userLang = 'sub';
+    try {
+      userLang = await dbService.getSetting('audio_pref', 'sub');
+    } catch(e) {
+      console.warn("Could not get audio_pref, using default", e);
+    }
     
     // Fetch all data in parallel with timeout to prevent infinite hangs
     const timeoutPromise = (promise, ms = 15000) => Promise.race([
@@ -104,13 +112,13 @@ export default class AnimeDetailPage {
     container.innerHTML = `
       <style>
         .page-bg {
-          position: fixed; inset: 0; z-index: 0;
+          position: absolute; inset: 0; z-index: 0;
           background: url('${banner}') center/cover no-repeat;
           filter: brightness(0.3) blur(20px);
           transform: scale(1.1);
         }
         .sheet-overlay {
-          position: fixed; inset: 0; z-index: 100;
+          position: absolute; inset: 0; z-index: 100;
           background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
           animation: fadeIn 0.3s ease-out;
         }
@@ -461,6 +469,10 @@ export default class AnimeDetailPage {
   }
 
   async afterRender() {
+    // Prevent execution if DOM is not ready (app.js calls this too early for our async loadData)
+    const closeBtn = document.getElementById('sheet-close');
+    if (!closeBtn) return;
+
     // Actions
     const favBtn = document.getElementById('fav-btn');
     const followBtn = document.getElementById('follow-btn');

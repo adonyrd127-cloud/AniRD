@@ -1,4 +1,4 @@
-import{d as x,a as b,b as T}from"./page-homepage-hw3Gvt4E.js";let v=null,z=[],L=!1;const S={success:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',error:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',info:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',warning:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',notification:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>'},E={success:{bg:"rgba(70, 211, 105, 0.12)",border:"rgba(70, 211, 105, 0.3)",text:"#46d369",icon:"#46d369"},error:{bg:"rgba(229, 9, 20, 0.12)",border:"rgba(229, 9, 20, 0.3)",text:"#e50914",icon:"#e50914"},info:{bg:"rgba(59, 130, 246, 0.12)",border:"rgba(59, 130, 246, 0.3)",text:"#60a5fa",icon:"#60a5fa"},warning:{bg:"rgba(232, 124, 3, 0.12)",border:"rgba(232, 124, 3, 0.3)",text:"#e87c03",icon:"#e87c03"},notification:{bg:"rgba(229, 9, 20, 0.12)",border:"rgba(229, 9, 20, 0.25)",text:"#ffffff",icon:"#e50914"}};function O(){return v||(v=document.createElement("div"),v.id="anird-toast-container",v.innerHTML=`<style>
+import{d as u,a as b,b as T}from"./page-homepage-hw3Gvt4E.js";let v=null,z=[],L=!1;const S={success:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',error:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',info:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',warning:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',notification:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>'},E={success:{bg:"rgba(70, 211, 105, 0.12)",border:"rgba(70, 211, 105, 0.3)",text:"#46d369",icon:"#46d369"},error:{bg:"rgba(229, 9, 20, 0.12)",border:"rgba(229, 9, 20, 0.3)",text:"#e50914",icon:"#e50914"},info:{bg:"rgba(59, 130, 246, 0.12)",border:"rgba(59, 130, 246, 0.3)",text:"#60a5fa",icon:"#60a5fa"},warning:{bg:"rgba(232, 124, 3, 0.12)",border:"rgba(232, 124, 3, 0.3)",text:"#e87c03",icon:"#e87c03"},notification:{bg:"rgba(229, 9, 20, 0.12)",border:"rgba(229, 9, 20, 0.25)",text:"#ffffff",icon:"#e50914"}};function B(){return v||(v=document.createElement("div"),v.id="anird-toast-container",v.innerHTML=`<style>
     #anird-toast-container {
       position: fixed; top: 84px; right: 20px; z-index: 9999;
       display: flex; flex-direction: column; gap: 10px;
@@ -71,18 +71,18 @@ import{d as x,a as b,b as T}from"./page-homepage-hw3Gvt4E.js";let v=null,z=[],L=
       #anird-toast-container { right: 10px; left: 10px; max-width: none; }
       .anird-toast { padding: 12px 14px; }
     }
-  </style>`,document.body.appendChild(v),v)}function I(){if(L||z.length===0)return;L=!0;const s=z.shift();_(s)}function _({type:s="info",title:i="",message:n="",duration:c=4e3,action:a=null,onClose:o=null}){const l=O(),e=E[s]||E.info,p=S[s]||S.info,t=document.createElement("div");t.className="anird-toast",t.style.background=e.bg,t.style.borderColor=e.border,t.style.setProperty("--duration",`${c}ms`);let h="";a&&(h=`<button class="toast-action" data-toast-action style="background: ${e.border}; color: ${e.text};">${a.label}</button>`),t.innerHTML=`
-    <div class="toast-icon" style="background: ${e.bg}; color: ${e.icon};">${p}</div>
+  </style>`,document.body.appendChild(v),v)}function I(){if(L||z.length===0)return;L=!0;const s=z.shift();O(s)}function O({type:s="info",title:a="",message:n="",duration:l=4e3,action:t=null,onClose:r=null}){const p=B(),e=E[s]||E.info,d=S[s]||S.info,i=document.createElement("div");i.className="anird-toast",i.style.background=e.bg,i.style.borderColor=e.border,i.style.setProperty("--duration",`${l}ms`);let g="";t&&(g=`<button class="toast-action" data-toast-action style="background: ${e.border}; color: ${e.text};">${t.label}</button>`),i.innerHTML=`
+    <div class="toast-icon" style="background: ${e.bg}; color: ${e.icon};">${d}</div>
     <div class="toast-content">
-      ${i?`<div class="toast-title">${i}</div>`:""}
+      ${a?`<div class="toast-title">${a}</div>`:""}
       ${n?`<div class="toast-message">${n}</div>`:""}
-      ${h}
+      ${g}
     </div>
     <button class="toast-close" data-toast-close>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
     <div class="toast-progress" style="background: ${e.icon};"></div>
-  `;const g=t.querySelector("[data-toast-action]");g&&a&&a.onClick&&g.addEventListener("click",d=>{d.stopPropagation(),a.onClick(),k(t,o)}),t.querySelector("[data-toast-close]").addEventListener("click",()=>k(t,o)),l.appendChild(t);const u=setTimeout(()=>k(t,o),c);t._timeout=u,t.addEventListener("mouseenter",()=>{clearTimeout(t._timeout),t.querySelector(".toast-progress").style.animationPlayState="paused"}),t.addEventListener("mouseleave",()=>{t._timeout=setTimeout(()=>k(t,o),2e3),t.querySelector(".toast-progress").style.animationPlayState="running"})}function k(s,i){s._removed||(s._removed=!0,clearTimeout(s._timeout),s.classList.add("removing"),setTimeout(()=>{s.remove(),i&&i(),L=!1,I()},350))}const C={show(s){z.push(s),I()},success(s,i,n){this.show({type:"success",title:s,message:i,duration:n})},error(s,i,n){this.show({type:"error",title:s,message:i,duration:n||5e3})},info(s,i,n){this.show({type:"info",title:s,message:i,duration:n})},warning(s,i,n){this.show({type:"warning",title:s,message:i,duration:n})},notify(s,i,n,c){this.show({type:"notification",title:s,message:i,action:n,duration:c||6e3})}};let y=null;const B=`
+  `;const h=i.querySelector("[data-toast-action]");h&&t&&t.onClick&&h.addEventListener("click",c=>{c.stopPropagation(),t.onClick(),k(i,r)}),i.querySelector("[data-toast-close]").addEventListener("click",()=>k(i,r)),p.appendChild(i);const x=setTimeout(()=>k(i,r),l);i._timeout=x,i.addEventListener("mouseenter",()=>{clearTimeout(i._timeout),i.querySelector(".toast-progress").style.animationPlayState="paused"}),i.addEventListener("mouseleave",()=>{i._timeout=setTimeout(()=>k(i,r),2e3),i.querySelector(".toast-progress").style.animationPlayState="running"})}function k(s,a){s._removed||(s._removed=!0,clearTimeout(s._timeout),s.classList.add("removing"),setTimeout(()=>{s.remove(),a&&a(),L=!1,I()},350))}const C={show(s){z.push(s),I()},success(s,a,n){this.show({type:"success",title:s,message:a,duration:n})},error(s,a,n){this.show({type:"error",title:s,message:a,duration:n||5e3})},info(s,a,n){this.show({type:"info",title:s,message:a,duration:n})},warning(s,a,n){this.show({type:"warning",title:s,message:a,duration:n})},notify(s,a,n,l){this.show({type:"notification",title:s,message:a,action:n,duration:l||6e3})}};let y=null;const _=`
   <style>
     .anird-modal-overlay {
       position: fixed; inset: 0; z-index: 10000;
@@ -170,24 +170,24 @@ import{d as x,a as b,b as T}from"./page-homepage-hw3Gvt4E.js";let v=null,z=[],L=
       .anird-modal-footer { padding: 12px 18px; }
     }
   </style>
-`;function A({title:s="",content:i="",size:n="",danger:c=!1,footer:a="",onClose:o=null,closeOnOverlay:l=!0}){y&&w();const e=document.createElement("div");e.className="anird-modal-overlay",e.innerHTML=`
-    ${B}
-    <div class="anird-modal ${n?"size-"+n:""} ${c?"danger":""}">
+`;function A({title:s="",content:a="",size:n="",danger:l=!1,footer:t="",onClose:r=null,closeOnOverlay:p=!0}){y&&w();const e=document.createElement("div");e.className="anird-modal-overlay",e.innerHTML=`
+    ${_}
+    <div class="anird-modal ${n?"size-"+n:""} ${l?"danger":""}">
       <div class="anird-modal-header">
         <h3 class="anird-modal-title">${s}</h3>
         <button class="anird-modal-close" data-modal-close>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      <div class="anird-modal-body">${i}</div>
-      ${a?`<div class="anird-modal-footer">${a}</div>`:""}
+      <div class="anird-modal-body">${a}</div>
+      ${t?`<div class="anird-modal-footer">${t}</div>`:""}
     </div>
-  `;const p=e.querySelector(".anird-modal"),t=()=>{e.classList.add("closing"),p.classList.add("closing"),setTimeout(()=>{e.remove(),y=null,o&&o()},200)};l&&e.addEventListener("click",g=>{g.target===e&&t()}),e.querySelector("[data-modal-close]").addEventListener("click",t);const h=g=>{g.key==="Escape"&&(t(),document.removeEventListener("keydown",h))};return document.addEventListener("keydown",h),y={overlay:e,close:t},document.body.appendChild(e),document.body.style.overflow="hidden",e._cleanup=()=>{document.body.style.overflow=""},{close:t,el:p}}function w(){y&&(y.close(),document.body.style.overflow="",y=null)}function M({title:s,message:i,confirmText:n="Confirmar",cancelText:c="Cancelar",danger:a=!1}){return new Promise(o=>{const l=`
-      <button class="btn-v4-secondary" data-modal-cancel style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 600;">${c}</button>
-      <button class="btn-v4-primary" data-modal-confirm style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700; ${a?"background: #e50914; border-color: #e50914;":""}">${n}</button>
-    `,{el:e}=A({title:s,content:`<p style="color: #a1a1aa; font-size: 14px; line-height: 1.6;">${i}</p>`,footer:l,danger:a,size:"sm",onClose:()=>o(!1)});e.querySelector("[data-modal-confirm]").addEventListener("click",()=>{w(),o(!0)}),e.querySelector("[data-modal-cancel]").addEventListener("click",()=>{w(),o(!1)})})}function R({title:s,message:i,placeholder:n="",defaultValue:c="",confirmText:a="Aceptar"}){return new Promise(o=>{const l=`
-      <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">${i}</p>
-      <input type="text" id="anird-modal-input" placeholder="${n}" value="${c}"
+  `;const d=e.querySelector(".anird-modal"),i=()=>{e.classList.add("closing"),d.classList.add("closing"),setTimeout(()=>{e.remove(),y=null,r&&r()},200)};p&&e.addEventListener("click",h=>{h.target===e&&i()}),e.querySelector("[data-modal-close]").addEventListener("click",i);const g=h=>{h.key==="Escape"&&(i(),document.removeEventListener("keydown",g))};return document.addEventListener("keydown",g),y={overlay:e,close:i},document.body.appendChild(e),document.body.style.overflow="hidden",e._cleanup=()=>{document.body.style.overflow=""},{close:i,el:d}}function w(){y&&(y.close(),document.body.style.overflow="",y=null)}function M({title:s,message:a,confirmText:n="Confirmar",cancelText:l="Cancelar",danger:t=!1}){return new Promise(r=>{const p=`
+      <button class="btn-v4-secondary" data-modal-cancel style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 600;">${l}</button>
+      <button class="btn-v4-primary" data-modal-confirm style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700; ${t?"background: #e50914; border-color: #e50914;":""}">${n}</button>
+    `,{el:e}=A({title:s,content:`<p style="color: #a1a1aa; font-size: 14px; line-height: 1.6;">${a}</p>`,footer:p,danger:t,size:"sm",onClose:()=>r(!1)});e.querySelector("[data-modal-confirm]").addEventListener("click",()=>{w(),r(!0)}),e.querySelector("[data-modal-cancel]").addEventListener("click",()=>{w(),r(!1)})})}function R({title:s,message:a,placeholder:n="",defaultValue:l="",confirmText:t="Aceptar"}){return new Promise(r=>{const p=`
+      <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">${a}</p>
+      <input type="text" id="anird-modal-input" placeholder="${n}" value="${l}"
         style="width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
         background: rgba(255,255,255,0.05); color: white; font-size: 14px; font-family: 'Inter', sans-serif;
         outline: none; transition: border-color 0.2s;"
@@ -195,14 +195,14 @@ import{d as x,a as b,b as T}from"./page-homepage-hw3Gvt4E.js";let v=null,z=[],L=
       >
     `,e=`
       <button class="btn-v4-secondary" data-modal-cancel style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 600;">Cancelar</button>
-      <button class="btn-v4-primary" data-modal-confirm style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700;">${a}</button>
-    `,{el:p}=A({title:s,content:l,footer:e,size:"sm",onClose:()=>o(null)}),t=p.querySelector("#anird-modal-input");setTimeout(()=>t.focus(),400);const h=()=>{const g=t.value.trim();w(),o(g||null)};p.querySelector("[data-modal-confirm]").addEventListener("click",h),p.querySelector("[data-modal-cancel]").addEventListener("click",()=>{w(),o(null)}),t.addEventListener("keydown",g=>{g.key==="Enter"&&h()})})}class P{constructor(i){this.params=i,this.animeId=i.id,this.anime=null,this.characters=[],this.recommendations=[],this.relations=[],this.isFavorite=!1,this.isFollowing=!1}async render(){const i=document.createElement("div");return i.className="page-enter",i.innerHTML=`
-      <div style="position:fixed;inset:0;z-index:0;background:#09090b;"></div>
-      <div style="position:fixed;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;">
+      <button class="btn-v4-primary" data-modal-confirm style="padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700;">${t}</button>
+    `,{el:d}=A({title:s,content:p,footer:e,size:"sm",onClose:()=>r(null)}),i=d.querySelector("#anird-modal-input");setTimeout(()=>i.focus(),400);const g=()=>{const h=i.value.trim();w(),r(h||null)};d.querySelector("[data-modal-confirm]").addEventListener("click",g),d.querySelector("[data-modal-cancel]").addEventListener("click",()=>{w(),r(null)}),i.addEventListener("keydown",h=>{h.key==="Enter"&&g()})})}class P{constructor(a){this.params=a,this.animeId=a.id,this.anime=null,this.characters=[],this.recommendations=[],this.relations=[],this.isFavorite=!1,this.isFollowing=!1}async render(){const a=document.createElement("div");return a.className="page-enter",a.style.cssText="position: fixed; inset: 0; z-index: 100;",a.innerHTML=`
+      <div style="position:absolute;inset:0;z-index:0;background:#09090b;"></div>
+      <div style="position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;">
         <div class="loader-spinner" style="width:50px;height:50px;border:3px solid #ef4444;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></div>
         <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
       </div>
-    `,this.loadData(i),i}async loadData(i){var g,u,d;const n=await x.getSetting("audio_pref","sub"),c=(r,f=15e3)=>Promise.race([r,new Promise((m,$)=>setTimeout(()=>$(new Error("Timeout")),f))]);let a,o,l,e,p,t;try{[a,o,l,e,p,t]=await c(Promise.all([b.getAnimeInfo(this.animeId),b.providers.jikan.request(`/anime/${this.animeId}/characters`).catch(()=>({data:[]})),b.providers.jikan.request(`/anime/${this.animeId}/recommendations`).catch(()=>({data:[]})),x.isFavorite(this.animeId).catch(()=>!1),x.isFollowing(this.animeId).catch(()=>!1),b.getAnimeRelations(this.animeId).catch(()=>({data:[]}))]))}catch(r){console.error("[AnimeDetailPage] Error fetching data:",r),a={data:null},o={data:[]},l={data:[]},e=!1,p=!1,t={data:[]}}if(this.anime=(a==null?void 0:a.data)||null,this.characters=(o==null?void 0:o.data)||[],this.recommendations=(l==null?void 0:l.data)||[],this.isFavorite=e||!1,this.isFollowing=p||!1,this.relations=(t==null?void 0:t.data)||[],!this.anime){console.error("[AnimeDetailPage] No se pudo cargar anime con ID:",this.animeId),i.innerHTML=`
+    `,this.loadData(a),a}async loadData(a){var h,x,c;let n="sub";try{n=await u.getSetting("audio_pref","sub")}catch(o){console.warn("Could not get audio_pref, using default",o)}const l=(o,f=15e3)=>Promise.race([o,new Promise((m,$)=>setTimeout(()=>$(new Error("Timeout")),f))]);let t,r,p,e,d,i;try{[t,r,p,e,d,i]=await l(Promise.all([b.getAnimeInfo(this.animeId),b.providers.jikan.request(`/anime/${this.animeId}/characters`).catch(()=>({data:[]})),b.providers.jikan.request(`/anime/${this.animeId}/recommendations`).catch(()=>({data:[]})),u.isFavorite(this.animeId).catch(()=>!1),u.isFollowing(this.animeId).catch(()=>!1),b.getAnimeRelations(this.animeId).catch(()=>({data:[]}))]))}catch(o){console.error("[AnimeDetailPage] Error fetching data:",o),t={data:null},r={data:[]},p={data:[]},e=!1,d=!1,i={data:[]}}if(this.anime=(t==null?void 0:t.data)||null,this.characters=(r==null?void 0:r.data)||[],this.recommendations=(p==null?void 0:p.data)||[],this.isFavorite=e||!1,this.isFollowing=d||!1,this.relations=(i==null?void 0:i.data)||[],!this.anime){console.error("[AnimeDetailPage] No se pudo cargar anime con ID:",this.animeId),a.innerHTML=`
         <div style="position:fixed;inset:0;z-index:0;background:#09090b;"></div>
         <div style="position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;">
           <div style="font-size:64px;margin-bottom:20px;filter:drop-shadow(0 0 20px rgba(229,9,20,0.3));">😵</div>
@@ -219,16 +219,16 @@ import{d as x,a as b,b as T}from"./page-homepage-hw3Gvt4E.js";let v=null,z=[],L=
             </button>
           </div>
         </div>
-      `,document.title="Error — AniRD";return}const h=await b.getAnilistBanner(this.animeId).catch(()=>null)||((u=(g=this.anime.images)==null?void 0:g.jpg)==null?void 0:u.large_image_url)||"";document.title=`${this.anime.title_english||this.anime.title} — AniRD`,i.innerHTML=`
+      `,document.title="Error — AniRD";return}const g=await b.getAnilistBanner(this.animeId).catch(()=>null)||((x=(h=this.anime.images)==null?void 0:h.jpg)==null?void 0:x.large_image_url)||"";document.title=`${this.anime.title_english||this.anime.title} — AniRD`,a.innerHTML=`
       <style>
         .page-bg {
-          position: fixed; inset: 0; z-index: 0;
-          background: url('${h}') center/cover no-repeat;
+          position: absolute; inset: 0; z-index: 0;
+          background: url('${g}') center/cover no-repeat;
           filter: brightness(0.3) blur(20px);
           transform: scale(1.1);
         }
         .sheet-overlay {
-          position: fixed; inset: 0; z-index: 100;
+          position: absolute; inset: 0; z-index: 100;
           background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
           animation: fadeIn 0.3s ease-out;
         }
@@ -435,7 +435,7 @@ import{d as x,a as b,b as T}from"./page-homepage-hw3Gvt4E.js";let v=null,z=[],L=
       <div class="sheet-overlay" id="sheet-overlay"></div>
       <div class="sheet-panel">
         <div class="sheet-banner">
-          <img src="${h}" alt="">
+          <img src="${g}" alt="">
           <div class="sheet-banner-overlay"></div>
           <button class="sheet-close" id="sheet-close">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -500,16 +500,16 @@ import{d as x,a as b,b as T}from"./page-homepage-hw3Gvt4E.js";let v=null,z=[],L=
               ${this.anime.source?`<div class="badge-pill">${this.anime.source}</div>`:""}
             </div>
 
-            ${((d=this.anime.studios)==null?void 0:d.length)>0?`
+            ${((c=this.anime.studios)==null?void 0:c.length)>0?`
               <h4 class="section-heading">Estudio</h4>
               <div class="badge-list">
-                ${this.anime.studios.map(r=>`<div class="badge-pill">${r.name}</div>`).join("")}
+                ${this.anime.studios.map(o=>`<div class="badge-pill">${o.name}</div>`).join("")}
               </div>
             `:""}
 
             <h4 class="section-heading">Géneros</h4>
             <div class="badge-list">
-              ${this.anime.genres.map(r=>`<div class="badge-pill" style="background: rgba(220,38,38,0.1); color: #fca5a5; border-color: rgba(220,38,38,0.2);">${r.name}</div>`).join("")}
+              ${this.anime.genres.map(o=>`<div class="badge-pill" style="background: rgba(220,38,38,0.1); color: #fca5a5; border-color: rgba(220,38,38,0.2);">${o.name}</div>`).join("")}
             </div>
 
             <h4 class="section-heading" style="margin-top: 8px;">Sinopsis</h4>
@@ -525,12 +525,12 @@ import{d as x,a as b,b as T}from"./page-homepage-hw3Gvt4E.js";let v=null,z=[],L=
           <div class="tab-panel" id="tab-characters">
             ${this.characters.length>0?`
               <div class="chars-grid">
-                ${this.characters.slice(0,20).map(r=>{var f,m;return`
+                ${this.characters.slice(0,20).map(o=>{var f,m;return`
                   <div class="char-card">
-                    <img class="char-img" src="${(m=(f=r.character.images)==null?void 0:f.jpg)==null?void 0:m.image_url}" alt="${r.character.name}">
+                    <img class="char-img" src="${(m=(f=o.character.images)==null?void 0:f.jpg)==null?void 0:m.image_url}" alt="${o.character.name}">
                     <div class="char-info">
-                      <div class="char-name">${r.character.name}</div>
-                      <div class="char-role">${r.role}</div>
+                      <div class="char-name">${o.character.name}</div>
+                      <div class="char-role">${o.role}</div>
                     </div>
                   </div>
                 `}).join("")}
@@ -542,8 +542,8 @@ import{d as x,a as b,b as T}from"./page-homepage-hw3Gvt4E.js";let v=null,z=[],L=
           <div class="tab-panel" id="tab-recommendations">
             ${this.recommendations.length>0?`
               <div class="recs-grid">
-                ${this.recommendations.slice(0,10).map(r=>`
-                  <anime-card data='${JSON.stringify({mal_id:r.entry.mal_id,title:r.entry.title,images:r.entry.images,score:"?.?"}).replace(/'/g,"&#39;")}'></anime-card>
+                ${this.recommendations.slice(0,10).map(o=>`
+                  <anime-card data='${JSON.stringify({mal_id:o.entry.mal_id,title:o.entry.title,images:o.entry.images,score:"?.?"}).replace(/'/g,"&#39;")}'></anime-card>
                 `).join("")}
               </div>
             `:'<div style="color:#71717a;text-align:center;padding:20px;">No hay recomendaciones.</div>'}
@@ -565,24 +565,24 @@ import{d as x,a as b,b as T}from"./page-homepage-hw3Gvt4E.js";let v=null,z=[],L=
           ${this.renderRelationsHtml()}
         </div>
       </div>
-    `,setTimeout(()=>{this.afterRender()},50)}async afterRender(){const i=document.getElementById("fav-btn"),n=document.getElementById("follow-btn");i&&i.addEventListener("click",async()=>{this.isFavorite?(await x.removeFavorite(this.animeId),this.isFavorite=!1,i.classList.remove("active")):(await x.addFavorite({...this.anime,addedAt:Date.now()}),this.isFavorite=!0,i.classList.add("active"))}),n&&n.addEventListener("click",async()=>{this.isFollowing?(await x.toggleFollowing({...this.anime,addedAt:Date.now()}),this.isFollowing=!1,n.classList.remove("active"),C.info("Dejaste de seguir",this.anime.title)):(await x.toggleFollowing({...this.anime,addedAt:Date.now()}),this.isFollowing=!0,n.classList.add("active"),C.success("Siguiendo",`Ahora sigues ${this.anime.title}`))});const c=document.querySelectorAll(".sheet-tab"),a=document.querySelectorAll(".tab-panel");c.forEach(l=>{l.addEventListener("click",()=>{c.forEach(e=>e.classList.remove("active")),a.forEach(e=>e.classList.remove("active")),l.classList.add("active"),document.getElementById("tab-"+l.dataset.tab).classList.add("active")})});const o=()=>{const l=document.querySelector(".sheet-panel"),e=document.querySelector(".sheet-overlay"),p=document.querySelector(".relations-panel");if(l&&e){l.style.animation="slideOut 0.3s forwards",e.style.animation="fadeOut 0.3s forwards",p&&(p.style.animation="fadeOut 0.3s forwards");const t=document.createElement("style");t.innerHTML=`
+    `,setTimeout(()=>{this.afterRender()},50)}async afterRender(){if(!document.getElementById("sheet-close"))return;const n=document.getElementById("fav-btn"),l=document.getElementById("follow-btn");n&&n.addEventListener("click",async()=>{this.isFavorite?(await u.removeFavorite(this.animeId),this.isFavorite=!1,n.classList.remove("active")):(await u.addFavorite({...this.anime,addedAt:Date.now()}),this.isFavorite=!0,n.classList.add("active"))}),l&&l.addEventListener("click",async()=>{this.isFollowing?(await u.toggleFollowing({...this.anime,addedAt:Date.now()}),this.isFollowing=!1,l.classList.remove("active"),C.info("Dejaste de seguir",this.anime.title)):(await u.toggleFollowing({...this.anime,addedAt:Date.now()}),this.isFollowing=!0,l.classList.add("active"),C.success("Siguiendo",`Ahora sigues ${this.anime.title}`))});const t=document.querySelectorAll(".sheet-tab"),r=document.querySelectorAll(".tab-panel");t.forEach(e=>{e.addEventListener("click",()=>{t.forEach(d=>d.classList.remove("active")),r.forEach(d=>d.classList.remove("active")),e.classList.add("active"),document.getElementById("tab-"+e.dataset.tab).classList.add("active")})});const p=()=>{const e=document.querySelector(".sheet-panel"),d=document.querySelector(".sheet-overlay"),i=document.querySelector(".relations-panel");if(e&&d){e.style.animation="slideOut 0.3s forwards",d.style.animation="fadeOut 0.3s forwards",i&&(i.style.animation="fadeOut 0.3s forwards");const g=document.createElement("style");g.innerHTML=`
            @keyframes slideOut { from { transform: translateX(0); } to { transform: translateX(-100%); } }
            @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-         `,document.head.appendChild(t),setTimeout(()=>{window.history.back()},300)}else window.history.back()};document.getElementById("sheet-close").addEventListener("click",o),document.getElementById("sheet-overlay").addEventListener("click",o),this.loadEpisodes()}async loadEpisodes(){var e,p,t,h,g,u;const i=document.getElementById("episodes-container"),n=await x.getSetting("audio_pref","sub");let c=new Set;try{const d=await T.history.where({animeId:String(this.animeId)}).toArray();c=new Set(d.map(r=>Number(r.episodeId)))}catch{}let a=null;try{const d=[this.anime.title,this.anime.title_english,this.anime.title_japanese,...this.anime.title_synonyms||[]].filter(Boolean);let r=null;for(const f of d){const m=await b.searchLocal(f);if(m!=null&&m.success&&((p=(e=m.data)==null?void 0:e.results)==null?void 0:p.length)>0){r=m;break}}if(r){const f=r.data.results.find($=>d.some(j=>$.title.toLowerCase().includes(j.toLowerCase())))||r.data.results[0],m=await b.getAnimeInfo(f.url);(t=m==null?void 0:m.data)!=null&&t.episodes&&(a=m.data.episodes.length)}}catch{}if(!a){if(this.anime.status==="Currently Airing")try{const d=await b.providers.jikan.request(`/anime/${this.animeId}/episodes`);if(((h=d==null?void 0:d.data)==null?void 0:h.length)>0){const r=d.pagination.last_visible_page;if(r>1){const f=await b.providers.jikan.request(`/anime/${this.animeId}/episodes?page=${r}`);a=f.data[f.data.length-1].mal_id}else a=d.data[d.data.length-1].mal_id}}catch{}a||(a=this.anime.episodes||12)}const o=((u=(g=this.anime.images)==null?void 0:g.jpg)==null?void 0:u.large_image_url)||"",l=`?title=${encodeURIComponent(this.anime.title)}`;i.innerHTML=`
+         `,document.head.appendChild(g),setTimeout(()=>{window.history.back()},300)}else window.history.back()};document.getElementById("sheet-close").addEventListener("click",p),document.getElementById("sheet-overlay").addEventListener("click",p),this.loadEpisodes()}async loadEpisodes(){var e,d,i,g,h,x;const a=document.getElementById("episodes-container"),n=await u.getSetting("audio_pref","sub");let l=new Set;try{const c=await T.history.where({animeId:String(this.animeId)}).toArray();l=new Set(c.map(o=>Number(o.episodeId)))}catch{}let t=null;try{const c=[this.anime.title,this.anime.title_english,this.anime.title_japanese,...this.anime.title_synonyms||[]].filter(Boolean);let o=null;for(const f of c){const m=await b.searchLocal(f);if(m!=null&&m.success&&((d=(e=m.data)==null?void 0:e.results)==null?void 0:d.length)>0){o=m;break}}if(o){const f=o.data.results.find($=>c.some(j=>$.title.toLowerCase().includes(j.toLowerCase())))||o.data.results[0],m=await b.getAnimeInfo(f.url);(i=m==null?void 0:m.data)!=null&&i.episodes&&(t=m.data.episodes.length)}}catch{}if(!t){if(this.anime.status==="Currently Airing")try{const c=await b.providers.jikan.request(`/anime/${this.animeId}/episodes`);if(((g=c==null?void 0:c.data)==null?void 0:g.length)>0){const o=c.pagination.last_visible_page;if(o>1){const f=await b.providers.jikan.request(`/anime/${this.animeId}/episodes?page=${o}`);t=f.data[f.data.length-1].mal_id}else t=c.data[c.data.length-1].mal_id}}catch{}t||(t=this.anime.episodes||12)}const r=((x=(h=this.anime.images)==null?void 0:h.jpg)==null?void 0:x.large_image_url)||"",p=`?title=${encodeURIComponent(this.anime.title)}`;a.innerHTML=`
       <div class="episodes-grid">
-        ${Array.from({length:a},(d,r)=>r+1).map(d=>{const r=c.has(d);return`
-            <a href="/watch/${this.animeId}/${d}/${n}${l}" data-link class="ep-card">
-              <img src="${o}" loading="lazy" style="${r?"opacity: 0.5; filter: grayscale(1);":""}">
+        ${Array.from({length:t},(c,o)=>o+1).map(c=>{const o=l.has(c);return`
+            <a href="/watch/${this.animeId}/${c}/${n}${p}" data-link class="ep-card">
+              <img src="${r}" loading="lazy" style="${o?"opacity: 0.5; filter: grayscale(1);":""}">
               <div class="ep-card-overlay">
-                <span class="ep-card-title">Ep. ${d}</span>
+                <span class="ep-card-title">Ep. ${c}</span>
               </div>
-              ${r?'<div class="ep-watched-badge">Visto</div>':""}
+              ${o?'<div class="ep-watched-badge">Visto</div>':""}
             </a>
           `}).join("")}
-    `}renderRelationsHtml(){if(!this.relations||this.relations.length===0)return'<div class="no-relations-message">No se encontraron precuelas, secuelas u otras conexiones.</div>';let i="";const n=[...this.relations].sort((c,a)=>{const o=c.relation.toLowerCase(),l=a.relation.toLowerCase();return o==="prequel"||o==="sequel"?-1:l==="prequel"||l==="sequel"?1:0});for(const c of n){const a=c.relation,o=a.toLowerCase()==="prequel"?"prequel":a.toLowerCase()==="sequel"?"sequel":"other",l=a==="Prequel"?"Precuela":a==="Sequel"?"Secuela":a==="Alternative version"?"Versión Alternativa":a==="Side story"?"Historia Paralela":a==="Spin-off"?"Spin-off":a==="Parent story"?"Historia Principal":a==="Summary"?"Resumen":a;for(const e of c.entry){const p=e.type==="anime",t=p?`/anime/${e.mal_id}`:e.url;i+=`
-          <a href="${t}" ${p?"data-link":'target="_blank" rel="noopener noreferrer"'} class="relation-item-card">
-            <span class="relation-badge ${o}">${l}</span>
+    `}renderRelationsHtml(){if(!this.relations||this.relations.length===0)return'<div class="no-relations-message">No se encontraron precuelas, secuelas u otras conexiones.</div>';let a="";const n=[...this.relations].sort((l,t)=>{const r=l.relation.toLowerCase(),p=t.relation.toLowerCase();return r==="prequel"||r==="sequel"?-1:p==="prequel"||p==="sequel"?1:0});for(const l of n){const t=l.relation,r=t.toLowerCase()==="prequel"?"prequel":t.toLowerCase()==="sequel"?"sequel":"other",p=t==="Prequel"?"Precuela":t==="Sequel"?"Secuela":t==="Alternative version"?"Versión Alternativa":t==="Side story"?"Historia Paralela":t==="Spin-off"?"Spin-off":t==="Parent story"?"Historia Principal":t==="Summary"?"Resumen":t;for(const e of l.entry){const d=e.type==="anime",i=d?`/anime/${e.mal_id}`:e.url;a+=`
+          <a href="${i}" ${d?"data-link":'target="_blank" rel="noopener noreferrer"'} class="relation-item-card">
+            <span class="relation-badge ${r}">${p}</span>
             <div class="relation-item-title">${e.name}</div>
             <div class="relation-item-meta">${e.type.toUpperCase()}</div>
           </a>
-        `}}return i}}const F=Object.freeze(Object.defineProperty({__proto__:null,default:P},Symbol.toStringTag,{value:"Module"}));export{F as A,C as T,M as c,R as p};
+        `}}return a}}const F=Object.freeze(Object.defineProperty({__proto__:null,default:P},Symbol.toStringTag,{value:"Module"}));export{F as A,C as T,M as c,R as p};
