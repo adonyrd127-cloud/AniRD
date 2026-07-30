@@ -32,13 +32,40 @@ class AniRDApplication : Application(), ImageLoaderFactory {
                     .build()
             }
             .respectCacheHeaders(false)
+            .crossfade(true)
+            .memoryCache {
+                coil.memory.MemoryCache.Builder(this)
+                    .maxSizePercent(0.25)
+                    .build()
+            }
+            .diskCache {
+                coil.disk.DiskCache.Builder()
+                    .maxSizeBytes(100L * 1024 * 1024) // 100 MB
+                    .directory(cacheDir.resolve("image_cache"))
+                    .build()
+            }
             .build()
     }
 
     override fun onCreate() {
         super.onCreate()
+        installCrashHandler()
         createNotificationChannels()
         setupBackgroundSync()
+    }
+
+    private fun installCrashHandler() {
+        val previous = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            try {
+                getSharedPreferences("crash_log", MODE_PRIVATE).edit()
+                    .putString("last_crash", android.util.Log.getStackTraceString(throwable))
+                    .apply()
+            } catch (e: Exception) {
+                // Ignore fallback
+            }
+            previous?.uncaughtException(thread, throwable)
+        }
     }
 
     private fun createNotificationChannels() {

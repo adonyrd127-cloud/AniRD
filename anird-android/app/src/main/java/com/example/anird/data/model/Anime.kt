@@ -1,10 +1,12 @@
 package com.example.anird.data.model
 
+import androidx.compose.runtime.Immutable
 import com.google.gson.annotations.SerializedName
 
 /**
  * Modelo principal de anime. Combina datos de Jikan (MAL) y fuentes locales.
  */
+@Immutable
 data class Anime(
     @SerializedName("mal_id") val malId: Int = 0,
     val title: String = "",
@@ -23,11 +25,11 @@ data class Anime(
     val trailer: Trailer? = null,
     val broadcast: Broadcast? = null,
     // Campos locales (del scraper)
-    var localUrl: String? = null,
-    var bannerUrl: String? = null,
-    var coverUrl: String? = null,
-    var nextEpisodeDate: String? = null,
-    var relations: List<AnimeRelation>? = null
+    val localUrl: String? = null,
+    val bannerUrl: String? = null,
+    val coverUrl: String? = null,
+    val nextEpisodeDate: String? = null,
+    val relations: List<AnimeRelation>? = null
 ) {
     /** URL de la imagen del poster (Jikan) */
     val imageUrl: String?

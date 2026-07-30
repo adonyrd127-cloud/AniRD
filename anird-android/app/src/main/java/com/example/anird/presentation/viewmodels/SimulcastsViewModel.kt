@@ -47,34 +47,55 @@ class SimulcastsViewModel @Inject constructor(
     fun loadSchedules() {
         updateJob?.cancel()
         viewModelScope.launch {
-            _uiState.value = SimulcastUiState.Loading
+            val stale = runCatching { repository.getCachedSchedules() }.getOrNull()
+            if (!stale.isNullOrEmpty()) {
+                allAnimeSchedules = stale
+                followingIds = runCatching { repository.getAllFollowingList().map { it.animeId }.toSet() }.getOrDefault(emptySet())
+                updateCountdowns()
+            } else {
+                _uiState.value = SimulcastUiState.Loading
+            }
+
             try {
-                // 1. Obtenemos los horarios de emisión semanales (Jikan API corregida)
-                allAnimeSchedules = repository.getSchedules(page = 1)
-                
-                // 2. Obtener lista de anime seguidos
+                val fetched = repository.getSchedules(page = 1)
+                if (fetched.isNotEmpty()) {
+                    allAnimeSchedules = fetched
+                }
                 followingIds = repository.getAllFollowingList().map { it.animeId }.toSet()
 
-                // 3. Consultar AniList en batch para los countdowns
-                val malIds = allAnimeSchedules.map { it.malId }
-                if (malIds.isNotEmpty()) {
-                    val batchAiring = repository.getNextAiringBatch(malIds)
-                    
-                    // Almacenar timestamps de aireación absoluta
-                    airingMap = batchAiring.associate { media ->
-                        media.idMal to (media.nextAiringEpisode?.airingAt ?: 0L)
-                    }.filterValues { it > 0 }
+                // Consultar AniList en chunks de ≤50 para no exceder límites de nodos GraphQL
+                allAnimeSchedules.map { it.malId }.filter { it > 0 }.distinct().chunked(50).forEach { chunk ->
+                    runCatching {
+                        val batchAiring = repository.getNextAiringBatch(chunk)
+                        val newAiringMap = batchAiring.associate { media ->
+                            media.idMal to (media.nextAiringEpisode?.airingAt ?: 0L)
+                        }.filterValues { it > 0 }
+                        val newAiringEpisodes = batchAiring.associate { media ->
+                            media.idMal to (media.nextAiringEpisode?.episode ?: 0)
+                        }.filterValues { it > 0 }
 
-                    airingEpisodes = batchAiring.associate { media ->
-                        media.idMal to (media.nextAiringEpisode?.episode ?: 0)
-                    }.filterValues { it > 0 }
+                        airingMap = airingMap + newAiringMap
+                        airingEpisodes = airingEpisodes + newAiringEpisodes
+                    }
                 }
 
-                // 4. Iniciar actualizador periódico de countdowns (cada minuto)
                 startCountdownTicker()
 
+            } catch (e: java.io.IOException) {
+                if (allAnimeSchedules.isEmpty()) {
+                    _uiState.value = SimulcastUiState.Error("Sin conexión. Revisa tu red e inténtalo de nuevo.")
+                }
+            } catch (e: retrofit2.HttpException) {
+                if (allAnimeSchedules.isEmpty()) {
+                    _uiState.value = when (e.code()) {
+                        429 -> SimulcastUiState.Error("Demasiadas peticiones a la API. Espera unos segundos.")
+                        else -> SimulcastUiState.Error("Error del servidor (${e.code()}).")
+                    }
+                }
             } catch (e: Exception) {
-                _uiState.value = SimulcastUiState.Error(e.localizedMessage ?: "Error al cargar la programación")
+                if (allAnimeSchedules.isEmpty()) {
+                    _uiState.value = SimulcastUiState.Error("No se pudo cargar la programación.")
+                }
             }
         }
     }
@@ -91,16 +112,16 @@ class SimulcastsViewModel @Inject constructor(
     private fun updateCountdowns() {
         val nowSeconds = System.currentTimeMillis() / 1000
 
-        allAnimeSchedules.forEach { anime ->
+        allAnimeSchedules = allAnimeSchedules.map { anime ->
             val airingAt = airingMap[anime.malId] ?: 0L
             val episodeNum = airingEpisodes[anime.malId] ?: 0
-            if (airingAt > 0) {
+            val formattedDate = if (airingAt > 0) {
                 val timeRemaining = airingAt - nowSeconds
                 if (timeRemaining > 0) {
                     val days = timeRemaining / 86400
                     val hours = (timeRemaining % 86400) / 3600
                     val mins = (timeRemaining % 3600) / 60
-                    anime.nextEpisodeDate = if (days > 0) {
+                    if (days > 0) {
                         "Ep $episodeNum en ${days}d ${hours}h"
                     } else if (hours > 0) {
                         "Ep $episodeNum en ${hours}h ${mins}m"
@@ -108,24 +129,41 @@ class SimulcastsViewModel @Inject constructor(
                         "Ep $episodeNum en ${mins}m"
                     }
                 } else {
-                    anime.nextEpisodeDate = "Emitido (Ep $episodeNum)"
+                    "Emitido (Ep $episodeNum)"
                 }
             } else {
-                anime.nextEpisodeDate = null
+                null
             }
+            anime.copy(nextEpisodeDate = formattedDate)
         }
 
-        // Agrupamos por día
+        // Agrupamos por día de forma segura
         val grouped = mutableMapOf<String, MutableList<Anime>>()
         daysOfWeek.forEach { grouped[it] = mutableListOf() }
 
         allAnimeSchedules.forEach { anime ->
-            val rawDay = anime.broadcast?.day?.lowercase(Locale.ROOT)?.trim() ?: ""
-            val broadcastDay = if (rawDay.endsWith("s")) rawDay.dropLast(1) else rawDay
-            if (broadcastDay.isNotEmpty() && broadcastDay in daysOfWeek) {
-                grouped[broadcastDay]?.add(anime)
+            val rawDay = (anime.broadcast?.day ?: anime.broadcast?.string ?: "").lowercase(Locale.ROOT)
+            val matchedDay = daysOfWeek.find { day -> rawDay.contains(day) }
+            if (matchedDay != null) {
+                grouped[matchedDay]?.add(anime)
             } else {
-                grouped["sunday"]?.add(anime)
+                val airingAt = airingMap[anime.malId] ?: 0L
+                if (airingAt > 0) {
+                    val cal = Calendar.getInstance().apply { timeInMillis = airingAt * 1000L }
+                    val inferredDay = when (cal.get(Calendar.DAY_OF_WEEK)) {
+                        Calendar.MONDAY -> "monday"
+                        Calendar.TUESDAY -> "tuesday"
+                        Calendar.WEDNESDAY -> "wednesday"
+                        Calendar.THURSDAY -> "thursday"
+                        Calendar.FRIDAY -> "friday"
+                        Calendar.SATURDAY -> "saturday"
+                        Calendar.SUNDAY -> "sunday"
+                        else -> "sunday"
+                    }
+                    grouped[inferredDay]?.add(anime)
+                } else {
+                    grouped["sunday"]?.add(anime)
+                }
             }
         }
 

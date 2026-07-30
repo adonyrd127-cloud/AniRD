@@ -177,7 +177,9 @@ fun PlayerScreen(
                         viewModel.saveWatchProgress(progress, duration)
                     },
                     onServerSelected = { viewModel.selectServer(it) },
-                    onLanguageSelected = { viewModel.selectLanguage(it) }
+                    onLanguageSelected = { viewModel.selectLanguage(it) },
+                    onPlayPreviousEpisode = { viewModel.playPreviousEpisode() },
+                    onPlayNextEpisode = { viewModel.playNextEpisode() }
                 )
             }
         }
@@ -193,7 +195,9 @@ fun VideoPlayerContainer(
     onBackClick: () -> Unit,
     onProgressUpdate: (Long, Long) -> Unit,
     onServerSelected: (StreamServer) -> Unit,
-    onLanguageSelected: (String) -> Unit
+    onLanguageSelected: (String) -> Unit,
+    onPlayPreviousEpisode: () -> Unit = {},
+    onPlayNextEpisode: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val activity = context.findActivity()
@@ -243,15 +247,16 @@ fun VideoPlayerContainer(
     // Determine if HTML/iframe or direct video
     val isHtml = remember(state.currentServer.url) {
         val lower = state.currentServer.url.lowercase(java.util.Locale.ROOT)
-        lower.contains("zilla-networks") ||
-                lower.contains("zilla") ||
-                lower.contains("embed") ||
-                lower.contains("play") ||
-                lower.contains("mp4upload") ||
-                lower.contains("fembed") ||
-                lower.contains("mega.nz") ||
-                lower.contains("ok.ru") ||
-                (!lower.endsWith(".mp4") && !lower.endsWith(".m3u8") && !lower.contains(".m3u8") && !lower.contains(".mp4"))
+        val isDirectMedia = (lower.contains(".m3u8") || lower.contains(".mp4")) &&
+                !lower.contains("embed") &&
+                !lower.contains("zilla") &&
+                !lower.contains("player.") &&
+                !lower.contains("mp4upload")
+        !isDirectMedia
+    }
+
+    LaunchedEffect(state.playbackSpeed) {
+        exoPlayer.setPlaybackSpeed(state.playbackSpeed)
     }
 
     // Setup media when server changes
@@ -450,8 +455,61 @@ fun VideoPlayerContainer(
                         settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                         settings.userAgentString =
                             "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
-                        webViewClient = android.webkit.WebViewClient()
-                        webChromeClient = android.webkit.WebChromeClient()
+                        settings.setSupportMultipleWindows(false)
+                        settings.javaScriptCanOpenWindowsAutomatically = false
+                        webViewClient = object : android.webkit.WebViewClient() {
+                            override fun shouldOverrideUrlLoading(
+                                view: android.webkit.WebView?,
+                                request: android.webkit.WebResourceRequest?
+                            ): Boolean {
+                                val url = request?.url?.toString() ?: ""
+                                return if (url.startsWith("http://") || url.startsWith("https://")) {
+                                    val currentHost = try { Uri.parse(state.currentServer.url).host ?: "" } catch (e: Exception) { "" }
+                                    val targetHost = try { Uri.parse(url).host ?: "" } catch (e: Exception) { "" }
+                                    if (currentHost.isNotBlank() && targetHost.isNotBlank() &&
+                                        (targetHost.contains(currentHost) || currentHost.contains(targetHost))
+                                    ) {
+                                        false
+                                    } else {
+                                        true // Bloquear redirección publicitaria
+                                    }
+                                } else {
+                                    true
+                                }
+                            }
+
+                            override fun shouldInterceptRequest(
+                                view: android.webkit.WebView?,
+                                request: android.webkit.WebResourceRequest?
+                            ): android.webkit.WebResourceResponse? {
+                                val url = request?.url?.toString()?.lowercase() ?: ""
+                                val isAd = url.contains("popcash") || url.contains("exoclick") ||
+                                        url.contains("popunder") || url.contains("adsterra") ||
+                                        url.contains("bet365") || url.contains("doubleclick") ||
+                                        url.contains("ad-system") || url.contains("propellerads") ||
+                                        url.contains("onclickads") || url.contains("juicyads") ||
+                                        url.contains("banner") || url.contains("popad") ||
+                                        url.contains("syndication") || url.contains("adservice") ||
+                                        url.contains("recomengine") || url.contains("adserver")
+
+                                return if (isAd) {
+                                    android.webkit.WebResourceResponse("text/plain", "UTF-8", null)
+                                } else {
+                                    super.shouldInterceptRequest(view, request)
+                                }
+                            }
+                        }
+
+                        webChromeClient = object : android.webkit.WebChromeClient() {
+                            override fun onCreateWindow(
+                                view: android.webkit.WebView?,
+                                isDialog: Boolean,
+                                isUserGesture: Boolean,
+                                resultMsg: android.os.Message?
+                            ): Boolean {
+                                return false
+                            }
+                        }
                         layoutParams = ViewGroup.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT
@@ -459,8 +517,35 @@ fun VideoPlayerContainer(
                     }
                 },
                 update = { webView ->
-                    if (webView.url != state.currentServer.url) {
-                        webView.loadUrl(state.currentServer.url)
+                    val targetUrl = state.currentServer.url
+                    val tagUrl = webView.tag as? String
+                    if (tagUrl != targetUrl) {
+                        webView.tag = targetUrl
+                        val parsedUri = try { Uri.parse(targetUrl) } catch (e: Exception) { null }
+                        val host = if (parsedUri?.scheme != null && parsedUri.host != null) {
+                            "${parsedUri.scheme}://${parsedUri.host}"
+                        } else {
+                            "https://animeav1.com"
+                        }
+
+                        val htmlContent = """
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                                <style>
+                                    * { margin: 0; padding: 0; box-sizing: border-box; background-color: #000000; }
+                                    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+                                    iframe { width: 100%; height: 100%; border: 0; outline: none; position: absolute; top: 0; left: 0; }
+                                </style>
+                            </head>
+                            <body>
+                                <iframe src="$targetUrl" allowfullscreen="true" allow="autoplay; encrypted-media; fullscreen" frameborder="0"></iframe>
+                            </body>
+                            </html>
+                        """.trimIndent()
+
+                        webView.loadDataWithBaseURL(host, htmlContent, "text/html", "UTF-8", null)
                     }
                 },
                 modifier = Modifier.fillMaxSize()
@@ -664,13 +749,13 @@ fun VideoPlayerContainer(
                     ) {
                         // Previous episode
                         TextButton(
-                            onClick = { /* Navigate to previous episode */ },
-                            enabled = state.episode.episodeNumber > 1,
+                            onClick = onPlayPreviousEpisode,
+                            enabled = state.hasPreviousEpisode,
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                         ) {
                             Text(
                                 "EP ANTERIOR",
-                                color = if (state.episode.episodeNumber > 1) TextSecondary else TextTertiary,
+                                color = if (state.hasPreviousEpisode) TextSecondary else TextTertiary,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -697,13 +782,13 @@ fun VideoPlayerContainer(
 
                         // Next episode
                         TextButton(
-                            onClick = { /* Navigate to next episode */ },
-                            enabled = state.episode.episodeNumber < (state.anime?.episodes ?: Int.MAX_VALUE),
+                            onClick = onPlayNextEpisode,
+                            enabled = state.hasNextEpisode,
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                         ) {
                             Text(
                                 "EP SIGUIENTE",
-                                color = if (state.episode.episodeNumber < (state.anime?.episodes ?: Int.MAX_VALUE)) TextSecondary else TextTertiary,
+                                color = if (state.hasNextEpisode) TextSecondary else TextTertiary,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -793,7 +878,7 @@ fun VideoPlayerContainer(
                         Icon(
                             imageVector = when (gestureIndicatorType) {
                                 "brightness" -> Icons.Default.Star
-                                "volume" -> if (gestureIndicatorValue > 0.5f) Icons.Default.Notifications else Icons.Default.Notifications
+                                "volume" -> if (gestureIndicatorValue > 0f) Icons.Default.VolumeUp else Icons.Default.VolumeOff
                                 "seek" -> if (seekGestureDirection == 1) IconsDefaultFastForward else IconsDefaultFastRewind
                                 else -> Icons.Default.PlayArrow
                             },

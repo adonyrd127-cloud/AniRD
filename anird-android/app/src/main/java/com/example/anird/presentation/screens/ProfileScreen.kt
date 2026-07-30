@@ -450,16 +450,17 @@ fun LoginCard(
 
         // Login / Register button
         val isLoading = uiState is AuthUiState.Loading
+        val isFormValid = usernameText.isNotBlank() && passwordText.isNotBlank() && !isLoading
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
                 .background(
-                    if (isLoading) PrimaryDim else Primary,
+                    if (isFormValid) Primary else PrimaryDim,
                     RoundedCornerShape(14.dp)
                 )
                 .then(
-                    if (!isLoading) {
+                    if (isFormValid) {
                         Modifier.clickable {
                             if (isRegisterMode) {
                                 onRegisterClick(usernameText, passwordText)

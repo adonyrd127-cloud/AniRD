@@ -127,6 +127,9 @@ interface CacheDao {
     @Query("SELECT * FROM cache WHERE `key` = :key AND expiresAt > :now LIMIT 1")
     suspend fun get(key: String, now: Long = System.currentTimeMillis()): CacheEntity?
 
+    @Query("SELECT * FROM cache WHERE `key` = :key LIMIT 1")
+    suspend fun getAny(key: String): CacheEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun put(cache: CacheEntity)
 

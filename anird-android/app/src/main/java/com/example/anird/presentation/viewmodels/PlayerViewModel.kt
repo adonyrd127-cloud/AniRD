@@ -23,7 +23,11 @@ sealed interface PlayerUiState {
         val anime: Anime?,
         val servers: List<StreamServer>,
         val currentServer: StreamServer,
-        val subOrDub: String // "sub" or "dub"
+        val subOrDub: String, // "sub" or "dub"
+        val playbackSpeed: Float = 1.0f,
+        val totalEpisodes: Int? = null,
+        val hasPreviousEpisode: Boolean = episode.episodeNumber > 1,
+        val hasNextEpisode: Boolean = totalEpisodes == null || episode.episodeNumber < totalEpisodes
     ) : PlayerUiState
     data class Error(val message: String) : PlayerUiState
 }
@@ -55,10 +59,32 @@ class PlayerViewModel @Inject constructor(
                 // 1. Obtener la metadata del anime y del episodio de la BD local
                 val anime = repository.getAnimeBasicInfo(malId)
                 val episodeId = "${malId}_$episodeNumber"
-                val episode = episodeDao.getEpisodeById(episodeId)
+                var episode = episodeDao.getEpisodeById(episodeId)
 
                 if (episode == null || episode.videoUrl.isNullOrBlank()) {
-                    _uiState.value = PlayerUiState.Error("No se encontró información del episodio para reproducir")
+                    if (anime != null) {
+                        val localResult = repository.searchLocal(anime.title, anime.titleEnglish, anime.titleJapanese)
+                        if (localResult != null) {
+                            val localInfo = repository.getLocalAnimeInfo(localResult.url)
+                            val targetEp = localInfo?.episodes?.find { it.number == episodeNumber }
+                            if (targetEp != null && !targetEp.url.isNullOrBlank()) {
+                                val newEntity = EpisodeEntity(
+                                    id = episodeId,
+                                    animeMalId = malId,
+                                    episodeNumber = episodeNumber,
+                                    title = targetEp.title ?: "Episodio $episodeNumber",
+                                    thumbnailUrl = anime.imageUrl,
+                                    videoUrl = targetEp.url
+                                )
+                                episodeDao.insertAll(listOf(newEntity))
+                                episode = newEntity
+                            }
+                        }
+                    }
+                }
+
+                if (episode == null || episode.videoUrl.isNullOrBlank()) {
+                    _uiState.value = PlayerUiState.Error("No se encontraron servidores de video para este episodio")
                     return@launch
                 }
 
@@ -79,18 +105,43 @@ class PlayerViewModel @Inject constructor(
                 // 3. Seleccionar el primer servidor por defecto
                 val defaultServer = servers.first()
 
+                val currentSpeed = (_uiState.value as? PlayerUiState.Success)?.playbackSpeed ?: 1.0f
+
                 _uiState.value = PlayerUiState.Success(
                     episode = episode,
                     anime = anime,
                     servers = servers,
                     currentServer = defaultServer,
-                    subOrDub = subOrDub
+                    subOrDub = subOrDub,
+                    playbackSpeed = currentSpeed,
+                    totalEpisodes = anime?.episodes
                 )
 
             } catch (e: Exception) {
                 Log.e(TAG, "Error cargando reproductores para el episodio $episodeNumber", e)
                 _uiState.value = PlayerUiState.Error(e.localizedMessage ?: "Error al resolver enlaces de video")
             }
+        }
+    }
+
+    fun playNextEpisode() {
+        val currentState = _uiState.value as? PlayerUiState.Success
+        if (currentState != null && currentState.hasNextEpisode) {
+            loadEpisodeVideo(currentMalId, currentEpisodeNumber + 1)
+        }
+    }
+
+    fun playPreviousEpisode() {
+        val currentState = _uiState.value as? PlayerUiState.Success
+        if (currentState != null && currentState.hasPreviousEpisode) {
+            loadEpisodeVideo(currentMalId, currentEpisodeNumber - 1)
+        }
+    }
+
+    fun setPlaybackSpeed(speed: Float) {
+        val currentState = _uiState.value
+        if (currentState is PlayerUiState.Success) {
+            _uiState.value = currentState.copy(playbackSpeed = speed)
         }
     }
 

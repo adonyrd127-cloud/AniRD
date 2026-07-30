@@ -204,7 +204,7 @@ fun SimulcastsScreen(
                     ) {
                         items(
                             items = dayAnimeList,
-                            key = { it.malId }
+                            key = { anime -> "${anime.malId}_${anime.title}" }
                         ) { anime ->
                             SimulcastAnimeCard(
                                 anime = anime,
@@ -422,7 +422,7 @@ private fun SimulcastAnimeCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = anime.nextEpisodeDate!!,
+                        text = anime.nextEpisodeDate ?: "",
                         color = Accent,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,

@@ -80,10 +80,10 @@ data class EpisodeEntity(
     val title: String?,
     val thumbnailUrl: String?,
     val videoUrl: String?,
-    val durationSeconds: Int?,
-    val watchedProgressMs: Long?,
+    val durationSeconds: Int? = null,
+    val watchedProgressMs: Long? = null,
     val isDownloaded: Boolean = false,
-    val localPath: String?
+    val localPath: String? = null
 )
 
 @Entity(tableName = "search_history")

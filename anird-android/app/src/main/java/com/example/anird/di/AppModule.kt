@@ -67,10 +67,11 @@ object AppModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
+        val logging = HttpLoggingInterceptor().apply {
+            level = if (com.example.anird.BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+        }
         return OkHttpClient.Builder()
-            .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
-            })
+            .addInterceptor(logging)
             .build()
     }
 
@@ -78,6 +79,9 @@ object AppModule {
     @Singleton
     fun provideJikanApiService(): JikanApiService {
         var lastJikanRequest = 0L
+        val logging = HttpLoggingInterceptor().apply {
+            level = if (com.example.anird.BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+        }
         val jikanClient = OkHttpClient.Builder()
             .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
             .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
@@ -92,9 +96,7 @@ object AppModule {
                 }
                 chain.proceed(chain.request())
             }
-            .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
-            })
+            .addInterceptor(logging)
             .build()
 
         return Retrofit.Builder()
@@ -112,6 +114,9 @@ object AppModule {
         serverConfigManager: ServerConfigManager
     ): LocalApiService {
         val initialUrl = com.example.anird.BuildConfig.LOCAL_API_URL
+        val logging = HttpLoggingInterceptor().apply {
+            level = if (com.example.anird.BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+        }
         val localClient = OkHttpClient.Builder()
             .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
             .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
@@ -145,9 +150,7 @@ object AppModule {
                 }
                 chain.proceed(requestBuilder.build())
             }
-            .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
-            })
+            .addInterceptor(logging)
             .build()
 
         return Retrofit.Builder()

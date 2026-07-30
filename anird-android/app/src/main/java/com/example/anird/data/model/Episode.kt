@@ -1,5 +1,6 @@
 package com.example.anird.data.model
 
+import androidx.compose.runtime.Immutable
 import com.google.gson.annotations.SerializedName
 
 /**
@@ -8,14 +9,15 @@ import com.google.gson.annotations.SerializedName
 
 // --- Episodio ---
 
+@Immutable
 data class Episode(
     val number: Int = 0,
     val title: String? = null,
     val url: String? = null,      // URL del scraper para obtener servidores
-    var thumbnailUrl: String? = null,
-    var watched: Boolean = false,
-    var progressMs: Long = 0,
-    var durationMs: Long = 0
+    val thumbnailUrl: String? = null,
+    val watched: Boolean = false,
+    val progressMs: Long = 0,
+    val durationMs: Long = 0
 ) {
     val displayTitle: String
         get() = title?.takeIf { it.isNotBlank() } ?: "Episodio $number"
@@ -29,6 +31,7 @@ data class Episode(
 
 // --- Servidores de Streaming ---
 
+@Immutable
 data class StreamServer(
     val server: String = "",
     val url: String = ""
@@ -138,7 +141,7 @@ data class SyncAnimeItem(
 
 data class SyncHistoryItem(
     val animeId: Int = 0,
-    val episodeId: String? = null,
+    val episodeId: Any? = null,
     val episodeNumber: Int = 0,
     val progress: Long = 0,
     val duration: Long = 0,
@@ -146,7 +149,14 @@ data class SyncHistoryItem(
     val updatedAt: Long = 0,
     val title: String? = null,
     val cover: String? = null
-)
+) {
+    val resolvedEpisodeNumber: Int
+        get() {
+            if (episodeNumber > 0) return episodeNumber
+            val str = episodeId?.toString() ?: ""
+            return str.replace(Regex("[^0-9]"), "").toIntOrNull() ?: 1
+        }
+}
 
 data class SyncResponse(
     val success: Boolean = false,

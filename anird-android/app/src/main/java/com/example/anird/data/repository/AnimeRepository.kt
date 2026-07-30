@@ -11,6 +11,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 
+import com.example.anird.domain.repository.IAnimeRepository
+
 /**
  * Repositorio central que orquesta Jikan, AniList, API local y Room.
  */
@@ -19,7 +21,7 @@ class AnimeRepository(
     private val anilistApi: AniListService,
     private val localApi: LocalApiService,
     private val db: AppDatabase
-) {
+) : IAnimeRepository {
     companion object {
         private const val TAG = "AniRD-Repo"
         private const val CACHE_TTL = 10 * 60 * 1000L // 10 minutos
@@ -33,7 +35,7 @@ class AnimeRepository(
 
     // --- Anime Data (Jikan + cache) ---
 
-    suspend fun getTrending(page: Int = 1): List<Anime> = withContext(Dispatchers.IO) {
+    override suspend fun getTrending(page: Int): List<Anime> = withContext(Dispatchers.IO) {
         val cacheKey = "trending_$page"
         getCachedOrFetch(cacheKey) {
             val response = jikanApi.getTrending(page = page)
@@ -41,7 +43,7 @@ class AnimeRepository(
         }
     }
 
-    suspend fun getLatest(page: Int = 1): List<Anime> = withContext(Dispatchers.IO) {
+    override suspend fun getLatest(page: Int): List<Anime> = withContext(Dispatchers.IO) {
         val cacheKey = "latest_$page"
         getCachedOrFetch(cacheKey) {
             val response = jikanApi.getSeasonNow(page = page)
@@ -49,15 +51,36 @@ class AnimeRepository(
         }
     }
 
-    suspend fun getSchedules(page: Int = 1): List<Anime> = withContext(Dispatchers.IO) {
+    override suspend fun getCachedSchedules(): List<Anime>? = withContext(Dispatchers.IO) {
+        try {
+            val cached = cacheDao.getAny("schedules_1")
+            if (cached != null) {
+                val type = object : TypeToken<List<Anime>>() {}.type
+                return@withContext gson.fromJson<List<Anime>>(cached.data, type)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error leyendo caché de schedules", e)
+        }
+        null
+    }
+
+    override suspend fun getSchedules(page: Int): List<Anime> = withContext(Dispatchers.IO) {
         val cacheKey = "schedules_$page"
         getCachedOrFetch(cacheKey) {
-            val response = jikanApi.getSeasonNow(page = page)
-            response.data ?: emptyList()
+            val results = mutableListOf<Anime>()
+            var p = page
+            repeat(2) {
+                val response = try { jikanApi.getSeasonNow(page = p) } catch (e: Exception) { null }
+                val data = response?.data ?: emptyList()
+                results += data
+                if (response?.pagination?.hasNextPage != true) return@repeat
+                p++
+            }
+            results
         }
     }
 
-    suspend fun getMovies(page: Int = 1): List<Anime> = withContext(Dispatchers.IO) {
+    override suspend fun getMovies(page: Int): List<Anime> = withContext(Dispatchers.IO) {
         val cacheKey = "movies_$page"
         getCachedOrFetch(cacheKey) {
             val response = jikanApi.getMovies(page = page)
@@ -65,7 +88,7 @@ class AnimeRepository(
         }
     }
 
-    suspend fun getDubbed(page: Int = 1): List<Anime> = withContext(Dispatchers.IO) {
+    override suspend fun getDubbed(page: Int): List<Anime> = withContext(Dispatchers.IO) {
         val cacheKey = "dubbed_$page"
         getCachedOrFetch(cacheKey) {
             val response = jikanApi.getDubbed(page = page)
@@ -73,7 +96,7 @@ class AnimeRepository(
         }
     }
 
-    suspend fun getByGenre(genreIds: String, page: Int = 1): List<Anime> = withContext(Dispatchers.IO) {
+    override suspend fun getByGenre(genreIds: String, page: Int): List<Anime> = withContext(Dispatchers.IO) {
         val cacheKey = "genre_${genreIds}_$page"
         getCachedOrFetch(cacheKey) {
             val response = jikanApi.getByGenre(genreIds, page = page)
@@ -81,7 +104,7 @@ class AnimeRepository(
         }
     }
 
-    suspend fun searchJikan(query: String): List<Anime> = withContext(Dispatchers.IO) {
+    override suspend fun searchJikan(query: String): List<Anime> = withContext(Dispatchers.IO) {
         try {
             val response = jikanApi.searchAnime(query)
             response.data ?: emptyList()
@@ -93,7 +116,7 @@ class AnimeRepository(
 
     // --- Anime Details ---
 
-    suspend fun getAnimeDetails(malId: Int): Anime? = withContext(Dispatchers.IO) {
+    override suspend fun getAnimeDetails(malId: Int): Anime? = withContext(Dispatchers.IO) {
         try {
             coroutineScope {
                 val jikanDeferred = async {
@@ -109,15 +132,17 @@ class AnimeRepository(
                 val anime = jikanDeferred.await()
                 val anilistMedia = bannerDeferred.await()
 
-                anime?.copy()?.apply {
-                    bannerUrl = anilistMedia?.bannerImage
+                anime?.let { a ->
                     val nextAiring = anilistMedia?.nextAiringEpisode
-                    if (nextAiring != null) {
-                        // Formatear la fecha en base a timeUntilAiring o airingAt
+                    val formattedDate = if (nextAiring != null) {
                         val days = nextAiring.timeUntilAiring / 86400
                         val hours = (nextAiring.timeUntilAiring % 86400) / 3600
-                        nextEpisodeDate = "Episodio ${nextAiring.episode} en $days d $hours h"
-                    }
+                        "Episodio ${nextAiring.episode} en $days d $hours h"
+                    } else null
+                    a.copy(
+                        bannerUrl = anilistMedia?.bannerImage,
+                        nextEpisodeDate = formattedDate
+                    )
                 }
             }
         } catch (e: Exception) {
@@ -126,7 +151,7 @@ class AnimeRepository(
         }
     }
 
-    suspend fun getNextAiringBatch(malIds: List<Int>): List<com.example.anird.data.model.AniListMedia> = withContext(Dispatchers.IO) {
+    override suspend fun getNextAiringBatch(malIds: List<Int>): List<com.example.anird.data.model.AniListMedia> = withContext(Dispatchers.IO) {
         if (malIds.isEmpty()) return@withContext emptyList()
         try {
             val resp = anilistApi.query(AniListService.batchAiringRequest(malIds))
@@ -137,7 +162,7 @@ class AnimeRepository(
         }
     }
 
-    suspend fun getAnimeCharacters(malId: Int): List<AnimeCharacter> = withContext(Dispatchers.IO) {
+    override suspend fun getAnimeCharacters(malId: Int): List<AnimeCharacter> = withContext(Dispatchers.IO) {
         try {
             jikanApi.getAnimeCharacters(malId).data ?: emptyList()
         } catch (e: Exception) {
@@ -146,7 +171,7 @@ class AnimeRepository(
         }
     }
 
-    suspend fun getAnimeRelations(malId: Int): List<AnimeRelation> = withContext(Dispatchers.IO) {
+    override suspend fun getAnimeRelations(malId: Int): List<AnimeRelation> = withContext(Dispatchers.IO) {
         try {
             jikanApi.getAnimeRelations(malId).data ?: emptyList()
         } catch (e: Exception) {
@@ -155,7 +180,7 @@ class AnimeRepository(
         }
     }
 
-    suspend fun getAnimeRecommendations(malId: Int): List<Anime> = withContext(Dispatchers.IO) {
+    override suspend fun getAnimeRecommendations(malId: Int): List<Anime> = withContext(Dispatchers.IO) {
         try {
             val recs = jikanApi.getAnimeRecommendations(malId).data ?: emptyList()
             recs.mapNotNull { it.entry }
@@ -165,7 +190,7 @@ class AnimeRepository(
         }
     }
 
-    suspend fun getAnimeBasicInfo(malId: Int): Anime? = withContext(Dispatchers.IO) {
+    override suspend fun getAnimeBasicInfo(malId: Int): Anime? = withContext(Dispatchers.IO) {
         val cacheKey = "basic_$malId"
         getCachedOrFetch(cacheKey) {
             val response = jikanApi.getAnimeBasic(malId)
@@ -175,7 +200,7 @@ class AnimeRepository(
 
     // --- AniList ---
 
-    suspend fun getAniListEpisodes(malId: Int): List<AniListEpisode> = withContext(Dispatchers.IO) {
+    override suspend fun getAniListEpisodes(malId: Int): List<AniListEpisode> = withContext(Dispatchers.IO) {
         try {
             val response = anilistApi.query(AniListService.episodesRequest(malId))
             response.data?.media?.streamingEpisodes ?: emptyList()
@@ -191,7 +216,7 @@ class AnimeRepository(
      * Buscar anime en el API local con cascada de títulos.
      * Intenta con el título completo, luego inglés, luego japonés.
      */
-    suspend fun searchLocal(vararg titles: String?): LocalAnimeResult? = withContext(Dispatchers.IO) {
+    override suspend fun searchLocal(vararg titles: String?): LocalAnimeResult? = withContext(Dispatchers.IO) {
         for (title in titles) {
             if (title.isNullOrBlank()) continue
             try {
@@ -234,7 +259,7 @@ class AnimeRepository(
         null
     }
 
-    suspend fun getLocalAnimeInfo(url: String): LocalAnimeInfo? = withContext(Dispatchers.IO) {
+    override suspend fun getLocalAnimeInfo(url: String): LocalAnimeInfo? = withContext(Dispatchers.IO) {
         try {
             val response = localApi.getAnimeInfo(url)
             if (response.success) response.data else null
@@ -244,7 +269,7 @@ class AnimeRepository(
         }
     }
 
-    suspend fun getStreamServers(episodeUrl: String): StreamResponse = withContext(Dispatchers.IO) {
+    override suspend fun getStreamServers(episodeUrl: String): StreamResponse = withContext(Dispatchers.IO) {
         try {
             val response = localApi.getEpisodeLinks(episodeUrl)
             if (response.success && response.data != null) {
@@ -260,12 +285,12 @@ class AnimeRepository(
 
     // --- Favoritos ---
 
-    fun getFavoritesLive() = favoriteDao.getAllFavorites()
-    suspend fun getAllFavoritesList() = withContext(Dispatchers.IO) { favoriteDao.getAllFavoritesList() }
-    fun isFavoriteLive(animeId: Int) = favoriteDao.isFavorite(animeId)
-    fun isFavoriteFlow(animeId: Int) = favoriteDao.isFavoriteFlow(animeId)
+    override fun getFavoritesLive() = favoriteDao.getAllFavorites()
+    override suspend fun getAllFavoritesList() = withContext(Dispatchers.IO) { favoriteDao.getAllFavoritesList() }
+    override fun isFavoriteLive(animeId: Int) = favoriteDao.isFavorite(animeId)
+    override fun isFavoriteFlow(animeId: Int) = favoriteDao.isFavoriteFlow(animeId)
 
-    suspend fun toggleFavorite(anime: Anime): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun toggleFavorite(anime: Anime): Boolean = withContext(Dispatchers.IO) {
         val isFav = favoriteDao.isFavoriteSync(anime.malId)
         if (isFav) {
             favoriteDao.delete(anime.malId)
@@ -283,12 +308,12 @@ class AnimeRepository(
 
     // --- Following ---
 
-    fun getFollowingLive() = followingDao.getAllFollowing()
-    suspend fun getAllFollowingList() = withContext(Dispatchers.IO) { followingDao.getAllFollowingList() }
-    fun isFollowingLive(animeId: Int) = followingDao.isFollowing(animeId)
-    fun isFollowingFlow(animeId: Int) = followingDao.isFollowingFlow(animeId)
+    override fun getFollowingLive() = followingDao.getAllFollowing()
+    override suspend fun getAllFollowingList() = withContext(Dispatchers.IO) { followingDao.getAllFollowingList() }
+    override fun isFollowingLive(animeId: Int) = followingDao.isFollowing(animeId)
+    override fun isFollowingFlow(animeId: Int) = followingDao.isFollowingFlow(animeId)
 
-    suspend fun toggleFollowing(anime: Anime): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun toggleFollowing(anime: Anime): Boolean = withContext(Dispatchers.IO) {
         val isFollow = followingDao.isFollowingSync(anime.malId)
         if (isFollow) {
             followingDao.delete(anime.malId)
@@ -306,12 +331,12 @@ class AnimeRepository(
 
     // --- Historial ---
 
-    fun getContinueWatchingLive(limit: Int = 20) = historyDao.getContinueWatching(limit)
+    override fun getContinueWatchingLive(limit: Int) = historyDao.getContinueWatching(limit)
 
-    suspend fun saveProgress(
+    override suspend fun saveProgress(
         animeId: Int, episodeNumber: Int,
         progress: Long, duration: Long,
-        title: String? = null, cover: String? = null
+        title: String?, cover: String?
     ) = withContext(Dispatchers.IO) {
         historyDao.upsert(
             HistoryEntity(
@@ -326,7 +351,7 @@ class AnimeRepository(
         )
     }
 
-    suspend fun getHistoryForAnime(animeId: Int) = withContext(Dispatchers.IO) {
+    override suspend fun getHistoryForAnime(animeId: Int) = withContext(Dispatchers.IO) {
         historyDao.getHistoryForAnime(animeId)
     }
 
@@ -347,19 +372,47 @@ class AnimeRepository(
             Log.w(TAG, "Error leyendo caché '$key'", e)
         }
 
-        val result = fetch()
-
         try {
-            val json = gson.toJson(result)
-            cacheDao.put(CacheEntity(key, json, System.currentTimeMillis() + CACHE_TTL))
+            val result = fetch()
+            val isEmpty = (result is List<*> && result.isEmpty())
+            if (!isEmpty) {
+                try {
+                    val json = gson.toJson(result)
+                    cacheDao.put(CacheEntity(key, json, System.currentTimeMillis() + CACHE_TTL))
+                } catch (e: Exception) {
+                    Log.w(TAG, "Error guardando caché '$key'", e)
+                }
+                return result
+            } else {
+                try {
+                    val fallbackCache = cacheDao.getAny(key)
+                    if (fallbackCache != null) {
+                        val type = object : TypeToken<T>() {}.type
+                        val data = gson.fromJson<T>(fallbackCache.data, type)
+                        if (data != null && (data !is List<*> || data.isNotEmpty())) return data
+                    }
+                } catch (ce: Exception) {
+                    Log.w(TAG, "Error leyendo caché de respaldo para '$key'", ce)
+                }
+                return result
+            }
         } catch (e: Exception) {
-            Log.w(TAG, "Error guardando caché '$key'", e)
+            Log.e(TAG, "Error de red buscando '$key', intentando caché de respaldo", e)
+            try {
+                val fallbackCache = cacheDao.getAny(key)
+                if (fallbackCache != null) {
+                    val type = object : TypeToken<T>() {}.type
+                    val data = gson.fromJson<T>(fallbackCache.data, type)
+                    if (data != null) return data
+                }
+            } catch (ce: Exception) {
+                Log.w(TAG, "Error leyendo caché de respaldo para '$key'", ce)
+            }
+            throw e
         }
-
-        return result
     }
 
-    suspend fun clearCache() = withContext(Dispatchers.IO) {
+    override suspend fun clearCache() = withContext(Dispatchers.IO) {
         cacheDao.deleteAll()
     }
 }

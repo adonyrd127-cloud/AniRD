@@ -64,6 +64,7 @@ class AuthViewModel @Inject constructor(
                 _isLoggedIn.value = true
                 _username.value = authRepository.username
                 _uiState.value = AuthUiState.Success
+                launch { runCatching { authRepository.syncFromServerFull() } }
             } else {
                 _uiState.value = AuthUiState.Error(result.exceptionOrNull()?.message ?: "Error al iniciar sesión")
             }
@@ -82,6 +83,7 @@ class AuthViewModel @Inject constructor(
                 _isLoggedIn.value = true
                 _username.value = authRepository.username
                 _uiState.value = AuthUiState.Success
+                launch { runCatching { authRepository.syncFromServerFull() } }
             } else {
                 _uiState.value = AuthUiState.Error(result.exceptionOrNull()?.message ?: "Error al registrarse")
             }

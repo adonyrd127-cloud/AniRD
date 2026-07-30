@@ -5,8 +5,11 @@ import com.example.anird.data.local.*
 import com.example.anird.data.model.*
 import com.example.anird.data.remote.LocalApiService
 import com.example.anird.utils.JwtManager
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+
+import com.example.anird.domain.repository.IAuthRepository
 
 /**
  * Repositorio de autenticación y sincronización con el servidor.
@@ -15,15 +18,15 @@ class AuthRepository(
     private val localApi: LocalApiService,
     private val jwtManager: JwtManager,
     private val db: AppDatabase
-) {
+) : IAuthRepository {
     companion object {
         private const val TAG = "AniRD-Auth"
     }
 
-    val isLoggedIn: Boolean get() = jwtManager.isLoggedIn()
-    val username: String? get() = jwtManager.getUsername()
+    override val isLoggedIn: Boolean get() = jwtManager.isLoggedIn()
+    override val username: String? get() = jwtManager.getUsername()
 
-    suspend fun login(username: String, password: String): Result<AuthResponse> = withContext(Dispatchers.IO) {
+    override suspend fun login(username: String, password: String): Result<AuthResponse> = withContext(Dispatchers.IO) {
         try {
             val response = localApi.login(AuthRequest(username, password))
             if (response.success && response.token != null) {
@@ -36,15 +39,34 @@ class AuthRepository(
                 Log.d(TAG, "Login exitoso para $username")
                 Result.success(response)
             } else {
-                Result.failure(Exception(response.message ?: "Error de autenticación"))
+                Result.failure(Exception(response.message ?: "Credenciales inválidas"))
             }
+        } catch (e: java.net.UnknownHostException) {
+            Result.failure(Exception("No se encontró el servidor. Verifica la IP en Ajustes."))
+        } catch (e: java.net.SocketTimeoutException) {
+            Result.failure(Exception("El servidor tardó demasiado. ¿Está encendida la Orange Pi?"))
+        } catch (e: java.net.ConnectException) {
+            Result.failure(Exception("No se pudo conectar al puerto configurado."))
+        } catch (e: retrofit2.HttpException) {
+            val msg = try {
+                val errorBody = e.response()?.errorBody()?.string()
+                if (errorBody != null) {
+                    val parsed = Gson().fromJson(errorBody, AuthResponse::class.java)
+                    parsed.message ?: "Credenciales inválidas"
+                } else {
+                    "Error del servidor (${e.code()})"
+                }
+            } catch (ex: Exception) {
+                "Error del servidor (${e.code()})"
+            }
+            Result.failure(Exception(msg))
         } catch (e: Exception) {
             Log.e(TAG, "Error en login", e)
-            Result.failure(e)
+            Result.failure(Exception("Error inesperado: ${e.message ?: "desconocido"}"))
         }
     }
 
-    suspend fun register(username: String, password: String): Result<AuthResponse> = withContext(Dispatchers.IO) {
+    override suspend fun register(username: String, password: String): Result<AuthResponse> = withContext(Dispatchers.IO) {
         try {
             val response = localApi.register(AuthRequest(username, password))
             if (response.success && response.token != null) {
@@ -55,23 +77,43 @@ class AuthRepository(
             } else {
                 Result.failure(Exception(response.message ?: "Error al registrar"))
             }
+        } catch (e: java.net.UnknownHostException) {
+            Result.failure(Exception("No se encontró el servidor. Verifica la IP en Ajustes."))
+        } catch (e: java.net.SocketTimeoutException) {
+            Result.failure(Exception("El servidor tardó demasiado. ¿Está encendida la Orange Pi?"))
+        } catch (e: java.net.ConnectException) {
+            Result.failure(Exception("No se pudo conectar al puerto configurado."))
+        } catch (e: retrofit2.HttpException) {
+            val msg = try {
+                val errorBody = e.response()?.errorBody()?.string()
+                if (errorBody != null) {
+                    val parsed = Gson().fromJson(errorBody, AuthResponse::class.java)
+                    parsed.message ?: "Error al registrar"
+                } else {
+                    "Error del servidor (${e.code()})"
+                }
+            } catch (ex: Exception) {
+                "Error del servidor (${e.code()})"
+            }
+            Result.failure(Exception(msg))
         } catch (e: Exception) {
             Log.e(TAG, "Error en registro", e)
-            Result.failure(e)
+            Result.failure(Exception("Error inesperado: ${e.message ?: "desconocido"}"))
         }
     }
 
-    suspend fun logout() = withContext(Dispatchers.IO) {
+    override suspend fun logout() = withContext(Dispatchers.IO) {
         jwtManager.clear()
         db.favoriteDao().deleteAll()
         db.followingDao().deleteAll()
         db.historyDao().deleteAll()
         db.cacheDao().deleteAll()
         Log.d(TAG, "Sesión cerrada, datos locales eliminados")
+        Unit
     }
 
     /** Sincronizar datos locales al servidor */
-    suspend fun syncToServer() = withContext(Dispatchers.IO) {
+    override suspend fun syncToServer() = withContext(Dispatchers.IO) {
         if (!isLoggedIn) return@withContext
         try {
             val favorites = db.favoriteDao().getAllFavoritesList().map {
@@ -83,6 +125,7 @@ class AuthRepository(
             val history = db.historyDao().getAllHistory().map {
                 SyncHistoryItem(
                     animeId = it.animeId,
+                    episodeId = it.episodeNumber,
                     episodeNumber = it.episodeNumber,
                     progress = it.progress,
                     duration = it.duration,
@@ -100,7 +143,7 @@ class AuthRepository(
     }
 
     /** Obtener datos del servidor y merge con local */
-    suspend fun syncFromServerFull() = withContext(Dispatchers.IO) {
+    override suspend fun syncFromServerFull() = withContext(Dispatchers.IO) {
         if (!isLoggedIn) return@withContext
         try {
             val response = localApi.getSyncData()
@@ -118,7 +161,7 @@ class AuthRepository(
         for (item in data.favorites) {
             if (!db.favoriteDao().isFavoriteSync(item.animeId)) {
                 db.favoriteDao().insert(
-                    FavoriteEntity(item.animeId, item.title, item.cover, item.addedAt)
+                    FavoriteEntity(item.animeId, item.title, item.cover ?: "", item.addedAt)
                 )
             }
         }
@@ -126,24 +169,26 @@ class AuthRepository(
         for (item in data.following) {
             if (!db.followingDao().isFollowingSync(item.animeId)) {
                 db.followingDao().insert(
-                    FollowingEntity(item.animeId, item.title, item.cover, addedAt = item.addedAt)
+                    FollowingEntity(item.animeId, item.title, item.cover ?: "", addedAt = item.addedAt)
                 )
             }
         }
         // Merge historial (por timestamp)
         for (item in data.history) {
-            val existing = db.historyDao().getHistoryForEpisode(item.animeId, item.episodeNumber)
-            if (existing == null || item.updatedAt > existing.updatedAt) {
+            val epNum = item.resolvedEpisodeNumber
+            val existing = db.historyDao().getHistoryForEpisode(item.animeId, epNum)
+            val itemTime = if (item.updatedAt > 0) item.updatedAt else item.timestamp
+            if (existing == null || itemTime > existing.updatedAt) {
                 db.historyDao().upsert(
                     HistoryEntity(
                         animeId = item.animeId,
-                        episodeNumber = item.episodeNumber,
+                        episodeNumber = epNum,
                         progress = item.progress,
                         duration = item.duration,
-                        timestamp = item.timestamp,
-                        updatedAt = item.updatedAt,
-                        title = item.title,
-                        cover = item.cover
+                        timestamp = if (item.timestamp > 0) item.timestamp else itemTime,
+                        updatedAt = if (item.updatedAt > 0) item.updatedAt else itemTime,
+                        title = item.title ?: "",
+                        cover = item.cover ?: ""
                     )
                 )
             }

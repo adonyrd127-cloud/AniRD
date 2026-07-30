@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Permitir HTTP cleartext de forma global para dar soporte completo a IPs locales (10.x.x.x) y Tailscale (100.x.x.x) -->
-    <base-config cleartextTrafficPermitted="true">
+    <!-- Permitir HTTP cleartext únicamente para direcciones IP locales o de desarrollo -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">10.0.0.9</domain>
+        <domain includeSubdomains="true">100.101.132.92</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">localhost</domain>
+    </domain-config>
+
+    <!-- Restricción global HTTPS obligatoria para el resto de dominios -->
+    <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
-            <certificates src="system"/>
+            <certificates src="system" />
         </trust-anchors>
     </base-config>
 </network-security-config>

@@ -19,3 +19,12 @@
 # Media Session
 -keep class androidx.media.** { *; }
 -keep class android.support.v4.media.** { *; }
+
+# Gson models
+-keep class com.example.anird.data.model.** { *; }
+-keepclassmembers class com.example.anird.data.model.** { *; }
+
+# Retrofit
+-keepattributes Signature, Exceptions, *Annotation*
+-keep,allowobfuscation,allowshrinking interface retrofit2.Call
+-keep,allowobfuscation,allowshrinking class retrofit2.Response
