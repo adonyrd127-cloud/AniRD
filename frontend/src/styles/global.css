@@ -1,30 +1,671 @@
-/* Fonts loaded via <link> in index.html for non-blocking rendering */
+/* ==========================================================================
+   🎨 ANIRD PREMIUM UI ENHANCEMENTS - DISEÑO PROFESIONAL ANIME
+   ========================================================================== */
 
-:root {
-  --bg-dark: #050505;
-  --bg-card: rgba(20, 20, 20, 0.6);
-  --accent: #ff0000;
-  --accent-glow: rgba(255, 0, 0, 0.4);
-  --text-main: #ffffff;
-  --text-muted: #a1a1aa;
-  --glass: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --font-main: 'Inter', sans-serif;
-  --font-display: 'Outfit', sans-serif;
+/* --- Scrollbar Personalizado Estilo Anime --- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
+::-webkit-scrollbar-track {
+  background: rgba(10, 10, 15, 0.5);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #e50914 0%, #a30000 100%);
+  border-radius: 10px;
+  border: 2px solid rgba(10, 10, 15, 0.5);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff0a16 0%, #e50914 100%);
+}
+
+/* Firefox scrollbar */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: #e50914 rgba(10, 10, 15, 0.5);
 }
 
-body {
-  background-color: var(--bg-dark);
-  color: var(--text-main);
-  font-family: var(--font-main);
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
+/* --- Fondo Animado de Partículas (Opcional) --- */
+.anime-particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.anime-particles::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(229, 9, 20, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(229, 9, 20, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(26, 188, 156, 0.02) 0%, transparent 50%);
+  animation: particleFloat 30s ease-in-out infinite;
+}
+
+@keyframes particleFloat {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(2%, 2%) rotate(1deg); }
+  66% { transform: translate(-1%, 1%) rotate(-1deg); }
+}
+
+/* --- Mejoras en Navbar Premium --- */
+.nav-v4 {
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.nav-v4::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(229, 9, 20, 0.3) 50%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.nav-v4:hover::after {
+  opacity: 1;
+}
+
+.nav-logo {
+  position: relative;
+  text-shadow: 0 0 20px rgba(229, 9, 20, 0.5);
+  transition: all 0.3s ease;
+}
+
+.nav-logo:hover {
+  text-shadow: 0 0 30px rgba(229, 9, 20, 0.8), 0 0 60px rgba(229, 9, 20, 0.4);
+  transform: scale(1.02);
+}
+
+.nav-links a {
+  position: relative;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-links a::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(229, 9, 20, 0.1) 0%, rgba(229, 9, 20, 0.05) 100%);
+  border-radius: 8px;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-links a:hover::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.nav-links a:hover {
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* --- Dropdown con efecto Glass premium --- */
+.nav-dropdown-content {
+  background: rgba(15, 15, 20, 0.95);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-column a {
+  position: relative;
+  padding-left: 0;
+  transition: all 0.3s ease;
+}
+
+.dropdown-column a::after {
+  content: '→';
+  position: absolute;
+  right: 0;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.3s ease;
+  color: var(--accent);
+}
+
+.dropdown-column a:hover::after {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* --- Search Pill mejorado --- */
+.search-pill {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.search-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(229, 9, 20, 0.1) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.search-pill:hover::before {
+  opacity: 1;
+}
+
+.search-pill:hover {
+  border-color: rgba(229, 9, 20, 0.3);
+  box-shadow: 0 0 20px rgba(229, 9, 20, 0.15);
+}
+
+/* --- Botón de Perfil con gradiente --- */
+.btn-profile {
+  background: linear-gradient(135deg, #e50914 0%, #a30000 100%);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 4px 15px rgba(229, 9, 20, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.btn-profile::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-profile:hover::before {
+  left: 100%;
+}
+
+.btn-profile:hover {
+  box-shadow: 
+    0 6px 20px rgba(229, 9, 20, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   🎴 CARDS DE ANIME MEJORADAS - ESTILO PROFESIONAL
+   ========================================================================== */
+
+/* Card container con efectos mejorados */
+.home-sections-v4 .section-wrapper {
+  position: relative;
+}
+
+.section-title {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-title::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: linear-gradient(180deg, #e50914 0%, #ff4d5a 100%);
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(229, 9, 20, 0.5);
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(229, 9, 20, 0.5) 0%, transparent 100%);
+}
+
+/* Scroll buttons mejorados */
+.scroll-btn {
+  background: rgba(10, 10, 15, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-btn:hover {
+  background: linear-gradient(135deg, #e50914 0%, #a30000 100%);
+  border-color: rgba(229, 9, 20, 0.5);
+  box-shadow: 0 8px 30px rgba(229, 9, 20, 0.4);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.section-wrapper:hover .scroll-btn {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   🎬 HERO SECTION CINEMATOGRÁFICA
+   ========================================================================== */
+
+.hero-v4 {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-backdrop-v4::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 0%, rgba(10, 10, 15, 0.8) 100%);
+  z-index: 1;
+}
+
+.hero-backdrop-v4::after {
+  background: linear-gradient(to top, #0a0a0f 0%, rgba(10, 10, 15, 0.8) 50%, transparent 100%),
+              linear-gradient(to right, #0a0a0f 0%, rgba(10, 10, 15, 0.4) 50%, transparent 100%);
+  z-index: 1;
+}
+
+.hero-content-v4 {
+  z-index: 10;
+  animation: heroFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes heroFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-title-v4 {
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle-v4 {
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Botones del Hero con efectos premium */
+.hero-actions-v4 .btn-v4-primary {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 8px 25px rgba(229, 9, 20, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.hero-actions-v4 .btn-v4-primary::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.hero-actions-v4 .btn-v4-primary:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.hero-actions-v4 .btn-v4-secondary {
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.hero-actions-v4 .btn-v4-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+}
+
+/* ==========================================================================
+   🔘 BOTONES GLOBALES MEJORADOS
+   ========================================================================== */
+
+.btn-v4-primary {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #e50914 0%, #c40812 100%);
+  box-shadow: 
+    0 8px 20px rgba(229, 9, 20, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-v4-primary::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 100%);
+  border-radius: 50px 50px 0 0;
+}
+
+.btn-v4-primary:hover {
+  background: linear-gradient(135deg, #ff0a16 0%, #e50914 100%);
+  box-shadow: 
+    0 12px 35px rgba(229, 9, 20, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.btn-v4-primary:active {
+  transform: translateY(-1px);
+}
+
+.btn-v4-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.btn-v4-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* ==========================================================================
+   📱 MOBILE NAV MEJORADO
+   ========================================================================== */
+
+.mobile-nav {
+  background: rgba(10, 10, 15, 0.95);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-nav-item {
+  position: relative;
+  padding: 8px 16px;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-nav-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(229, 9, 20, 0.15) 0%, rgba(229, 9, 20, 0.05) 100%);
+  border-radius: 12px;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-nav-item.active::before,
+.mobile-nav-item:hover::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.mobile-nav-item.active {
+  color: #ff4d5a;
+}
+
+.mobile-nav-item svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  transition: transform 0.3s ease;
+}
+
+.mobile-nav-item:hover svg {
+  transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   🎭 SKELETON LOADERS MEJORADOS
+   ========================================================================== */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(26, 26, 35, 0.8) 0%,
+    rgba(35, 35, 45, 0.9) 25%,
+    rgba(26, 26, 35, 0.8) 50%,
+    rgba(35, 35, 45, 0.9) 75%,
+    rgba(26, 26, 35, 0.8) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.03) 50%,
+    transparent 100%
+  );
+}
+
+.skeleton-card {
+  animation: skeletonPulse 2s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.skeleton-hero {
+  background: linear-gradient(135deg, rgba(26, 26, 35, 0.5) 0%, rgba(35, 35, 45, 0.5) 100%);
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   🎪 ERROR STATES & EMPTY STATES MEJORADOS
+   ========================================================================== */
+
+.home-error-banner {
+  background: linear-gradient(135deg, rgba(229, 9, 20, 0.1) 0%, rgba(163, 0, 0, 0.05) 100%);
+  border: 1px solid rgba(229, 9, 20, 0.3);
+  border-left: 4px solid #e50914;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(229, 9, 20, 0.15);
+}
+
+/* Empty state messages */
+.horizontal-scroll-v4 p[style*="color:rgba"] {
+  padding: 30px !important;
+  text-align: center;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ==========================================================================
+   🌟 EFECTOS DE BRILLO Y RESPLANDOR
+   ========================================================================== */
+
+/* Glow effect para elementos interactivos */
+.glow-on-hover {
+  position: relative;
+}
+
+.glow-on-hover::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: radial-gradient(circle at center, rgba(229, 9, 20, 0.4) 0%, transparent 70%);
+  opacity: 0;
+  filter: blur(10px);
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.glow-on-hover:hover::after {
+  opacity: 1;
+}
+
+/* Accent glow para elementos activos */
+.accent-glow {
+  box-shadow: 
+    0 0 20px rgba(229, 9, 20, 0.3),
+    0 0 40px rgba(229, 9, 20, 0.15),
+    0 0 60px rgba(229, 9, 20, 0.05);
+}
+
+/* ==========================================================================
+   🎨 UTILIDADES VISUALES ADICIONALES
+   ========================================================================== */
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 50%, #d0d0d0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-accent {
+  background: linear-gradient(135deg, #ff4d5a 0%, #e50914 50%, #a30000 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass morphism utility */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Smooth fade in animation */
+.fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hover lift effect */
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Loading spinner mejorado */
+.loader-small {
+  border: 3px solid rgba(229, 9, 20, 0.1) !important;
+  border-top-color: #e50914 !important;
+  box-shadow: 0 0 20px rgba(229, 9, 20, 0.2);
+}
+
+/* Selection color personalizada */
+::selection {
+  background: rgba(229, 9, 20, 0.3);
+  color: white;
+}
+
+::-moz-selection {
+  background: rgba(229, 9, 20, 0.3);
+  color: white;
+}
+
+/* Focus visible para accesibilidad */
+:focus-visible {
+  outline: 2px solid rgba(229, 9, 20, 0.5);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Reduced motion para accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* --- Premium Navbar --- */
