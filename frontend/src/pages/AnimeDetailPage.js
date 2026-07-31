@@ -55,8 +55,8 @@ export default class AnimeDetailPage {
       [animeRes, charsRes, recsRes, isFav, isFoll, relationsRes] = await timeoutPromise(
         Promise.all([
           apiService.getAnimeInfo(this.animeId),
-          apiService.providers.jikan.request(`/anime/${this.animeId}/characters`).catch(() => ({ data: [] })),
-          apiService.providers.jikan.request(`/anime/${this.animeId}/recommendations`).catch(() => ({ data: [] })),
+          apiService.getAnimeCharacters(this.animeId).catch(() => ({ data: [] })),
+          apiService.getAnimeRecommendations(this.animeId).catch(() => ({ data: [] })),
           dbService.isFavorite(this.animeId).catch(() => false),
           dbService.isFollowing(this.animeId).catch(() => false),
           apiService.getAnimeRelations(this.animeId).catch(() => ({ data: [] }))

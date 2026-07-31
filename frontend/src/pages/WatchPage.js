@@ -20,6 +20,7 @@ export default class WatchPage {
     
     // UI state
     this.isTheater = localStorage.getItem('watch-theater-mode') === 'true';
+    this.isAmbient = localStorage.getItem('watch-ambient-mode') !== 'false';
     this.sortDesc = false;
     this.searchQuery = '';
   }
@@ -177,7 +178,7 @@ export default class WatchPage {
 
     container.innerHTML = `
       <!-- Resplandor dinámico de fondo (Modo Ambiente) -->
-      <div class="ambient-glow" id="ambient-glow" style="background-image: url('${bannerUrl}')"></div>
+      <div class="ambient-glow" id="ambient-glow" style="background-image: url('${bannerUrl}'); transition: opacity 0.8s ease; ${this.isAmbient ? 'opacity: 0.6; display: block;' : 'opacity: 0; display: none;'}"></div>
       
       <!-- Capa de Luces Apagadas -->
       <div class="dim-overlay" id="dim-overlay"></div>
@@ -208,6 +209,9 @@ export default class WatchPage {
               </button>
               <button class="control-btn-v5" id="btn-lights">
                 💡 <span id="lights-text">Apagar Luces</span>
+              </button>
+              <button class="control-btn-v5 ${this.isAmbient ? 'active' : ''}" id="btn-ambient">
+                ✨ <span id="ambient-text">Modo Ambiente</span>
               </button>
               <button class="control-btn-v5 ${this.isTheater ? 'active' : ''}" id="btn-theater">
                 🎬 <span id="theater-text">${this.isTheater ? 'Modo Normal' : 'Modo Cine'}</span>
@@ -612,9 +616,11 @@ export default class WatchPage {
     const playerSection = document.getElementById('player-section');
     const mainColumn = document.getElementById('main-column');
     const dimOverlay = document.getElementById('dim-overlay');
+    const ambientGlow = document.getElementById('ambient-glow');
     
     const btnTheater = document.getElementById('btn-theater');
     const btnLights = document.getElementById('btn-lights');
+    const btnAmbient = document.getElementById('btn-ambient');
     const btnFav = document.getElementById('btn-favorite');
     
     const lightsText = document.getElementById('lights-text');
@@ -671,6 +677,28 @@ export default class WatchPage {
     }
     if (dimOverlay) {
       dimOverlay.addEventListener('click', () => toggleLights(false));
+    }
+
+    // MODO AMBIENTE
+    if (btnAmbient && ambientGlow) {
+      btnAmbient.addEventListener('click', () => {
+        this.isAmbient = !this.isAmbient;
+        localStorage.setItem('watch-ambient-mode', this.isAmbient);
+        btnAmbient.classList.toggle('active', this.isAmbient);
+        if (this.isAmbient) {
+          ambientGlow.style.display = 'block';
+          // Force reflow to trigger opacity transition
+          ambientGlow.offsetHeight;
+          ambientGlow.style.opacity = '0.6';
+          Toast.info('Modo Ambiente', 'Resplandor dinámico activado');
+        } else {
+          ambientGlow.style.opacity = '0';
+          setTimeout(() => {
+            if (!this.isAmbient) ambientGlow.style.display = 'none';
+          }, 800);
+          Toast.info('Modo Ambiente', 'Resplandor dinámico desactivado');
+        }
+      });
     }
 
     // FAVORITO INDEXEDDB

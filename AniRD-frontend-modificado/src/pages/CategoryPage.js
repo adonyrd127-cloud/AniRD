@@ -1,0 +1,168 @@
+import { apiService } from '../services/api.js';
+import '../components/AnimeCard.js';
+
+export default class CategoryPage {
+  constructor(params) {
+    this.category = params.name;
+    this.page = 1;
+    this.loading = false;
+    this.hasMore = true;
+    this.titles = {
+      popular: 'Animes Populares',
+      movies: 'Películas de Anime',
+      latest: 'Últimos Lanzamientos',
+      dub: 'Animes en Latino',
+      action: 'Acción',
+      adventure: 'Aventura',
+      comedy: 'Comedia',
+      drama: 'Drama',
+      fantasy: 'Fantasía',
+      music: 'Musical',
+      romance: 'Romance',
+      'sci-fi': 'Ciencia Ficción',
+      seinen: 'Seinen',
+      shoujo: 'Shoujo',
+      shounen: 'Shounen',
+      'slice-of-life': 'Recuentos de la Vida',
+      sports: 'Deportes',
+      supernatural: 'Sobrenatural',
+      thriller: 'Thriller'
+    };
+    this.genres = {
+      action: 1,
+      adventure: 2,
+      comedy: 4,
+      drama: 8,
+      fantasy: 10,
+      music: 19,
+      romance: 22,
+      'sci-fi': 24,
+      seinen: 42,
+      shoujo: 25,
+      shounen: 27,
+      'slice-of-life': 36,
+      sports: 30,
+      supernatural: 37,
+      thriller: 41
+    };
+  }
+
+  async render() {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <style>
+        .page-container {
+          padding: 100px 4% 60px;
+          max-width: 1600px;
+          margin: 0 auto;
+        }
+        .category-header {
+            margin-bottom: 40px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .category-title {
+          font-family: var(--font-display);
+          font-size: 2.2rem;
+          color: white;
+          font-weight: 900;
+          letter-spacing: -0.03em;
+          margin: 0;
+        }
+        .anime-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 30px;
+        }
+        .loader {
+            padding: 40px;
+            text-align: center;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        @media (max-width: 768px) {
+            .page-container { padding-top: 80px; }
+            .category-title { font-size: 1.8rem; }
+            .anime-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        }
+      </style>
+      <div class="page-container">
+        <div class="category-header">
+            <h2 class="category-title">${this.titles[this.category] || 'Explorar'}</h2>
+        </div>
+        <div class="anime-grid" id="category-grid">
+          ${Array.from({length: 12}, () => `<div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>`).join('')}
+        </div>
+        <div id="grid-loader" class="loader" style="display:none;">Cargando más...</div>
+      </div>
+    `;
+    return container;
+  }
+
+  async afterRender() {
+    this.grid = document.getElementById('category-grid');
+    this.loader = document.getElementById('grid-loader');
+    
+    // Initial Load
+    await this.loadMore();
+
+    // Scroll Listener
+    this.scrollHandler = () => {
+        if (this.loading || !this.hasMore) return;
+        
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
+            this.loadMore();
+        }
+    };
+    window.addEventListener('scroll', this.scrollHandler);
+  }
+
+  // Cleanup on destroy (though our simple router doesn't explicitly call it yet)
+  // We'll add a check in the router later if needed.
+
+  async loadMore() {
+    if (this.loading) return;
+    this.loading = true;
+    this.loader.style.display = 'block';
+
+    try {
+        let res;
+        const genreId = this.genres[this.category];
+        
+        if (genreId) {
+            res = await apiService.getByGenre(genreId, this.page);
+        } else {
+            switch(this.category) {
+                case 'popular': res = await apiService.getTrending(this.page); break;
+                case 'movies': res = await apiService.getMovies(this.page); break;
+                case 'latest': res = await apiService.getLatest(this.page); break;
+                case 'dub': res = await apiService.getDubbed(this.page); break;
+                default: res = await apiService.getTrending(this.page);
+            }
+        }
+
+        const items = res.data?.results || res.data || [];
+        
+        if (items.length === 0) {
+            this.hasMore = false;
+            if (this.page === 1) {
+                this.grid.innerHTML = '<div style="color:var(--text-muted); padding:40px; text-align:center; grid-column: 1 / -1; font-size:1.2rem;">No se encontraron animes en esta categoría.</div>';
+            }
+        } else {
+            // Clear skeletons on first load
+            if (this.page === 1) this.grid.innerHTML = '';
+            items.forEach(anime => {
+                const card = document.createElement('anime-card');
+                card.data = anime;
+                this.grid.appendChild(card);
+            });
+            this.page++;
+        }
+    } catch(e) {
+        console.error("Failed to load more items", e);
+    } finally {
+        this.loading = false;
+        this.loader.style.display = 'none';
+    }
+  }
+}

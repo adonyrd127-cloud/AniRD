@@ -1,4 +1,18 @@
 export class AnimeCard extends HTMLElement {
+  static get observedAttributes() {
+    return ['data'];
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'data' && newValue) {
+      try {
+        this.data = JSON.parse(newValue);
+      } catch (e) {
+        console.error('Failed to parse anime-card data attribute:', e);
+      }
+    }
+  }
+
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });

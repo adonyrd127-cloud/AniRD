@@ -81,9 +81,9 @@ class AnilistClient {
 
   async getAnimeList(variables = {}) {
     const query = `
-      query ($format: MediaFormat, $genre: String, $sort: [MediaSort], $season: MediaSeason, $seasonYear: Int, $page: Int, $perPage: Int) {
+      query ($search: String, $format: MediaFormat, $genre: String, $sort: [MediaSort], $season: MediaSeason, $seasonYear: Int, $page: Int, $perPage: Int) {
         Page(page: $page, perPage: $perPage) {
-          media(format: $format, genre: $genre, sort: $sort, season: $season, seasonYear: $seasonYear, type: ANIME, isAdult: false) {
+          media(search: $search, format: $format, genre: $genre, sort: $sort, season: $season, seasonYear: $seasonYear, type: ANIME, isAdult: false) {
             id
             idMal
             title { romaji english native }
@@ -195,12 +195,27 @@ export class AnimeAPI {
       type: item.format === 'TV' ? 'TV' : item.format === 'MOVIE' ? 'Movie' : item.format || 'TV',
       episodes: item.episodes,
       status: item.status === 'RELEASING' ? 'Currently Airing' : item.status,
-      synopsis: item.description ? item.description.replace(/<[^>]*>?/gm, '') : ''
+      synopsis: item.description ? item.description.replace(/<[^>]*>?/gm, '') : '',
+      genres: item.genres ? item.genres.map(g => ({ name: g })) : [],
+      year: item.seasonYear || null
     };
   }
 
   async getAnimeSearch(query, options = {}) {
-    return await this.providers.jikan.request('/anime', { q: query, limit: 20 }, options);
+    try {
+      const res = await this.providers.jikan.request('/anime', { q: query, limit: 20 }, options);
+      if (res && res.data) return res;
+    } catch (e) {
+      console.warn('[API] Jikan search failed, trying AniList fallback:', e.message);
+    }
+
+    try {
+      const media = await this.providers.anilist.getAnimeList({ search: query, perPage: 20 });
+      return { data: this.formatAniListMedia(media) };
+    } catch (e) {
+      console.error('[API] AniList fallback search failed:', e.message);
+      throw e;
+    }
   }
 
   async searchLocal(query) {
@@ -333,16 +348,114 @@ export class AnimeAPI {
 
   async getAnimeRelations(id) {
     try {
-      return await this.providers.jikan.request(`/anime/${id}/relations`);
+      const res = await this.providers.jikan.request(`/anime/${id}/relations`);
+      if (res && res.data) return res;
     } catch (e) {
+      console.warn(`[API] Jikan relations failed for ${id}, trying AniList fallback:`, e.message);
+    }
+
+    try {
+      const query = `
+        query ($id: Int) {
+          Media (idMal: $id, type: ANIME) {
+            relations {
+              edges {
+                relationType
+                node {
+                  id
+                  idMal
+                  type
+                  title { romaji english native }
+                }
+              }
+            }
+          }
+        }
+      `;
+      const data = await this.providers.anilist.request(query, { id: Number(id) });
+      const edges = data?.Media?.relations?.edges || [];
+      const relationsMap = {};
+
+      edges.forEach(edge => {
+        const type = edge.relationType;
+        const node = edge.node;
+        if (!node) return;
+
+        let relString = type.charAt(0) + type.slice(1).toLowerCase().replace('_', ' ');
+        if (type === 'PREQUEL') relString = 'Prequel';
+        else if (type === 'SEQUEL') relString = 'Sequel';
+        else if (type === 'PARENT') relString = 'Parent story';
+        else if (type === 'SIDE_STORY') relString = 'Side story';
+        else if (type === 'SPIN_OFF') relString = 'Spin-off';
+        else if (type === 'SUMMARY') relString = 'Summary';
+        else if (type === 'ALTERNATIVE') relString = 'Alternative version';
+
+        if (!relationsMap[relString]) {
+          relationsMap[relString] = [];
+        }
+
+        relationsMap[relString].push({
+          mal_id: node.idMal || node.id,
+          type: node.type.toLowerCase(),
+          name: node.title?.english || node.title?.romaji || node.title?.native || 'Anime',
+          url: `https://myanimelist.net/${node.type.toLowerCase()}/${node.idMal || node.id}`
+        });
+      });
+
+      const formatted = Object.keys(relationsMap).map(rel => ({
+        relation: rel,
+        entry: relationsMap[rel]
+      }));
+
+      return { data: formatted };
+    } catch (e) {
+      console.error('[API] AniList fallback relations failed:', e.message);
       return { data: [] };
     }
   }
 
   async getAnimeCharacters(id) {
     try {
-      return await this.providers.jikan.request(`/anime/${id}/characters`);
+      const res = await this.providers.jikan.request(`/anime/${id}/characters`);
+      if (res && res.data) return res;
     } catch (e) {
+      console.warn(`[API] Jikan characters failed for ${id}, trying AniList fallback:`, e.message);
+    }
+
+    try {
+      const query = `
+        query ($id: Int) {
+          Media (idMal: $id, type: ANIME) {
+            characters (sort: [ROLE, RELEVANCE, ID], perPage: 20) {
+              edges {
+                role
+                node {
+                  id
+                  name { full }
+                  image { large }
+                }
+              }
+            }
+          }
+        }
+      `;
+      const data = await this.providers.anilist.request(query, { id: Number(id) });
+      const edges = data?.Media?.characters?.edges || [];
+      const formatted = edges.map(edge => ({
+        role: edge.role === 'MAIN' ? 'Main' : 'Supporting',
+        character: {
+          mal_id: edge.node.id,
+          name: edge.node.name?.full || 'Character',
+          images: {
+            jpg: {
+              image_url: edge.node.image?.large
+            }
+          }
+        }
+      }));
+      return { data: formatted };
+    } catch (e) {
+      console.error('[API] AniList fallback characters failed:', e.message);
       return { data: [] };
     }
   }
@@ -357,8 +470,51 @@ export class AnimeAPI {
 
   async getAnimeRecommendations(id) {
     try {
-      return await this.providers.jikan.request(`/anime/${id}/recommendations`);
+      const res = await this.providers.jikan.request(`/anime/${id}/recommendations`);
+      if (res && res.data) return res;
     } catch (e) {
+      console.warn(`[API] Jikan recommendations failed for ${id}, trying AniList fallback:`, e.message);
+    }
+
+    try {
+      const query = `
+        query ($id: Int) {
+          Media (idMal: $id, type: ANIME) {
+            recommendations {
+              nodes {
+                mediaRecommendation {
+                  id
+                  idMal
+                  title { romaji english native }
+                  coverImage { extraLarge large }
+                }
+              }
+            }
+          }
+        }
+      `;
+      const data = await this.providers.anilist.request(query, { id: Number(id) });
+      const nodes = data?.Media?.recommendations?.nodes || [];
+      const formatted = nodes
+        .filter(n => n.mediaRecommendation)
+        .map(n => {
+          const rec = n.mediaRecommendation;
+          return {
+            entry: {
+              mal_id: rec.idMal || rec.id,
+              title: rec.title?.english || rec.title?.romaji || rec.title?.native || 'Anime',
+              images: {
+                jpg: {
+                  image_url: rec.coverImage?.large,
+                  large_image_url: rec.coverImage?.extraLarge || rec.coverImage?.large
+                }
+              }
+            }
+          };
+        });
+      return { data: formatted };
+    } catch (e) {
+      console.error('[API] AniList fallback recommendations failed:', e.message);
       return { data: [] };
     }
   }
