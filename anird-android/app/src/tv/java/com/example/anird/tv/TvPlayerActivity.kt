@@ -188,14 +188,13 @@ class TvPlayerActivity : FragmentActivity() {
                     return false
                 }
 
-                // Para el frame principal, solo permitir la URL de referer, data URIs, o hosts autorizados
-                val baseRefererUrl = com.example.anird.BuildConfig.API_BASE_URL.replace(":3005", ":8090")
-                return if (url.startsWith("data:") || url.contains("10.0.0.9") || url.contains("100.101.132.92") || url.startsWith(baseRefererUrl)) {
-                    false
-                } else {
-                    Log.d(TAG, "Redireccion externa en frame principal bloqueada: $url")
-                    true
+                // Permitir protocolos web estándar (http, https, data, blob) y bloquear esquemas no web (intent, market, etc.)
+                if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:") || url.startsWith("blob:")) {
+                    return false
                 }
+
+                Log.d(TAG, "Esquema no web bloqueado en reproductor: $url")
+                return true
             }
         }
 

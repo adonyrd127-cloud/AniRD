@@ -175,7 +175,7 @@ class TvDetailsFragment : DetailsSupportFragment() {
         lifecycleScope.launch {
             try {
                 // 1. Obtener metadatos oficiales de MyAnimeList/AniList (Jikan + AniList banner)
-                val anime = animeRepo.getAnimeDetails(malId) ?: return@launch
+                var anime = animeRepo.getAnimeDetails(malId) ?: return@launch
                 currentAnime = anime
                 
                 // Cargar banner de fondo dinámico
@@ -193,10 +193,13 @@ class TvDetailsFragment : DetailsSupportFragment() {
                 var episodesList = emptyList<Episode>()
                 if (localResult != null) {
                     val info = animeRepo.getLocalAnimeInfo(localResult.url)
-                    anime.localUrl = localResult.url
+                    anime = anime.copy(
+                        localUrl = localResult.url,
+                        bannerUrl = anime.bannerUrl ?: info?.backdrop,
+                        coverUrl = anime.coverUrl ?: info?.image
+                    )
+                    currentAnime = anime
                     if (info != null) {
-                        anime.bannerUrl = anime.bannerUrl ?: info.backdrop
-                        anime.coverUrl = anime.coverUrl ?: info.image
                         
                         // Obtener historial local de Room
                         val historyList = animeRepo.getHistoryForAnime(malId)

@@ -21,6 +21,9 @@ class TvSearchFragment : SearchSupportFragment(), SearchSupportFragment.SearchRe
     private lateinit var animeRepo: AnimeRepository
     private lateinit var rowsAdapter: ArrayObjectAdapter
     private lateinit var resultsAdapter: ArrayObjectAdapter
+    
+    private val searchHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var searchRunnable: Runnable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,13 +52,21 @@ class TvSearchFragment : SearchSupportFragment(), SearchSupportFragment.SearchRe
     override fun getResultsAdapter(): ObjectAdapter = rowsAdapter
 
     override fun onQueryTextChange(newQuery: String?): Boolean {
-        // Para evitar saturar las llamadas a la API (rate limit de Jikan), solo buscamos en submit
+        searchRunnable?.let { searchHandler.removeCallbacks(it) }
+        val query = newQuery?.trim() ?: ""
+        if (query.length >= 3) {
+            searchRunnable = Runnable { performSearch(query) }
+            searchHandler.postDelayed(searchRunnable!!, 600L)
+        } else if (query.isEmpty()) {
+            resultsAdapter.clear()
+        }
         return true
     }
 
     override fun onQueryTextSubmit(query: String?): Boolean {
+        searchRunnable?.let { searchHandler.removeCallbacks(it) }
         if (!query.isNullOrBlank()) {
-            performSearch(query)
+            performSearch(query.trim())
         }
         return true
     }
