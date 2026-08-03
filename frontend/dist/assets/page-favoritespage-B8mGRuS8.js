@@ -1,5 +1,5 @@
 const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/page-homepage-CMAm-BoN.js","assets/vendor-DIPEJTOH.js"])))=>i.map(i=>d[i]);
-import{_ as s}from"./page-watchpage-DG9DzZ09.js";import{d}from"./page-homepage-CMAm-BoN.js";import"./vendor-DIPEJTOH.js";import"./page-animedetailpage-D5KPHKxt.js";class u{async render(){const a=document.createElement("div");return a.innerHTML=`
+import{_ as s}from"./page-watchpage-CILtXbBH.js";import{d}from"./page-homepage-CMAm-BoN.js";import"./vendor-DIPEJTOH.js";import"./page-animedetailpage-D5KPHKxt.js";class u{async render(){const a=document.createElement("div");return a.innerHTML=`
       <style>
         .page-container {
           padding: 40px 4%;

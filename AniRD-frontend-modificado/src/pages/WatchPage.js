@@ -747,40 +747,10 @@ export default class WatchPage {
   _renderActiveServerPlayer(container, serverObj) {
     if (!container || !serverObj || !serverObj.url) return;
     const url = serverObj.url;
-    const isHls = url.includes('.m3u8') || serverObj.isHls;
-    const isDirectMp4 = url.includes('.mp4') || serverObj.isDirectMp4;
-
-    if (isHls || isDirectMp4) {
-      container.innerHTML = `
-        <video id="v5-native-player" controls autoplay playsinline style="width:100%; height:100%; object-fit:contain; background:#000;" ${isDirectMp4 ? `src="${url}"` : ''}></video>
-        <button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>
-      `;
-      if (isHls) {
-        const video = document.getElementById('v5-native-player');
-        const loadHls = () => {
-          if (window.Hls && window.Hls.isSupported()) {
-            const hls = new window.Hls();
-            hls.loadSource(url);
-            hls.attachMedia(video);
-          } else if (video && video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = url;
-          }
-        };
-        if (window.Hls) {
-          loadHls();
-        } else {
-          const script = document.createElement('script');
-          script.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
-          script.onload = loadHls;
-          document.head.appendChild(script);
-        }
-      }
-    } else {
-      container.innerHTML = `
-        <iframe src="${this._getAutoplayUrl(url)}" allowfullscreen allow="autoplay; encrypted-media" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>
-        <button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>
-      `;
-    }
+    container.innerHTML = `
+      <iframe src="${this._getAutoplayUrl(url)}" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+      <button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>
+    `;
   }
 
   // 2. Control de píldoras de servidor (reproductor híbrido dinámico)
