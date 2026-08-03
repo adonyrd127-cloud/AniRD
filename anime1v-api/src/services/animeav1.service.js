@@ -344,7 +344,7 @@ function inferLinkKind(url, explicitKind) {
     return "stream";
   }
 
-  if (/(embed|play\/?|m3u8|hls|player\.)/i.test(url)) {
+  if (/(embed|play\/?|m3u8|hls|player\.|uns\.bio|upnshare)/i.test(url)) {
     return "stream";
   }
 
@@ -623,7 +623,7 @@ function normalizeAnimeInfo(media, domain) {
     titleJapanese:
       (isObject(media.aka) && (media.aka["ja-jp"] || media.aka["ja"] || media.aka.jp)) || media.titleJapanese || null,
     description: media.description || media.synopsis || null,
-    image: resolveAbsoluteUrl(media.poster || media.image || media.cover, domain),
+    image: resolveAbsoluteUrl(media.poster || media.image || media.cover || (media.id ? `https://cdn.animeav1.com/covers/${media.id}.jpg` : null), domain),
     backdrop: resolveAbsoluteUrl(media.backdrop || media.banner || media.thumbnail, domain),
     status: (isObject(media.status) ? media.status.name : media.status) || null,
     type: (isObject(media.category) ? media.category.name : media.type) || null,
@@ -700,12 +700,17 @@ function mapSearchResults(array, domain) {
         return null;
       }
 
+      let img = item.poster || item.image || item.cover || null;
+      if (!img && item.id) {
+        img = `https://cdn.animeav1.com/covers/${item.id}.jpg`;
+      }
+
       return {
         id: item.id ?? null,
         title,
         slug,
         url,
-        image: resolveAbsoluteUrl(item.poster || item.image || item.cover, domain),
+        image: resolveAbsoluteUrl(img, domain),
         backdrop: resolveAbsoluteUrl(item.backdrop || item.banner, domain),
         type: (isObject(item.category) ? item.category.name : item.type) || null,
         score: parseNumber(item.score),
@@ -920,7 +925,7 @@ async function getEpisodeLinks(urlCandidate, includeMegaRaw, excludeServersRaw) 
   const includeMega = parseBoolean(includeMegaRaw);
   const excludedTokens = buildExcludedTokens(includeMega, excludeServersRaw);
 
-  const html = await fetchHtml(normalizedUrl);
+  const html = await fetchHtml(urlCandidate);
   const svelteData = extractSvelteData(html);
   const dataRoot = svelteData || {};
 
@@ -964,8 +969,46 @@ async function getEpisodeLinks(urlCandidate, includeMegaRaw, excludeServersRaw) 
   };
 }
 
+async function getCatalog(page, genre) {
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const domain = DEFAULT_DOMAIN;
+
+  let catalogUrl = `https://${domain}/catalogo?page=${pageNum}`;
+  if (genre && typeof genre === "string" && genre.trim()) {
+    catalogUrl += `&genre=${encodeURIComponent(genre.trim())}`;
+  }
+
+  const html = await fetchHtml(catalogUrl);
+
+  let results = [];
+  const svelteData = extractSvelteData(html);
+  if (svelteData) {
+    const bestArray = chooseLikelySearchArray(svelteData);
+    if (bestArray) {
+      results = mapSearchResults(bestArray, domain);
+    }
+  }
+
+  if (results.length === 0) {
+    results = parseSearchResultsFromHtml(html, domain);
+  }
+
+  return {
+    success: true,
+    data: {
+      page: pageNum,
+      genre: genre || null,
+      results,
+      count: results.length,
+      hasMore: results.length >= 10,
+    },
+    source: svelteData ? "json" : "html",
+  };
+}
+
 module.exports = {
   searchAnime,
   getAnimeInfo,
   getEpisodeLinks,
+  getCatalog,
 };

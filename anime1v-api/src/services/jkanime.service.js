@@ -609,20 +609,7 @@ async function getAnimeInfo(urlCandidate) {
     }
   }
 
-  const parsedTotal = parseNumber(info.infoValues.totalEpisodes);
-  if (episodes.length === 0 && parsedTotal && parsedTotal > 0) {
-    episodes = Array.from({ length: parsedTotal }, (_, i) => {
-      const epNum = i + 1;
-      return {
-        id: null,
-        number: epNum,
-        title: `Episodio ${epNum}`,
-        url: `https://${DEFAULT_DOMAIN}/${slug}/${epNum}/`,
-      };
-    });
-  }
-
-  const totalEpisodes = parsedTotal || episodes.length || null;
+  const totalEpisodes = info.infoValues.totalEpisodes || episodes.length || null;
 
   return {
     success: true,

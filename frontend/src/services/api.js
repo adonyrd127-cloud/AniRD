@@ -275,6 +275,10 @@ export class AnimeAPI {
     return await this.providers.local.request('/anime/episode', { url });
   }
 
+  async resolveServer(url) {
+    return await this.providers.local.request('/anime/resolve', { url });
+  }
+
   async getTrending(page = 1) {
     try {
       const res = await this.providers.jikan.request('/top/anime', { filter: 'airing', limit: 24, page });

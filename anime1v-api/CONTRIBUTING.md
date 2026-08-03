@@ -29,7 +29,7 @@ Si vas a contribuir con código, sigue estos pasos para configurar tu entorno:
 1. **Haz un Fork** del repositorio a tu cuenta de GitHub (¡gracias por sumarte a los 20+ forks!).
 2. **Clona** tu fork de manera local:
    ```bash
-   git clone https://github.com/TU_USUARIO/anime1v-api.git
+   git clone https://github.com/FxxMorgan/anime1v-api.git
    cd anime1v-api
    ```
 3. **Instala las dependencias**, incluyendo puppeteer si vas a probar sitios con protección JS:

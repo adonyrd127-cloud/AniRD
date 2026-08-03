@@ -5,91 +5,22 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
-const pino = require("pino");
-const pinoHttp = require("pino-http");
 const animeRoutes = require("./routes/anime.routes");
-const playerRoutes = require("./routes/player.routes");
 const downloadService = require("./services/download.service");
 const { ApiError } = require("./utils/api-error");
-
-const logger = pino({
-  level: process.env.LOG_LEVEL || "info",
-  transport: process.env.NODE_ENV !== "production"
-    ? { target: "pino-pretty" }
-    : undefined
-});
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
 
 app.use(
   helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "https:"],
-        mediaSrc: ["'self'", "https:", "blob:", "data:"],
-        connectSrc: ["'self'", "https:"],
-        frameSrc: ["'self'", "https:"],
-      },
-    },
-    crossOriginResourcePolicy: { policy: "cross-origin" },
-    crossOriginEmbedderPolicy: false,
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: false,
   })
 );
-
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-  : ["http://localhost:5173", "http://127.0.0.1:5173"];
-
-const corsOptions = {
-  origin: (origin, callback) => {
-    // En desarrollo, permitir cualquier origen para acceso por red local
-    if (process.env.NODE_ENV !== "production") {
-      return callback(null, true);
-    }
-
-    const isLocalOrTailscale = origin && (
-      /^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|100\.\d+\.\d+\.\d+)(:\d+)?$/.test(origin)
-    );
-
-    if (!origin || origin.includes("localhost") || origin.includes("127.0.0.1") || isLocalOrTailscale) {
-      return callback(null, true);
-    }
-
-    // Validar contra whitelist exacta en producción
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else if (allowedOrigins.includes("*") || allowedOrigins.includes("")) {
-      callback(null, true);
-    } else {
-      callback(new Error("Origen no permitido por las políticas de seguridad de CORS de AniRD"));
-    }
-  },
-};
-
-app.use(cors(corsOptions));
-
-// Inyectar protección de Rate Limiting por IP para proteger el hardware de la Orange Pi
-const rateLimit = require("express-rate-limit");
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 150, // Límite de 150 peticiones por ventana de 15 min por IP
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    success: false,
-    message: "Demasiadas peticiones desde esta dirección IP. Por favor intenta de nuevo en 15 minutos.",
-  },
-  skip: () => process.env.DISABLE_RATE_LIMIT === "true",
-});
-
-app.use("/api/", apiLimiter);
-
+app.use(cors());
 app.use(express.json({ limit: "1mb" }));
-app.use(pinoHttp({ logger }));
+app.use(morgan("dev"));
 
 const downloadsDir = downloadService.getDownloadsDir();
 const staticDownloadOptions = {
@@ -102,6 +33,7 @@ const staticDownloadOptions = {
 
 app.use("/downloads", express.static(downloadsDir, staticDownloadOptions));
 app.use("/api/downloads", express.static(downloadsDir, staticDownloadOptions));
+app.use(express.static(path.join(__dirname, "../public")));
 
 app.get("/", (_req, res) => {
   res.status(200).json({
@@ -115,25 +47,9 @@ app.get("/", (_req, res) => {
   });
 });
 
-const { cache } = require("./cache");
-
 app.get("/health", (_req, res) => {
-  res.status(200).json({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-    cache: cache.getStats(),
-  });
+  res.status(200).json({ success: true, status: "ok" });
 });
-
-const authRoutes = require("./routes/auth.routes");
-const userRoutes = require("./routes/user.routes");
-
-app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/user", userRoutes);
-
-// Player proxy routes — montadas en rutas públicas separadas (sin API key, sin rate limit agresivo)
-// Estas rutas sirven páginas HTML y proxy de streaming — las carga el navegador directamente en iframes.
-app.use("/player", playerRoutes);
 
 app.use("/api/v1/anime", animeRoutes);
 app.use("/api/anime1v", animeRoutes);
@@ -144,12 +60,6 @@ app.use((_req, _res, next) => {
 
 app.use((error, _req, res, _next) => {
   const statusCode = error.statusCode || 500;
-
-  if (_req.log) {
-    _req.log.error(error);
-  } else {
-    logger.error(error);
-  }
 
   const response = {
     success: false,
@@ -163,6 +73,7 @@ app.use((error, _req, res, _next) => {
   res.status(statusCode).json(response);
 });
 
-app.listen(port, "0.0.0.0", () => {
-  logger.info(`AniRD API listening on port ${port} (All interfaces)`);
+app.listen(port, () => {
+  // eslint-disable-next-line no-console
+  console.log(`Anime1v API listening on http://localhost:${port}`);
 });

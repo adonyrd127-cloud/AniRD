@@ -2,6 +2,9 @@ import { apiService } from '../services/api.js';
 import { dbService, db } from '../services/db.js';
 import { getRouter } from '../app.js';
 import { Toast } from '../components/Toast.js';
+import Plyr from 'plyr';
+import Hls from 'hls.js';
+import 'plyr/dist/plyr.css';
 
 export default class WatchPage {
   constructor(params) {
@@ -23,6 +26,9 @@ export default class WatchPage {
     this.isAmbient = localStorage.getItem('watch-ambient-mode') !== 'false';
     this.sortDesc = false;
     this.searchQuery = '';
+    
+    this.plyrInstance = null;
+    this.hlsInstance = null;
   }
 
   async render() {
@@ -787,9 +793,71 @@ export default class WatchPage {
     }
   }
 
-  _renderActiveServerPlayer(container, serverObj) {
+  async _renderActiveServerPlayer(container, serverObj) {
     if (!container || !serverObj || !serverObj.url) return;
     const url = serverObj.url;
+    
+    // Destroy previous instances
+    if (this.plyrInstance) {
+      try { this.plyrInstance.destroy(); } catch(e){}
+      this.plyrInstance = null;
+    }
+    if (this.hlsInstance) {
+      try { this.hlsInstance.destroy(); } catch(e){}
+      this.hlsInstance = null;
+    }
+    
+    // Show loading state
+    container.innerHTML = `
+      <div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#000;">
+         <div class="spinner" style="border: 4px solid rgba(255,255,255,0.1); border-left-color: #ff3366; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
+         <p style="color:#aaa; font-size:12px; margin-top:15px; font-family:'Outfit'">Resolviendo enlace de video...</p>
+         <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+      </div>
+      <button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>
+    `;
+
+    try {
+      const resolveRes = await apiService.resolveServer(url);
+      
+      if (resolveRes && resolveRes.success && resolveRes.streamUrl) {
+        // Native Player Injection
+        container.innerHTML = `
+          <video id="anird-player" playsinline controls style="--plyr-color-main: #ff3366;"></video>
+          <button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>
+        `;
+        const videoElement = document.getElementById('anird-player');
+        const streamUrl = resolveRes.streamUrl;
+        
+        // Initialize HLS if needed
+        if (resolveRes.mediaType === 'hls' || streamUrl.includes('.m3u8')) {
+          if (Hls.isSupported()) {
+            this.hlsInstance = new Hls();
+            this.hlsInstance.loadSource(streamUrl);
+            this.hlsInstance.attachMedia(videoElement);
+            this.hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+              this.plyrInstance = new Plyr(videoElement, { autoplay: true });
+            });
+          } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+            videoElement.src = streamUrl;
+            this.plyrInstance = new Plyr(videoElement, { autoplay: true });
+          }
+        } else {
+          // Direct MP4
+          videoElement.src = streamUrl;
+          this.plyrInstance = new Plyr(videoElement, { autoplay: true });
+        }
+      } else {
+        // Fallback to iframe if resolution fails
+        this._renderIframeFallback(container, url);
+      }
+    } catch (e) {
+      console.warn("Failed to resolve native stream:", e);
+      this._renderIframeFallback(container, url);
+    }
+  }
+
+  _renderIframeFallback(container, url) {
     container.innerHTML = `
       <iframe src="${this._getAutoplayUrl(url)}" allowfullscreen allow="autoplay; encrypted-media"></iframe>
       <button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>

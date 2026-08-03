@@ -30,14 +30,14 @@ Si utilizas este código en proyectos, sitios web o aplicaciones, el **Core Engi
 
 ## Proveedores Soportados
 
-| Proveedor | Búsqueda | Info Anime | Episodios | Descarga | Notas |
-|-----------|:--------:|:----------:|:---------:|:--------:|-------|
-| **AnimeAV1** | Sí | Sí | Sí | Sí | HLS nativo, más estable |
-| **AnimeFLV** | Sí | Sí | Sí | Sí | Requiere puppeteer (anti-bot) |
-| **TioAnime** | Sí | Sí | Sí | Sí | YourUpload recomendado |
-| **HentaiLA** | Sí | Sí | Sí | Parcial | SvelteKit, API `__data.json` |
-| **JKAnime** | Sí | Sí | Sí | No | JKPlayer con cifrado fuerte |
-| **MonosChinos**| Sí | Sí | Sí | Sí | Base64 decoding nativo |
+| Proveedor | Búsqueda | Info Anime | Episodios | Catálogo | Descarga | Notas |
+|-----------|:--------:|:----------:|:---------:|:--------:|:--------:|-------|
+| **AnimeAV1** | ✅ | ✅ | ✅ | ✅ | ✅ | Poster autogenerado via CDN fallback |
+| **AnimeFLV** | ✅ | ✅ | ✅ | ✅ | ✅ | Browser global compartido (sin zombies) |
+| **TioAnime** | ✅ | ✅ | ✅ | ❌ | ✅ | YourUpload recomendado |
+| **HentaiLA** | ✅ | ✅ | ✅ | ❌ | Parcial | SvelteKit, API `__data.json` |
+| **JKAnime** | ✅ | ✅ | ✅ | ❌ | ❌ | JKPlayer con cifrado fuerte |
+| **MonosChinos**| ✅ | ✅ | ✅ | ❌ | ✅ | Base64 decoding nativo |
 
 ### Servidores de Video Soportados
 
@@ -46,30 +46,40 @@ Si utilizas este código en proyectos, sitios web o aplicaciones, el **Core Engi
 | **YourUpload** | Directo | - | Más confiable, priorizado |
 | **Mega** | Directo | - | Requiere `includeMega=true` |
 | **1Fichier** | POST | - | Cookies + redirect |
-| **StreamWish** | Puppeteer | Sí | Protección JS |
-| **StreamTape** | Puppeteer | - | Protección JS |
-| **VOE** | Redirect | - | Filtro anti-fake |
-| **VidHide** | No | - | Cifrado fuerte |
+| **StreamWish** | Modular ⚡ | Sí | Reintento con URL original si falla redirect |
+| **StreamTape** | Modular ⚡ | - | Extractor dedicado |
+| **VOE** | Modular ⚡ | - | Filtro anti-fake |
+| **VidHide** | Inline | Sí | Extractor HTTP inline |
 | **Filemoon** | Unpacker JS | Sí | Extrae m3u8 nativamente |
 | **Doodstream** | Unpacker JS | - | Bypass de tokens por JS |
 | **Mixdrop** | Unpacker JS | - | Decodificación nativa |
-| **Luluvideo** | Puppeteer | Sí | Resuelto vía interceptación |
-| **MP4Upload** | HTML | - | Embed HTML |
+| **Hqq / Netu** | Inline | - | Extractor HTTP inline |
+| **Dropload** | Inline | Sí | Extractor HTTP inline |
+| **MP4Upload** | Puppeteer | - | Conversión automática a URL embed |
 | **HLS / Zilla** | Sí | Sí | FFmpeg con headers |
 | **PixelDrain** | Directo | - | API `/api/file/{id}?download` |
+| **yt-dlp** | CLI Fallback | Sí | Usado como penúltimo recurso si está instalado |
 
 ---
 
 ## Características Principales
 
-- **Multi-Proveedor**: AnimeAV1, AnimeFLV, TioAnime, HentaiLA, JKAnime, MonosChinos — búsqueda unificada.
+- **Multi-Proveedor**: AnimeAV1, AnimeFLV, TioAnime, HentaiLA, JKAnime, MonosChinos — búsqueda unificada en paralelo.
+- **Búsqueda Concurrente**: Motor con `Promise.all` para consultar todos los proveedores al mismo tiempo.
+- **Catálogo Multi-Proveedor**: El endpoint `/catalog` soporta el parámetro `provider` para servir listados de AnimeAV1, AnimeFLV y otros proveedores en tiempo real.
+- **Poster Autogenerado (AnimeAV1)**: Si el scraper no detecta un campo de imagen en la respuesta, se construye automáticamente la URL desde el CDN de AnimeAV1 (`https://cdn.animeav1.com/covers/{id}.jpg`).
+- **Resolución de Streams en Paralelo**: El endpoint `/resolve` ejecuta todos los servidores de video al mismo tiempo con `Promise.any`, entregando el primero que resuelva sin esperar a los demás.
+- **Browser Global Singleton (Puppeteer)**: Una única instancia compartida de Chromium con semáforo de concurrencia (`MAX_CONCURRENT_PAGES`), eliminando procesos zombie y reduciendo el consumo de RAM.
+- **Resolutores Modulares de Video**: Extractores dedicados de alta velocidad para StreamWish, StreamTape, VOE, VidHide, Doodstream, Mixdrop, Dropload, Hqq/Netu y más.
+- **Soporte yt-dlp**: Integración opcional de `yt-dlp` como resolver de fallback de alta velocidad para servidores compatibles.
+- **Image Proxy sin Auth**: El endpoint `/image-proxy` está disponible sin API Key para que el frontend pueda cargar portadas directamente sin consumir cuota.
+- **Slug en Resultados**: Las búsquedas e info devuelven el campo `slug` con la URL del proveedor, listo para usar en la UI.
 - **Puppeteer Anti-Bot**: Resuelve páginas con protección JavaScript (Cloudflare, fingerprinting, SvelteKit).
 - **Filtro Anti-Fake**: Detecta y rechaza videos falsos (Big Buck Bunny, test-videos, placeholders).
 - **Descargador Nativo**: Cola de descargas directo al disco con soporte HLS (`ffmpeg`).
 - **Motor FFmpeg Stealth**: Inyecta `User-Agent` + `Referer` para evadir bloqueos en streams HLS.
 - **CLI Interactivo v2**: Menú de proveedor, búsqueda, selección de episodios, idioma y confirmación.
-- **Fallback Automático**: Si un servidor falla, salta al siguiente automáticamente.
-- **Debug Mode**: `DEBUG_DOWNLOAD=true` para logs detallados por candidato.
+- **Debug Mode**: `DEBUG_RESOLVER=true` / `DEBUG_DOWNLOAD=true` para logs detallados por candidato.
 - **Totalmente Modificable**: Sin límites de peticiones comerciales. Todo en tu entorno.
 
 ---
@@ -97,8 +107,12 @@ cp .env.example .env
 | `DOWNLOADS_DIR` | `downloads` | Carpeta de descargas |
 | `REQUEST_TIMEOUT_MS` | `15000` | Timeout de requests HTTP |
 | `DOWNLOAD_REQUEST_TIMEOUT_MS` | `120000` | Timeout de descarga |
-| `DEBUG_DOWNLOAD` | `false` | Logs detallados de resolución |
-| `DEFAULT_ANIME_DOMAIN` | `animeav1.com` | Proveedor por defecto |
+| `DEBUG_DOWNLOAD` | `false` | Logs detallados del motor de descarga |
+| `DEBUG_RESOLVER` | `false` | Logs detallados de resolución de streams |
+| `DEFAULT_ANIME_DOMAIN` | `animeav1.com` | Dominio de AnimeAV1 por defecto |
+| `MAX_CONCURRENT_PAGES` | `2` | Máximo de páginas Puppeteer simultáneas |
+| `YTDLP_ENABLED` | `true` | Habilitar/deshabilitar yt-dlp como fallback |
+| `YTDLP_TIMEOUT_MS` | `8500` | Timeout para llamadas a yt-dlp |
 
 ### 3. Instalar e iniciar
 
@@ -108,6 +122,20 @@ npm run dev
 ```
 
 Servidor en `http://localhost:3001`.
+
+---
+
+## Frontend Web UI (Cypher Anime)
+
+La interfaz web incluida en `public/` ha sido completamente rediseñada para ofrecer una experiencia profesional y orientada al usuario:
+
+- **Diseño Profesional (Light Theme)**: Interfaz limpia y agradable a la vista, utilizando una paleta Slate-Indigo moderna y cuidada.
+- **Optimización Mobile-First**: Layout adaptativo con cuadrícula de 2 columnas en dispositivos móviles, scroll horizontal fluido para filtros de género y menús ergonómicos.
+- **Reproductor de Video Mejorado**: 
+  - *Bypass de Sandbox*: Permite la incrustación y reproducción correcta de múltiples servidores de streaming sin bloqueos de origen en el iframe.
+  - *Fix de Audio*: Al cerrar el reproductor o cambiar de vista, el audio del iframe se detiene correctamente forzando el reinicio del frame.
+- **Controles de Navegación**: Nueva botonera en el reproductor (Anterior, Catálogo, Siguiente) con ordenamiento lógico de episodios, e incluye un botón "Externo" como respaldo para abrir el reproductor en pestaña nueva.
+- **Catálogo Dinámico**: El panel de tendencias y exploración se alimenta de datos en tiempo real mediante la orquestación de proveedores en el backend, sin elementos fijos (*hardcode*).
 
 ---
 
@@ -130,25 +158,86 @@ node descargador.js
 
 ## Documentación de Endpoints
 
+Todos los endpoints (excepto `/image-proxy`) requieren autenticación mediante:
+- Header: `X-API-Key: <tu-clave>`
+- Query param: `?apiKey=<tu-clave>`
+
+---
+
 ### 1. Búsqueda de Animes
 ```http
 GET /api/v1/anime/search?q=nombre&domain=proveedor.com
 ```
 Parámetros:
 - `q` — Término de búsqueda (requerido)
-- `domain` — Dominio del proveedor (opcional, ej: `tioanime.com`)
+- `domain` — Dominio o ID del proveedor (opcional, ej: `tioanime.com` o `animeflv`)
+
+Respuesta incluye `slug` y `provider` por resultado.
+
+---
 
 ### 2. Información de Anime
 ```http
 GET /api/v1/anime/info?url=https://proveedor.com/anime/slug
 ```
+Respuesta incluye `image` con poster (autogenerado para AnimeAV1 si no hay datos), `slug`, `url` y `episodes[]`.
 
-### 3. Enlaces de Episodio
+---
+
+### 3. Catálogo / Tendencias
 ```http
-GET /api/v1/anime/episode?url=https://proveedor.com/ver/slug-1
+GET /api/v1/anime/catalog?page=1&provider=animeflv&genre=accion
+```
+Parámetros:
+- `page` — Número de página (default: `1`)
+- `provider` — Proveedor: `animeav1` (default), `animeflv`, `jkanime`, `tioanime`, `monoschinos`, `hentaila`
+- `genre` — Filtro de género (opcional, soporte según proveedor)
+
+Respuesta incluye `slug`, `url`, `image`, `provider` y `hasMore` por resultado.
+
+---
+
+### 4. Enlaces de Episodio
+```http
+GET /api/v1/anime/episode?url=https://proveedor.com/ver/slug-1&includeMega=false&excludeServers=mega
+```
+Parámetros:
+- `url` — URL del episodio (requerido)
+- `includeMega` — Incluir links de Mega (default: `false`)
+- `excludeServers` — Servidores a excluir, separados por coma (ej: `mega,streamtape`)
+
+---
+
+### 5. Resolución Directa de Stream (Paralelo)
+```http
+GET /api/v1/anime/resolve?url=https://servidor.com/e/id
+# O con múltiples URLs en paralelo:
+GET /api/v1/anime/resolve?urls=["https://voe.sx/e/id","https://streamwish.to/e/id"]
+```
+Ejecuta todos los servidores en paralelo con `Promise.any` y devuelve el primero que resuelva con éxito.
+
+Respuesta:
+```json
+{
+  "success": true,
+  "server": "voe",
+  "mediaType": "hls",
+  "streamUrl": "https://cdn.voe.sx/hls/...",
+  "resolvedFrom": "https://voe.sx/e/..."
+}
 ```
 
-### 4. Descarga
+---
+
+### 6. Proxy de Imágenes (Sin autenticación)
+```http
+GET /api/v1/anime/image-proxy?url=https://cdn.animeav1.com/covers/123.jpg
+```
+Devuelve la imagen en stream directo. No requiere API Key. Ideal para uso en `<img src>` en el frontend.
+
+---
+
+### 7. Descarga
 ```http
 POST /api/v1/anime/download
 Content-Type: application/json
@@ -162,12 +251,12 @@ Content-Type: application/json
 }
 ```
 
-### 5. Estado de Descarga
+### 8. Estado de Descarga
 ```http
 GET /api/v1/anime/download/:id
 ```
 
-### 6. Descarga por Lote
+### 9. Descarga por Lote
 ```http
 POST /api/v1/anime/batch
 
@@ -222,22 +311,75 @@ ls downloads/
 anime1v-api/
 ├── descargador.js          # CLI interactivo v2
 ├── src/
+│   ├── routes/
+│   │   └── anime.routes.js        # Endpoints API (con /catalog y /resolve paralelo)
 │   ├── services/
-│   │   ├── anime.service.js       # Orquestador multi-proveedor
-│   │   ├── animeflv.service.js    # AnimeFLV (puppeteer)
-│   │   ├── animeav1.service.js    # AnimeAV1
+│   │   ├── anime.service.js       # Orquestador multi-proveedor (slug mapping)
+│   │   ├── animeav1.service.js    # AnimeAV1 (poster CDN fallback)
+│   │   ├── animeflv.service.js    # AnimeFLV (browser global + getCatalog)
 │   │   ├── jkanime.service.js     # JKAnime
-│   │   ├── tioanime.service.js    # TioAnime (NUEVO)
-│   │   ├── hentaila.service.js    # HentaiLA (NUEVO)
-│   │   ├── monoschinos.service.js # MonosChinos (NUEVO)
-│   │   └── download.service.js    # Motor de descarga + resolvers
+│   │   ├── tioanime.service.js    # TioAnime
+│   │   ├── hentaila.service.js    # HentaiLA (SvelteKit)
+│   │   ├── monoschinos.service.js # MonosChinos
+│   │   └── download.service.js    # Motor de descarga
 │   ├── utils/
-│   │   └── api-error.js
-│   └── index.js
+│   │   ├── api-error.js           # Clase de errores HTTP
+│   │   ├── browser.js             # ⭐ Singleton Puppeteer con semáforo
+│   │   ├── http.js                # ⭐ Helpers HTTP / scraping
+│   │   ├── resolver-helpers.js    # Axios helpers para resolvers
+│   │   └── resolvers/
+│   │       ├── resolvers.js       # ⭐ Orquestador de resolución paralela
+│   │       ├── streamwish.resolver.js  # ⭐ Con reintento de descarga
+│   │       ├── streamtape.resolver.js
+│   │       ├── voe.resolver.js
+│   │       └── ytdlp.resolver.js  # ⭐ Fallback yt-dlp
+│   ├── middlewares/
+│   │   ├── auth.js                # API Key middleware
+│   │   └── rate-limit.js          # Rate limiter diario
+│   └── server.js
 ├── downloads/               # Archivos descargados
+├── public/                  # UI web (Cypher Anime)
 ├── Apis/anime1v/            # Documentación de API pública
 └── .env.example
 ```
+
+> ⭐ = Archivo nuevo o modificado significativamente en la última actualización.
+
+---
+
+## Roadmap de Desarrollo - Anime1v API & Cypher Anime
+
+Este apartado detalla las próximas fases de desarrollo, optimizaciones técnicas y nuevas características planeadas para el ecosistema (API Backend + UI Frontend).
+
+### Fase 1: Rendimiento y Escalabilidad ✅ (Completado)
+
+- [x] **Browser Singleton (Puppeteer)**: Una única instancia de Chromium compartida con semáforo de concurrencia (`MAX_CONCURRENT_PAGES`). Elimina procesos zombie.
+- [x] **Resolución de Streams en Paralelo**: `Promise.any` en `/resolve` para entregar el primer servidor exitoso sin esperar a los demás.
+- [x] **Resolutores Modulares**: Extractores de alta velocidad dedicados por servidor (StreamWish, StreamTape, VOE, VidHide, Doodstream, Hqq, Dropload, Mixdrop).
+- [x] **yt-dlp como Fallback**: Soporte opcional para usar `yt-dlp` del sistema como resolver de alta velocidad antes de Puppeteer.
+
+### Fase 2: Estabilidad y Expansión de Proveedores
+
+- [x] **Poster Fallback (AnimeAV1)**: Autogeneración de URL de portada desde CDN cuando la API no retorna imagen.
+- [x] **Catálogo Multi-Proveedor**: El endpoint `/catalog` soporta selección dinámica de proveedor vía `?provider=`.
+- [x] **Slug en Resultados**: Todos los resultados de búsqueda e info devuelven `slug` y `url` del proveedor.
+- [x] **Image Proxy sin Auth**: Endpoint `/image-proxy` sin requerir API Key para uso directo en frontend.
+- [ ] **Caché Distribuida (Redis)**: Implementar almacenamiento en caché temporal para catálogo, búsquedas y links.
+- [ ] **Decodificador JKAnime**: Ingeniería inversa al cifrado de JKPlayer para obtener MPs4 puros.
+- [ ] **Integración API Mega**: Implementar descarga nativa para servidores Mega con API keys.
+- [ ] **getCatalog para JKAnime / TioAnime**: Extender el catálogo dinámico a los demás proveedores.
+
+### Fase 3: Experiencia de Usuario (Cypher Anime UI)
+Mejoras para la aplicación web orientadas a la retención de usuarios.
+
+- [ ] **Persistencia Local**: Guardar progreso de visualización de episodios y lista de "Favoritos" en LocalStorage / IndexedDB.
+- [ ] **Reanudación de Reproducción**: Detectar el minuto exacto donde se dejó un episodio y permitir continuarlo.
+- [ ] **Modo Teatro y Dark Theme Completo**: Agregar toggle para oscurecer el sitio alrededor del reproductor.
+
+### Fase 4: Nuevas Fronteras (Largo Plazo)
+- [ ] **Soporte Manga**: Extender la API base para raspar y leer capítulos de manga (ej. TMO).
+- [ ] **Dockerización Avanzada**: Despliegue en 1-click mediante docker-compose con clúster Redis integrado y balanceador NGINX.
+- [ ] **Aplicación PWA**: Configurar Service Workers y un manifest para que la UI funcione como aplicación nativa en dispositivos móviles.
 
 ---
 

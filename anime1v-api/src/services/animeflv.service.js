@@ -4,21 +4,11 @@ const vm = require("node:vm");
 const { URL } = require("node:url");
 const { ApiError } = require("../utils/api-error");
 
-let puppeteerBrowser = null;
-
-async function getPuppeteerBrowser() {
-  if (!puppeteerBrowser) {
-    const puppeteer = require("puppeteer");
-    puppeteerBrowser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
-  }
-  return puppeteerBrowser;
-}
+// Shared global browser instead of launching multiple duplicate chrome processes
+const { getBrowser } = require("../utils/browser");
 
 async function fetchHtmlWithPuppeteer(url) {
-  const browser = await getPuppeteerBrowser();
+  const browser = await getBrowser();
   const page = await browser.newPage();
   
   await page.setUserAgent(
@@ -49,7 +39,7 @@ async function fetchHtmlWithPuppeteer(url) {
   return content;
 }
 
-const DEFAULT_DOMAIN = "www4.animeflv.net";
+const DEFAULT_DOMAIN = "animeflv.net";
 
 const HTTP_HEADERS = {
   "User-Agent":
@@ -70,9 +60,8 @@ async function fetchHtml(url) {
     });
     return response.data;
   } catch (error) {
-    // If regular fetch fails, try with puppeteer
     try {
-      console.log("fetchHtml: trying with puppeteer for", url);
+      console.log("fetchHtml: trying with shared puppeteer for", url);
       return await fetchHtmlWithPuppeteer(url);
     } catch (puppeteerError) {
       throw new ApiError(500, "No se pudo obtener contenido desde AnimeFLV", error.message);
@@ -569,6 +558,8 @@ async function searchAnime(query, domainCandidate) {
 async function getAnimeInfo(urlCandidate) {
   const normalizedUrl = normalizeInputUrl(urlCandidate);
   const parsed = new URL(normalizedUrl);
+  // Use the domain from the input URL if available, fallback to DEFAULT_DOMAIN
+  const domain = parsed.hostname || DEFAULT_DOMAIN;
   const segments = parsed.pathname.split("/").filter(Boolean);
 
   let slug = segments[1] || "";
@@ -585,14 +576,14 @@ async function getAnimeInfo(urlCandidate) {
     throw new ApiError(400, "URL invalida");
   }
 
-  const baseUrl = `https://${DEFAULT_DOMAIN}/anime/${slug}`;
+  const baseUrl = `https://${domain}/anime/${slug}`;
   const html = await fetchHtml(baseUrl);
 
-  const info = parseAnimeInfoFromHtml(html, DEFAULT_DOMAIN);
-  let episodes = parseEpisodesFromHtml(html, DEFAULT_DOMAIN, slug);
+  const info = parseAnimeInfoFromHtml(html, domain);
+  let episodes = parseEpisodesFromHtml(html, domain, slug);
 
   if (episodes.length === 0) {
-    episodes = parseEpisodeListFromScript(html, DEFAULT_DOMAIN, slug);
+    episodes = parseEpisodeListFromScript(html, domain, slug);
   }
 
   return {
@@ -602,7 +593,7 @@ async function getAnimeInfo(urlCandidate) {
       title: info.title,
       titleJapanese: null,
       description: info.description,
-      image: resolveAbsoluteUrl(info.image, DEFAULT_DOMAIN),
+      image: resolveAbsoluteUrl(info.image, domain),
       backdrop: null,
       status: null,
       type: info.type || null,
@@ -623,6 +614,8 @@ async function getAnimeInfo(urlCandidate) {
 
 async function getEpisodeLinks(urlCandidate, includeMegaRaw, excludeServersRaw) {
   const normalizedUrl = normalizeInputUrl(urlCandidate);
+  const parsedEpUrl = new URL(normalizedUrl);
+  const epDomain = parsedEpUrl.hostname || DEFAULT_DOMAIN;
   const includeMega = String(includeMegaRaw).toLowerCase() === "true";
   const excludedTokens = buildExcludedTokens(includeMega, excludeServersRaw);
 
@@ -654,7 +647,7 @@ async function getEpisodeLinks(urlCandidate, includeMegaRaw, excludeServersRaw) 
     }
   }
 
-  const downloadRows = parseDownloadRows(html, DEFAULT_DOMAIN);
+  const downloadRows = parseDownloadRows(html, epDomain);
   for (const row of downloadRows) {
     const variant = normalizeVariantKey(row.variant);
     const link = buildLinkRecord(row.server || "Download", row.url, row.format || null);
@@ -700,10 +693,34 @@ async function getEpisodeLinks(urlCandidate, includeMegaRaw, excludeServersRaw) 
   };
 }
 
+async function getCatalog(page, genre) {
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const domain = DEFAULT_DOMAIN || "animeflv.net";
+
+  let catalogUrl = `https://${domain}/browse?page=${pageNum}`;
+  if (genre && typeof genre === "string" && genre.trim()) {
+    catalogUrl += `&genre[]=${encodeURIComponent(genre.trim().toLowerCase())}`;
+  }
+
+  const html = await fetchHtml(catalogUrl);
+  const results = parseSearchResultsFromHtml(html, domain);
+
+  return {
+    success: true,
+    data: {
+      page: pageNum,
+      genre: genre || null,
+      results,
+      count: results.length,
+      hasMore: results.length >= 20,
+    },
+    source: "animeflv",
+  };
+}
+
 module.exports = {
   searchAnime,
   getAnimeInfo,
   getEpisodeLinks,
-  getPuppeteerBrowser,
-  fetchHtmlWithPuppeteer,
+  getCatalog,
 };

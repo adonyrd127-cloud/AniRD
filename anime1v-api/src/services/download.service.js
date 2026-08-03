@@ -9,6 +9,9 @@ const ffmpeg = require("fluent-ffmpeg");
 ffmpeg.setFfmpegPath(ffmpegPath);
 const { ApiError } = require("../utils/api-error");
 const animeService = require("./anime.service");
+const { extractVoe } = require("../utils/resolvers/voe.resolver");
+const { extractStreamwish } = require("../utils/resolvers/streamwish.resolver");
+const { extractStreamtape } = require("../utils/resolvers/streamtape.resolver");
 
 let puppeteerBrowser = null;
 
@@ -40,7 +43,9 @@ async function resolveEmbedWithPuppeteer(url, referer) {
     let interceptedUrl = null;
     page.on("request", (req) => {
       const rUrl = req.url();
-      if (!interceptedUrl && (rUrl.includes('.m3u8') || rUrl.includes('.mp4')) && !rUrl.startsWith("blob:") && !rUrl.includes("blank")) {
+      const isDocument = req.resourceType() === "document";
+      const isMedia = /\.(?:m3u8|mp4)(?:\?|#|$)/i.test(rUrl);
+      if (!interceptedUrl && !isDocument && isMedia && !rUrl.startsWith("blob:") && !rUrl.includes("blank")) {
         interceptedUrl = rUrl;
       }
     });
@@ -341,7 +346,8 @@ function isLikelyVideoUrl(url) {
   }
 
   // Accept .mp4, .m3u8 (HLS), or direct video URLs
-  return /\.(mp4|m3u8)$/i.test(url) || lower.includes("video") || lower.includes("stream") || lower.includes(".mp4") || lower.includes(".m3u8");
+  const hasVideoExtension = /\.(?:mp4|m3u8)(?:\?|#|$)/i.test(url);
+  return hasVideoExtension || lower.includes("video") || lower.includes("stream");
 }
 
 async function fetchHtmlWithHeaders(url, referer) {
@@ -362,7 +368,18 @@ async function fetchHtmlWithHeaders(url, referer) {
 }
 
 async function resolveStreamwishUrl(url, referer) {
-  debugLog("Streamwish", "Resolving URL", url);
+  debugLog("Streamwish", "Resolving URL with native decrypter", url);
+  try {
+    const resolved = await extractStreamwish(url);
+    if (resolved) {
+      debugLog("Streamwish", "Native decrypter succeeded", resolved);
+      return resolved;
+    }
+  } catch (err) {
+    debugLog("Streamwish", "Native decrypter failed, running fallback", err.message);
+  }
+
+  debugLog("Streamwish", "Resolving URL with fallback", url);
   const { html, headers } = await fetchHtmlWithHeaders(url, referer);
   debugLog("Streamwish", "Fetched HTML length", html.length);
   debugLog("Streamwish", "Content-Type", headers["content-type"]);
@@ -415,7 +432,18 @@ async function resolveStreamwishUrl(url, referer) {
 }
 
 async function resolveStreamtapeUrl(url, referer) {
-  debugLog("Streamtape", "Resolving URL", url);
+  debugLog("Streamtape", "Resolving URL with native decrypter", url);
+  try {
+    const resolved = await extractStreamtape(url);
+    if (resolved) {
+      debugLog("Streamtape", "Native decrypter succeeded", resolved);
+      return resolved;
+    }
+  } catch (err) {
+    debugLog("Streamtape", "Native decrypter failed, running fallback", err.message);
+  }
+
+  debugLog("Streamtape", "Resolving URL with fallback", url);
   const { html, headers } = await fetchHtmlWithHeaders(url, referer);
   debugLog("Streamtape", "Fetched HTML length", html.length);
   debugLog("Streamtape", "Content-Type", headers["content-type"]);
@@ -575,7 +603,18 @@ async function resolveFembedUrl(url, referer) {
 }
 
 async function resolveVoeUrl(url, referer) {
-  debugLog("VOE", "Resolving URL", url);
+  debugLog("VOE", "Resolving URL with native decrypter", url);
+  try {
+    const resolved = await extractVoe(url);
+    if (resolved) {
+      debugLog("VOE", "Native decrypter succeeded", resolved);
+      return resolved;
+    }
+  } catch (err) {
+    debugLog("VOE", "Native decrypter failed, running fallback", err.message);
+  }
+
+  debugLog("VOE", "Resolving URL with fallback", url);
   try {
     const { html, headers } = await fetchHtmlWithHeaders(url, referer);
     debugLog("VOE", "Fetched HTML length", html.length);
@@ -894,6 +933,20 @@ async function resolveEmbedUrl(url, record, candidate) {
     debugLog("resolveEmbed", "Using Doodstream resolver", null);
     const resolved = await resolveDoodstreamUrl(url, referer);
     if (resolved) return resolved;
+  }
+
+  if (/mp4upload/i.test(host)) {
+    debugLog("resolveEmbed", "Using MP4Upload resolver", null);
+    if (!pathname.includes("embed") && !pathname.endsWith(".html")) {
+      const slug = pathname.split("/").filter(Boolean).pop();
+      if (slug) {
+        url = `https://www.mp4upload.com/embed-${slug}.html`;
+        debugLog("resolveEmbed", `Converted MP4Upload download URL to embed: ${url}`, null);
+      }
+    }
+    const resolved = await resolveEmbedWithPuppeteer(url, referer);
+    if (resolved) return resolved;
+    throw new Error("No se pudo resolver enlace directo en MP4Upload");
   }
 
   // 2. VOE AND DYNAMIC DOMAINS
