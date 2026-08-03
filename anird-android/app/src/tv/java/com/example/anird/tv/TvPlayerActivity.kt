@@ -181,6 +181,24 @@ class TvPlayerActivity : FragmentActivity() {
                 handler?.proceed()
             }
 
+            override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
+                val url = request?.url?.toString()?.lowercase() ?: ""
+                val isAd = url.contains("popcash") || url.contains("exoclick") ||
+                        url.contains("popunder") || url.contains("adsterra") ||
+                        url.contains("bet365") || url.contains("doubleclick") ||
+                        url.contains("ad-system") || url.contains("propellerads") ||
+                        url.contains("onclickads") || url.contains("juicyads") ||
+                        url.contains("banner") || url.contains("popad") ||
+                        url.contains("syndication") || url.contains("adservice") ||
+                        url.contains("recomengine") || url.contains("adserver")
+
+                return if (isAd) {
+                    WebResourceResponse("text/plain", "UTF-8", null)
+                } else {
+                    super.shouldInterceptRequest(view, request)
+                }
+            }
+
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val url = request?.url?.toString() ?: ""
                 val isMainFrame = request?.isForMainFrame ?: false
@@ -201,6 +219,14 @@ class TvPlayerActivity : FragmentActivity() {
         }
 
         webView.webChromeClient = object : WebChromeClient() {
+            override fun onCreateWindow(
+                view: WebView?,
+                isDialog: Boolean,
+                isUserGesture: Boolean,
+                resultMsg: android.os.Message?
+            ): Boolean {
+                return false
+            }
             // Implementar pantalla completa nativa real solicitada por reproductores HTML5 embebidos
             override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
                 if (customView != null) {

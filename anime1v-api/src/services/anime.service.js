@@ -1,3 +1,4 @@
+const axios = require("axios");
 const { URL } = require("node:url");
 const { ApiError } = require("../utils/api-error");
 const animeav1Service = require("./animeav1.service");
@@ -6,6 +7,60 @@ const animeflvService = require("./animeflv.service");
 const hentailaService = require("./hentaila.service");
 const tioanimeService = require("./tioanime.service");
 const monoschinosService = require("./monoschinos.service");
+
+async function resolveDirectStreamUrl(serverItem) {
+  if (!serverItem || !serverItem.url || typeof serverItem.url !== "string") {
+    return serverItem;
+  }
+
+  let url = serverItem.url;
+
+  // 1. Normalización de HLS (Zilla Networks) de /play/ a /m3u8/ para evitar bloqueos 403 de Cloudflare
+  if (url.includes("zilla-networks.com") && url.includes("/play/")) {
+    const videoId = url.split("/play/")[1]?.split("/")[0]?.split("?")[0];
+    if (videoId) {
+      return {
+        ...serverItem,
+        url: `https://player.zilla-networks.com/m3u8/${videoId}`,
+        isHls: true,
+      };
+    }
+  }
+
+  // 2. Extracción de video MP4 directo de MP4Upload (0 anuncios y popups)
+  if (url.includes("mp4upload.com") && (url.includes("embed-") || url.includes("/embed/"))) {
+    try {
+      const res = await axios.get(url, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+          Referer: "https://www.mp4upload.com/",
+        },
+        timeout: 5000,
+      });
+      const html = res.data;
+      const match =
+        html.match(/src:\s*["'](https?:[^\s"']+\.mp4[^\s"']*)["']/i) ||
+        html.match(/(https?:\/\/[^\s"']+\.mp4upload\.com[^\s"']*\.mp4[^\s"']*)/i);
+      if (match && match[1]) {
+        return {
+          ...serverItem,
+          url: match[1],
+          isDirectMp4: true,
+        };
+      }
+    } catch (_e) {
+      // Si falla la extracción directa, se mantiene la URL original
+    }
+  }
+
+  return serverItem;
+}
+
+async function processServersList(serversList) {
+  if (!Array.isArray(serversList)) return [];
+  return await Promise.all(serversList.map((item) => resolveDirectStreamUrl(item)));
+}
 
 const DEFAULT_ANIME_DOMAIN = process.env.DEFAULT_ANIME_DOMAIN || "animeav1.com";
 
@@ -220,6 +275,16 @@ async function getEpisodeLinks(urlCandidate, includeMega, excludeServers) {
   }
 
   const result = await provider.service.getEpisodeLinks(urlCandidate, includeMega, excludeServers);
+  
+  if (result && result.data && result.data.servers) {
+    if (result.data.servers.sub) {
+      result.data.servers.sub = await processServersList(result.data.servers.sub);
+    }
+    if (result.data.servers.dub) {
+      result.data.servers.dub = await processServersList(result.data.servers.dub);
+    }
+  }
+
   const finalResult = {
     ...result,
     source: result?.source || provider.id,

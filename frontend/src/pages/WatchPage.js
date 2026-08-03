@@ -378,6 +378,11 @@ export default class WatchPage {
   }
 
   async afterRender() {
+    const container = document.getElementById('video-container');
+    if (container && this.episodeData && this.episodeData.activeServers && this.episodeData.activeServers.length > 0) {
+      this._renderActiveServerPlayer(container, this.episodeData.activeServers[0]);
+    }
+
     this._initPlayerControls();
     this._initPlayerEnhancements();
     this._initServerPills();
@@ -782,23 +787,63 @@ export default class WatchPage {
     }
   }
 
-  // 2. Control de píldoras de servidor (iframe dinámico sin recargar)
+  _renderActiveServerPlayer(container, serverObj) {
+    if (!container || !serverObj || !serverObj.url) return;
+    const url = serverObj.url;
+    const isHls = url.includes('.m3u8') || serverObj.isHls;
+    const isDirectMp4 = url.includes('.mp4') || serverObj.isDirectMp4;
+
+    if (isHls || isDirectMp4) {
+      container.innerHTML = `
+        <video id="v5-native-player" controls autoplay playsinline style="width:100%; height:100%; object-fit:contain; background:#000;" ${isDirectMp4 ? `src="${url}"` : ''}></video>
+        <button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>
+      `;
+      if (isHls) {
+        const video = document.getElementById('v5-native-player');
+        const loadHls = () => {
+          if (window.Hls && window.Hls.isSupported()) {
+            const hls = new window.Hls();
+            hls.loadSource(url);
+            hls.attachMedia(video);
+          } else if (video && video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = url;
+          }
+        };
+        if (window.Hls) {
+          loadHls();
+        } else {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
+          script.onload = loadHls;
+          document.head.appendChild(script);
+        }
+      }
+    } else {
+      container.innerHTML = `
+        <iframe src="${this._getAutoplayUrl(url)}" allowfullscreen allow="autoplay; encrypted-media" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>
+        <button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>
+      `;
+    }
+  }
+
+  // 2. Control de píldoras de servidor (reproductor híbrido dinámico)
   _initServerPills() {
     const pills = document.querySelectorAll('.server-pill-v5');
-    const iframe = document.querySelector('.video-wrapper-v5 iframe');
+    const container = document.getElementById('video-container');
 
-    pills.forEach(pill => {
+    pills.forEach((pill, idx) => {
       pill.addEventListener('click', (e) => {
         pills.forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
         
+        const activeServers = this.episodeData?.activeServers || [];
         const videoUrl = pill.getAttribute('data-url');
-        if (iframe && videoUrl) {
-          iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-presentation');
-          iframe.src = this._getAutoplayUrl(videoUrl);
+        const serverObj = activeServers[idx] || { url: videoUrl };
+
+        if (container && serverObj.url) {
+          this._renderActiveServerPlayer(container, serverObj);
           
           // Micro-animación de carga en el reproductor
-          const container = document.getElementById('video-container');
           container.style.opacity = '0.5';
           setTimeout(() => container.style.opacity = '1', 500);
         }
