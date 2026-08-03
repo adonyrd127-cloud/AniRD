@@ -1,1 +1,27 @@
-[]
+[
+  {
+    "username": "testuser",
+    "password": "$2a$12$5f6MC/PpbosLY8WkBrzUP.dk6mBYyhJn8rt.gcg2ffx/rvtQTRVw2",
+    "createdAt": "2026-07-31T22:51:22.144Z",
+    "syncData": {
+      "favorites": [],
+      "following": [],
+      "history": [
+        {
+          "animeId": "21",
+          "episodeId": 1,
+          "progress": 120,
+          "duration": 120,
+          "timestamp": 1785538703299,
+          "updatedAt": 1785538703299,
+          "animeTitle": "One Piece",
+          "animeCover": "https://cdn.myanimelist.net/images/anime/1244/138851l.jpg",
+          "animeType": "TV",
+          "animeScore": 8.73,
+          "id": 1
+        }
+      ],
+      "lastUpdated": "2026-07-31T22:58:24.097Z"
+    }
+  }
+]

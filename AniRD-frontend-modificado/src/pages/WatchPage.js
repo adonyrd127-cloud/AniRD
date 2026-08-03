@@ -175,7 +175,7 @@ export default class WatchPage {
           <!-- Reproductor de Video -->
           <div class="video-wrapper-v5" id="video-container" tabindex="0">
             ${this.episodeData && this.episodeData.activeServers && this.episodeData.activeServers.length > 0 
-              ? `<iframe src="${this._getAutoplayUrl(this.episodeData.activeServers[0].url)}" allowfullscreen allow="autoplay; encrypted-media"></iframe>` 
+              ? `<iframe src="${this._getAutoplayUrl(this.episodeData.activeServers[0].url)}" allowfullscreen allow="autoplay; encrypted-media" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>` 
               : `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#111; gap: 15px; padding: 20px; text-align: center;">
                   <span style="font-size: 40px;">⚠️</span>
                   <h3 style="font-family:'Outfit'; font-size:18px;">Video no disponible</h3>
@@ -751,6 +751,7 @@ export default class WatchPage {
         
         const videoUrl = pill.getAttribute('data-url');
         if (iframe && videoUrl) {
+          iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-presentation');
           iframe.src = this._getAutoplayUrl(videoUrl);
           
           // Micro-animación de carga en el reproductor

@@ -158,6 +158,8 @@ class TvPlayerActivity : FragmentActivity() {
         // Optimización agresiva del WebView para TVs (Orange Pi / Fire TV)
         webView.settings.apply {
             javaScriptEnabled = true
+            javaScriptCanOpenWindowsAutomatically = false
+            setSupportMultipleWindows(false)
             domStorageEnabled = true
             databaseEnabled = true
             mediaPlaybackRequiresUserGesture = false
