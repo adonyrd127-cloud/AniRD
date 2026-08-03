@@ -8,16 +8,53 @@ const hentailaService = require("./hentaila.service");
 const tioanimeService = require("./tioanime.service");
 const monoschinosService = require("./monoschinos.service");
 
-async function resolveDirectStreamUrl(serverItem) {
+/**
+ * Transforma las URLs de servidores HLS (Zilla-Networks) y MP4Upload
+ * para que apunten a nuestras rutas proxy internas en lugar de a los
+ * servidores externos. Esto resuelve:
+ *
+ * 1. HLS (Zilla-Networks): Cloudflare WAF bloquea /play/{hash} con 403
+ *    cuando se carga en iframe desde orígenes externos. Nuestro proxy
+ *    descarga la playlist .m3u8 y segmentos .ts server-side.
+ *
+ * 2. MP4Upload: Las páginas embed incluyen scripts publicitarios.
+ *    Nuestro proxy extrae el .mp4 directo y sirve un reproductor limpio.
+ */
+function transformServerUrl(serverItem, hostBase) {
   if (!serverItem || !serverItem.url || typeof serverItem.url !== "string") {
     return serverItem;
   }
+
+  const url = serverItem.url;
+
+  // HLS / Zilla Networks: /play/{hash} → /player/player/hls/{hash}
+  if (url.includes("zilla-networks.com") && url.includes("/play/")) {
+    const videoId = url.split("/play/")[1]?.split("/")[0]?.split("?")[0];
+    if (videoId && /^[a-f0-9]+$/i.test(videoId)) {
+      return {
+        ...serverItem,
+        url: `${hostBase}/player/hls/${videoId}`,
+      };
+    }
+  }
+
+  // MP4Upload: /embed-{id}.html → /player/player/mp4upload/{id}
+  if (url.includes("mp4upload.com") && url.includes("embed-")) {
+    const match = url.match(/embed-([a-z0-9]+)/i);
+    if (match && match[1]) {
+      return {
+        ...serverItem,
+        url: `${hostBase}/player/mp4upload/${match[1]}`,
+      };
+    }
+  }
+
   return serverItem;
 }
 
-async function processServersList(serversList) {
+function processServersList(serversList, hostBase) {
   if (!Array.isArray(serversList)) return [];
-  return serversList;
+  return serversList.map((item) => transformServerUrl(item, hostBase));
 }
 
 const DEFAULT_ANIME_DOMAIN = process.env.DEFAULT_ANIME_DOMAIN || "animeav1.com";
@@ -220,8 +257,8 @@ async function getAnimeInfo(urlCandidate) {
   return finalResult;
 }
 
-async function getEpisodeLinks(urlCandidate, includeMega, excludeServers) {
-  const cacheKey = `episode:${urlCandidate}:${includeMega || ""}:${excludeServers || ""}`;
+async function getEpisodeLinks(urlCandidate, includeMega, excludeServers, apiBasePath) {
+  const cacheKey = `episode:${urlCandidate}:${includeMega || ""}:${excludeServers || ""}:${apiBasePath || ""}`;
   const cachedData = getFromCache(cacheKey);
   if (cachedData) {
     return cachedData;
@@ -234,12 +271,12 @@ async function getEpisodeLinks(urlCandidate, includeMega, excludeServers) {
 
   const result = await provider.service.getEpisodeLinks(urlCandidate, includeMega, excludeServers);
   
-  if (result && result.data && result.data.servers) {
+  if (result && result.data && result.data.servers && apiBasePath) {
     if (result.data.servers.sub) {
-      result.data.servers.sub = await processServersList(result.data.servers.sub);
+      result.data.servers.sub = processServersList(result.data.servers.sub, apiBasePath);
     }
     if (result.data.servers.dub) {
-      result.data.servers.dub = await processServersList(result.data.servers.dub);
+      result.data.servers.dub = processServersList(result.data.servers.dub, apiBasePath);
     }
   }
 

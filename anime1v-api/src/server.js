@@ -8,6 +8,7 @@ const morgan = require("morgan");
 const pino = require("pino");
 const pinoHttp = require("pino-http");
 const animeRoutes = require("./routes/anime.routes");
+const playerRoutes = require("./routes/player.routes");
 const downloadService = require("./services/download.service");
 const { ApiError } = require("./utils/api-error");
 
@@ -26,10 +27,10 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "https:"],
-        mediaSrc: ["'self'", "https:", "blob:"],
+        mediaSrc: ["'self'", "https:", "blob:", "data:"],
         connectSrc: ["'self'", "https:"],
         frameSrc: ["'self'", "https:"],
       },
@@ -129,6 +130,10 @@ const userRoutes = require("./routes/user.routes");
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
+
+// Player proxy routes — montadas en rutas públicas separadas (sin API key, sin rate limit agresivo)
+// Estas rutas sirven páginas HTML y proxy de streaming — las carga el navegador directamente en iframes.
+app.use("/player", playerRoutes);
 
 app.use("/api/v1/anime", animeRoutes);
 app.use("/api/anime1v", animeRoutes);

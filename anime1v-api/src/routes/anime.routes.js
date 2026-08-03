@@ -80,7 +80,8 @@ router.get(
   "/episode",
   asyncHandler(async (req, res) => {
     const validatedUrl = validateScraperUrl(req.query.url);
-    const response = await animeService.getEpisodeLinks(validatedUrl, req.query.includeMega, req.query.excludeServers);
+    const hostBase = `${req.protocol}://${req.get("host")}`;
+    const response = await animeService.getEpisodeLinks(validatedUrl, req.query.includeMega, req.query.excludeServers, hostBase);
     res.status(200).json(response);
   })
 );
