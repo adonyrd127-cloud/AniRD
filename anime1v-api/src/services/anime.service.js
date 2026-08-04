@@ -1,5 +1,6 @@
 const { URL } = require("node:url");
 const { ApiError } = require("../utils/api-error");
+const consumetService = require("./consumet.service");
 const animeav1Service = require("./animeav1.service");
 const jkanimeService = require("./jkanime.service");
 const animeflvService = require("./animeflv.service");
@@ -10,6 +11,12 @@ const monoschinosService = require("./monoschinos.service");
 const DEFAULT_ANIME_DOMAIN = process.env.DEFAULT_ANIME_DOMAIN || "animeav1.com";
 
 const PROVIDERS = [
+  {
+    id: "consumet",
+    label: "Consumet (HLS Directo)",
+    domains: ["consumet.org", "consumet", "hianime.to"],
+    service: consumetService,
+  },
   {
     id: "animeav1",
     label: "AnimeAV1",

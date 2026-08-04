@@ -864,7 +864,27 @@ export default class WatchPage {
       this.hlsInstance = null;
     }
 
-    // Render iframe player immediately
+    if (serverObj.isDirect || rawUrl.includes('.m3u8')) {
+      container.innerHTML = `
+        <video id="anird-player" playsinline controls style="--plyr-color-main: #ff3366; width:100%; height:100%;"></video>
+        <button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>
+      `;
+      const videoElement = document.getElementById('anird-player');
+      if (Hls.isSupported()) {
+        this.hlsInstance = new Hls();
+        this.hlsInstance.loadSource(rawUrl);
+        this.hlsInstance.attachMedia(videoElement);
+        this.hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+          this.plyrInstance = new Plyr(videoElement, { autoplay: true });
+        });
+      } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+        videoElement.src = rawUrl;
+        this.plyrInstance = new Plyr(videoElement, { autoplay: true });
+      }
+      return;
+    }
+
+    // Render iframe player immediately for embed servers
     this._renderIframeFallback(container, normalizedUrl, serverObj.server);
 
     // Attempt background HLS stream resolution if available
