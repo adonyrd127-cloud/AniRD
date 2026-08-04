@@ -183,34 +183,47 @@ router.get(
     const resolvePromises = urls.map(async (url) => {
       try {
         const directUrl = await resolveEmbedUrl(url);
-        if (directUrl && directUrl !== url) {
-          let server = "unknown";
-          if (url.includes("voe")) server = "voe";
-          else if (url.includes("tape")) server = "streamtape";
-          else if (url.includes("wish") || url.includes("playnix") || url.includes("medix") || url.includes("awish")) server = "streamwish";
-          else if (url.includes("vidhide")) server = "vidhide";
-          else if (url.includes("dood")) server = "doodstream";
+        const finalUrl = directUrl || url;
+        let server = "unknown";
+        if (url.includes("voe")) server = "voe";
+        else if (url.includes("tape")) server = "streamtape";
+        else if (url.includes("wish") || url.includes("playnix") || url.includes("medix") || url.includes("awish")) server = "streamwish";
+        else if (url.includes("vidhide")) server = "vidhide";
+        else if (url.includes("dood")) server = "doodstream";
+        else if (url.includes("upnshare") || url.includes("uns.bio")) server = "upnshare";
+        else if (url.includes("zilla")) server = "hls";
+        else if (url.includes("mp4upload")) server = "mp4upload";
 
-          return {
-            success: true,
-            server,
-            mediaType: directUrl.includes(".m3u8") ? "hls" : "mp4",
-            streamUrl: directUrl,
-            resolvedFrom: url
-          };
-        }
+        return {
+          success: true,
+          server,
+          mediaType: finalUrl.includes(".m3u8") ? "hls" : finalUrl.includes(".mp4") ? "mp4" : "embed",
+          streamUrl: finalUrl,
+          resolvedFrom: url
+        };
       } catch (err) {
         console.warn(`[RESOLVE CASCADE] Fallo en ${url}: ${err.message}`);
+        return {
+          success: true,
+          server: "fallback",
+          mediaType: "embed",
+          streamUrl: url,
+          resolvedFrom: url
+        };
       }
-      throw new Error("No se pudo resolver");
     });
 
     try {
-      // Carrera en paralelo: el primer servidor que resuelva con éxito entrega el OK e interrumpe la espera de los demás
       const fastestResult = await Promise.any(resolvePromises);
       return res.status(200).json(fastestResult);
     } catch (err) {
-      throw new ApiError(404, "No se pudo obtener el enlace de streaming directo en ningún servidor");
+      return res.status(200).json({
+        success: true,
+        server: "fallback",
+        mediaType: "embed",
+        streamUrl: urls[0],
+        resolvedFrom: urls[0]
+      });
     }
   })
 );

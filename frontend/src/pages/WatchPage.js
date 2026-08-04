@@ -854,7 +854,7 @@ export default class WatchPage {
     const rawUrl = serverObj.url;
     const normalizedUrl = this._normalizeEmbedUrl(rawUrl);
     
-    // Destroy previous instances
+    // Destroy previous player instances
     if (this.plyrInstance) {
       try { this.plyrInstance.destroy(); } catch(e){}
       this.plyrInstance = null;
@@ -863,62 +863,38 @@ export default class WatchPage {
       try { this.hlsInstance.destroy(); } catch(e){}
       this.hlsInstance = null;
     }
-    
-    // Show loading state
-    container.innerHTML = `
-      <div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#000;">
-         <div class="spinner" style="border: 4px solid rgba(255,255,255,0.1); border-left-color: #ff3366; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
-         <p style="color:#aaa; font-size:12px; margin-top:15px; font-family:'Outfit'">Resolviendo enlace de video...</p>
-         <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
-      </div>
-      <button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>
-    `;
 
+    // Render iframe player immediately
+    this._renderIframeFallback(container, normalizedUrl, serverObj.server);
+
+    // Attempt background HLS stream resolution if available
     try {
       const resolveRes = await Promise.race([
         apiService.resolveServer(rawUrl),
-        new Promise(r => setTimeout(() => r(null), 4000))
+        new Promise(r => setTimeout(() => r(null), 3000))
       ]);
       
-      if (resolveRes && resolveRes.success && resolveRes.streamUrl) {
+      if (resolveRes && resolveRes.success && resolveRes.streamUrl && resolveRes.streamUrl.includes('.m3u8')) {
         const streamUrl = resolveRes.streamUrl;
-
-        if (streamUrl.includes('.m3u8') || streamUrl.includes('.mp4')) {
-          // Native Player Injection
-          container.innerHTML = `
-            <video id="anird-player" playsinline controls style="--plyr-color-main: #ff3366;"></video>
-            <button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>
-          `;
-          const videoElement = document.getElementById('anird-player');
-          
-          if (resolveRes.mediaType === 'hls' || streamUrl.includes('.m3u8')) {
-            if (Hls.isSupported()) {
-              this.hlsInstance = new Hls();
-              this.hlsInstance.loadSource(streamUrl);
-              this.hlsInstance.attachMedia(videoElement);
-              this.hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                this.plyrInstance = new Plyr(videoElement, { autoplay: true });
-              });
-            } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
-              videoElement.src = streamUrl;
-              this.plyrInstance = new Plyr(videoElement, { autoplay: true });
-            }
-          } else {
-            videoElement.src = streamUrl;
+        container.innerHTML = `
+          <video id="anird-player" playsinline controls style="--plyr-color-main: #ff3366; width:100%; height:100%;"></video>
+          <button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>
+        `;
+        const videoElement = document.getElementById('anird-player');
+        if (Hls.isSupported()) {
+          this.hlsInstance = new Hls();
+          this.hlsInstance.loadSource(streamUrl);
+          this.hlsInstance.attachMedia(videoElement);
+          this.hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
             this.plyrInstance = new Plyr(videoElement, { autoplay: true });
-          }
-          return;
-        } else {
-          // Resolved an embed URL cleanly
-          this._renderIframeFallback(container, streamUrl, serverObj.server);
-          return;
+          });
+        } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+          videoElement.src = streamUrl;
+          this.plyrInstance = new Plyr(videoElement, { autoplay: true });
         }
       }
-
-      this._renderIframeFallback(container, normalizedUrl, serverObj.server);
     } catch (e) {
-      console.warn("Failed to resolve native stream:", e);
-      this._renderIframeFallback(container, normalizedUrl, serverObj.server);
+      // Keep iframe active
     }
   }
 
