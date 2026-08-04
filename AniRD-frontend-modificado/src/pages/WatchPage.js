@@ -175,7 +175,7 @@ export default class WatchPage {
           <!-- Reproductor de Video -->
           <div class="video-wrapper-v5" id="video-container" tabindex="0">
             ${this.episodeData && this.episodeData.activeServers && this.episodeData.activeServers.length > 0 
-              ? `<iframe src="${this._getAutoplayUrl(this.episodeData.activeServers[0].url)}" allowfullscreen allow="autoplay; encrypted-media" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>` 
+              ? `<iframe src="${this._getAutoplayUrl(this._normalizeEmbedUrl(this.episodeData.activeServers[0].url))}" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture; fullscreen" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"></iframe>` 
               : `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#111; gap: 15px; padding: 20px; text-align: center;">
                   <span style="font-size: 40px;">⚠️</span>
                   <h3 style="font-family:'Outfit'; font-size:18px;">Video no disponible</h3>
@@ -574,6 +574,61 @@ export default class WatchPage {
     }
   }
 
+  _normalizeEmbedUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    let cleanUrl = url.trim();
+
+    if (cleanUrl.startsWith('//')) {
+      cleanUrl = 'https:' + cleanUrl;
+    } else if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+      cleanUrl = 'https://' + cleanUrl;
+    }
+
+    try {
+      const parsed = new URL(cleanUrl);
+      const host = parsed.hostname.toLowerCase();
+
+      // UPNShare & uns.bio (/d/ -> /e/)
+      if (host.includes('upnshare') || host.includes('uns.bio')) {
+        if (parsed.pathname.startsWith('/d/')) {
+          parsed.pathname = parsed.pathname.replace('/d/', '/e/');
+          return parsed.toString();
+        }
+      }
+
+      // MP4Upload (/slug -> /embed-slug.html)
+      if (host.includes('mp4upload')) {
+        if (!parsed.pathname.includes('embed') && !parsed.pathname.endsWith('.html')) {
+          const slug = parsed.pathname.split('/').filter(Boolean).pop();
+          if (slug) {
+            parsed.pathname = `/embed-${slug}.html`;
+            return parsed.toString();
+          }
+        }
+      }
+
+      // Doodstream (/d/ -> /e/)
+      if (host.includes('dood') || host.includes('ds2play') || host.includes('dstream')) {
+        if (parsed.pathname.startsWith('/d/')) {
+          parsed.pathname = parsed.pathname.replace('/d/', '/e/');
+          return parsed.toString();
+        }
+      }
+
+      // Streamwish (/d/ or /f/ -> /e/)
+      if (host.includes('wish') || host.includes('awish') || host.includes('playnix') || host.includes('davioad')) {
+        if (parsed.pathname.startsWith('/d/') || parsed.pathname.startsWith('/f/')) {
+          parsed.pathname = parsed.pathname.replace(/^\/[df]\//, '/e/');
+          return parsed.toString();
+        }
+      }
+
+      return parsed.toString();
+    } catch (_) {
+      return cleanUrl;
+    }
+  }
+
   _getAutoplayUrl(url) {
     if (!url) return '';
     const isTV = document.body.classList.contains('tv-mode') || localStorage.getItem('tvMode') === 'true';
@@ -595,6 +650,7 @@ export default class WatchPage {
       return `${url}${separator}autoplay=1&auto=1`;
     }
   }
+
 
   // 1. Controles de Visualización (Modo Cine, Luces, Favoritos)
   _initPlayerControls() {
@@ -744,14 +800,103 @@ export default class WatchPage {
     }
   }
 
-  _renderActiveServerPlayer(container, serverObj) {
-    if (!container || !serverObj || !serverObj.url) return;
-    const url = serverObj.url;
+  async _renderActiveServerPlayer(container, serverObj) {
+    if (!container || !serverObj || !serverObj.url) {
+      if (container) {
+        container.innerHTML = `
+          <div class="video-error-state">
+            <span style="font-size: 36px;">⚠️</span>
+            <h3 style="font-family:'Outfit'; font-size:16px; margin:10px 0 5px;">Servidor no disponible</h3>
+            <p style="color:var(--text-muted); font-size:12px;">No se pudo obtener la URL del video para este servidor.</p>
+          </div>
+        `;
+      }
+      return;
+    }
+    const rawUrl = serverObj.url;
+    const normalizedUrl = this._normalizeEmbedUrl(rawUrl);
+
+    // Validate URL
+    if (!normalizedUrl || (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://'))) {
+      container.innerHTML = `
+        <div class="video-error-state">
+          <span style="font-size: 36px;">🔗</span>
+          <h3 style="font-family:'Outfit'; font-size:16px; margin:10px 0 5px;">URL inválida</h3>
+          <p style="color:var(--text-muted); font-size:12px;">La URL del servidor no es válida. Intenta con otro servidor.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const iframeId = 'video-iframe-' + Date.now();
+    const finalUrl = this._getAutoplayUrl(normalizedUrl);
+
     container.innerHTML = `
-      <iframe src="${this._getAutoplayUrl(url)}" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+      <iframe 
+        id="${iframeId}"
+        src="${finalUrl}" 
+        allowfullscreen 
+        allow="autoplay; encrypted-media; picture-in-picture; fullscreen" 
+        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+      ></iframe>
       <button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>
     `;
+
+    // Attempt background resolution from backend if applicable
+    try {
+      const resolveRes = await Promise.race([
+        apiService.resolveUrl(rawUrl),
+        new Promise(r => setTimeout(() => r(null), 3500))
+      ]);
+      if (resolveRes && resolveRes.success && resolveRes.streamUrl) {
+        const iframe = document.getElementById(iframeId);
+        if (iframe && resolveRes.streamUrl !== normalizedUrl) {
+          console.log("[WatchPage] URL resuelta por backend:", resolveRes.streamUrl);
+          iframe.src = this._getAutoplayUrl(resolveRes.streamUrl);
+        }
+      }
+    } catch (_) {}
+
+    // Error detection fallback
+    const iframe = document.getElementById(iframeId);
+    if (iframe) {
+      let loaded = false;
+      iframe.addEventListener('load', () => { loaded = true; });
+      
+      setTimeout(() => {
+        if (!loaded && iframe.parentElement) {
+          try {
+            const doc = iframe.contentDocument || iframe.contentWindow?.document;
+            if (doc && doc.body && doc.body.innerHTML === '') {
+              this._showIframeError(container, normalizedUrl, serverObj.server);
+            }
+          } catch(e) {
+            // Cross-origin - frame loaded externally
+          }
+        }
+      }, 10000);
+    }
   }
+
+  _showIframeError(container, url, serverName) {
+    if (!container) return;
+    container.innerHTML = `
+      <div class="video-error-state" style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#111; gap:15px; padding:20px; text-align:center;">
+        <span style="font-size: 40px;">🚫</span>
+        <h3 style="font-family:'Outfit'; font-size:18px; margin:0;">Error al cargar ${serverName || 'el servidor'}</h3>
+        <p style="color:var(--text-muted); font-size:13px; max-width:420px; margin:0;">El servidor de video restringió la carga dentro de la página (política X-Frame-Options) o no está disponible.</p>
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px;">
+          <button onclick="window.open('${url}', '_blank')" style="background:var(--accent, #e50914); color:white; border:none; padding:10px 18px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Outfit';">
+            🔗 Abrir en nueva pestaña
+          </button>
+          <button onclick="location.reload()" style="background:#222; color:white; border:1px solid #444; padding:10px 18px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Outfit';">
+            🔄 Reintentar
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
 
   // 2. Control de píldoras de servidor (reproductor híbrido dinámico)
   _initServerPills() {

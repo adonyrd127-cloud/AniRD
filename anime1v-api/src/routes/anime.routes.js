@@ -45,6 +45,51 @@ router.get(
   })
 );
 
+router.get(
+  "/video-proxy",
+  asyncHandler(async (req, res) => {
+    const { url } = req.query;
+    if (!url) {
+      throw new ApiError(400, "Se requiere el parametro url");
+    }
+
+    try {
+      const axios = require("axios");
+      const parsedUrl = new URL(url);
+      const referer = `${parsedUrl.origin}/`;
+      
+      const response = await axios.get(url, {
+        responseType: "stream",
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+          Referer: referer,
+          Origin: parsedUrl.origin
+        },
+        timeout: 15000,
+        maxRedirects: 5
+      });
+
+      // Forward content type
+      const contentType = response.headers["content-type"] || "application/octet-stream";
+      res.setHeader("Content-Type", contentType);
+      
+      // Set CORS headers
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "*");
+      
+      // Forward content length if available
+      if (response.headers["content-length"]) {
+        res.setHeader("Content-Length", response.headers["content-length"]);
+      }
+
+      response.data.pipe(res);
+    } catch (err) {
+      throw new ApiError(502, "Error al obtener el contenido de video", err.message);
+    }
+  })
+);
+
 router.use(requireApiKey, dailyRateLimit);
 
 router.get(

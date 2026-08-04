@@ -1,5 +1,6 @@
 package com.example.anird.presentation.components.home
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,7 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -16,43 +17,40 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val SurfaceVariant = Color(0xFF1A1D26)
 private val Primary = Color(0xFFE50914)
-private val TextPrimary = Color(0xFFF0F0F5)
-private val TextSecondary = Color(0xFF8B8FA3)
-
-@Immutable
-data class CategoryPillsState(
-    val categories: List<String>,
-    val selectedCategory: String
-)
+private val CardBackground = Color(0xFF1E2430)
 
 @Composable
 fun CategoryPills(
-    categories: List<String>,
     selectedCategory: String,
-    onCategorySelected: (String) -> Unit,
-    modifier: Modifier = Modifier
+    categories: List<String>,
+    onSelectCategory: (String) -> Unit
 ) {
     LazyRow(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 12.dp),
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(categories, key = { it }) { category ->
-            val isSelected = category == selectedCategory
+        items(categories, key = { it }) { cat ->
+            val isSelected = cat == selectedCategory
+            val bgColor by animateColorAsState(
+                targetValue = if (isSelected) Primary else CardBackground,
+                label = "categoryPillBg"
+            )
+            val textColor = if (isSelected) Color.White else Color.LightGray
+
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
-                    .background(if (isSelected) Primary else SurfaceVariant)
-                    .clickable { onCategorySelected(category) }
+                    .background(bgColor)
+                    .clickable { onSelectCategory(cat) }
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(
-                    text = category,
-                    color = if (isSelected) Color.White else TextSecondary,
+                    text = cat,
+                    color = textColor,
                     fontSize = 13.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                 )

@@ -620,6 +620,30 @@ body {
   border: none;
 }
 
+/* Error state when video embed fails to load */
+.video-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+  padding: 30px 20px;
+  text-align: center;
+  color: #fff;
+  gap: 5px;
+}
+.video-error-state h3 {
+  font-family: 'Outfit', sans-serif;
+  color: #fff;
+  margin: 0;
+}
+.video-error-state p {
+  color: var(--text-muted, #888);
+  margin: 0;
+  line-height: 1.5;
+}
+
 /* Barra de Controles Premium debajo de Video */
 .player-controls-v5 {
   display: flex;

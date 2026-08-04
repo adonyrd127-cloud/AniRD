@@ -858,11 +858,22 @@ export default class WatchPage {
   }
 
   _renderIframeFallback(container, url) {
+    if (!url || (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('//'))) {
+      container.innerHTML = `
+        <div class="video-error-state">
+          <span style="font-size: 36px;">⚠️</span>
+          <h3 style="font-family:'Outfit'; font-size:16px; margin:10px 0 5px;">URL inválida</h3>
+          <p style="color:var(--text-muted); font-size:12px;">La URL del servidor no es válida. Intenta con otro servidor.</p>
+        </div>
+      `;
+      return;
+    }
     container.innerHTML = `
-      <iframe src="${this._getAutoplayUrl(url)}" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+      <iframe src="${this._getAutoplayUrl(url)}" allowfullscreen allow="autoplay; encrypted-media" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>
       <button class="mobile-close-fullscreen-btn" id="btn-close-mobile-fs">✕</button>
     `;
   }
+
 
   // 2. Control de píldoras de servidor (reproductor híbrido dinámico)
   _initServerPills() {

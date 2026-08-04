@@ -18,6 +18,9 @@ const ytdlpResolver = require("./resolvers/ytdlp.resolver");
 const { extractVoe } = require("./resolvers/voe.resolver");
 const { extractStreamwish } = require("./resolvers/streamwish.resolver");
 const { extractStreamtape } = require("./resolvers/streamtape.resolver");
+const { extractHls } = require("./resolvers/hls.resolver");
+const { extractUpnshare } = require("./resolvers/upnshare.resolver");
+const { extractMp4upload } = require("./resolvers/mp4upload.resolver");
 
 const DEBUG_MODE = process.env.DEBUG_RESOLVER === "true" || process.env.DEBUG_DOWNLOAD === "true";
 
@@ -412,18 +415,24 @@ async function resolveEmbedUrl(url, parentUrl = null) {
     if (resolved) return resolved;
   }
 
+  // HLS / generic player embeds
+  if (/zilla|player\.|hls/i.test(host) || /\.m3u8/i.test(pathname)) {
+    debugLog("resolveEmbed", "Using HLS resolver", null);
+    const resolved = await extractHls(url);
+    if (resolved) return resolved;
+  }
+
+  // UPNShare / uns.bio
+  if (/upnshare|uns\.bio/i.test(host)) {
+    debugLog("resolveEmbed", "Using UPNShare resolver", null);
+    const resolved = await extractUpnshare(url);
+    if (resolved) return resolved;
+  }
+
   if (/mp4upload/i.test(host)) {
     debugLog("resolveEmbed", "Using MP4Upload resolver", null);
-    if (!pathname.includes("embed") && !pathname.endsWith(".html")) {
-      const slug = pathname.split("/").filter(Boolean).pop();
-      if (slug) {
-        url = `https://www.mp4upload.com/embed-${slug}.html`;
-        debugLog("resolveEmbed", `Converted MP4Upload download URL to embed: ${url}`, null);
-      }
-    }
-    const resolved = await resolveEmbedWithPuppeteer(url, referer);
+    const resolved = await extractMp4upload(url);
     if (resolved) return resolved;
-    throw new Error("No se pudo resolver enlace directo en MP4Upload");
   }
 
   // 2.5. yt-dlp High-Speed Resolver
@@ -459,6 +468,10 @@ module.exports = {
   resolveMixdropUrl,
   resolveDoodstreamUrl,
   resolveDroploadUrl,
+  resolveHlsUrl: extractHls,
+  resolveUpnshareUrl: extractUpnshare,
+  resolveMp4uploadUrl: extractMp4upload,
   resolveEmbedWithPuppeteer,
   resolveEmbedUrl,
 };
+
