@@ -129,6 +129,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const provider = req.query.provider || req.query.domain;
     let service;
+    let providerLabel = provider || "jkanime";
     if (provider === "animeflv") {
       service = require("../services/animeflv.service");
     } else if (provider === "jkanime") {
@@ -140,12 +141,15 @@ router.get(
     } else if (provider === "hentaila") {
       service = require("../services/hentaila.service");
     } else {
-      service = require("../services/animeav1.service");
+      // Default catalog: JKAnime (no scraping issues)
+      service = require("../services/jkanime.service");
+      providerLabel = "jkanime";
     }
 
     if (typeof service.getCatalog !== "function") {
-      console.log(`[ANIME CATALOG] Selected provider ${provider} does not support getCatalog. Falling back to AnimeAV1.`);
-      service = require("../services/animeav1.service");
+      console.log(`[ANIME CATALOG] Selected provider ${provider} does not support getCatalog. Falling back to JKAnime.`);
+      service = require("../services/jkanime.service");
+      providerLabel = "jkanime";
     }
 
     const response = await service.getCatalog(req.query.page, req.query.genre);
@@ -153,7 +157,7 @@ router.get(
     if (response && response.data && Array.isArray(response.data.results)) {
       response.data.results.forEach(item => {
         if (item.url) item.slug = item.url;
-        item.provider = provider || "animeav1";
+        item.provider = providerLabel;
       });
     }
     

@@ -1,74 +1,67 @@
 const { URL } = require("node:url");
 const { ApiError } = require("../utils/api-error");
 const consumetService = require("./consumet.service");
-const animeav1Service = require("./animeav1.service");
 const jkanimeService = require("./jkanime.service");
 const animeflvService = require("./animeflv.service");
 const hentailaService = require("./hentaila.service");
 const tioanimeService = require("./tioanime.service");
 const monoschinosService = require("./monoschinos.service");
 
-const DEFAULT_ANIME_DOMAIN = process.env.DEFAULT_ANIME_DOMAIN || "animeav1.com";
-
+// ============================================================
+// PROVIDERS
+// Consumet (Hianime/AnimePahe) is now the PRIMARY provider.
+// Legacy web scrapers are kept as optional secondary providers
+// for catalog/search endpoints, but NOT for episode streaming.
+// ============================================================
 const PROVIDERS = [
   {
     id: "consumet",
-    label: "Consumet (HLS Directo)",
-    domains: ["consumet.org", "consumet", "hianime.to"],
+    label: "Consumet (HiAnime / AnimePahe — Streams HLS)",
+    domains: ["hianime.to", "aniwatch.to", "consumet", "consumet.org", "animepahe.ru", "animepahe.com"],
     service: consumetService,
-  },
-  {
-    id: "animeav1",
-    label: "AnimeAV1",
-    domains: [DEFAULT_ANIME_DOMAIN, "animeav1.com", "www.animeav1.com"],
-    service: animeav1Service,
+    isPrimary: true
   },
   {
     id: "jkanime",
     label: "JKAnime",
     domains: ["jkanime.net", "www.jkanime.net"],
-    service: jkanimeService,
+    service: jkanimeService
   },
   {
     id: "animeflv",
     label: "AnimeFLV",
     domains: ["animeflv.net", "www.animeflv.net", "www4.animeflv.net"],
-    service: animeflvService,
+    service: animeflvService
   },
   {
     id: "hentaila",
     label: "HentaiLA",
     domains: ["hentaila.com", "www.hentaila.com"],
-    service: hentailaService,
+    service: hentailaService
   },
   {
     id: "tioanime",
     label: "TioAnime",
     domains: ["tioanime.com", "www.tioanime.com"],
-    service: tioanimeService,
+    service: tioanimeService
   },
   {
     id: "monoschinos",
     label: "MonosChinos",
     domains: ["monoschinos2.com", "www.monoschinos2.com"],
-    service: monoschinosService,
+    service: monoschinosService
   },
 ];
 
+// The default streaming provider — always consumet
+const PRIMARY_PROVIDER = PROVIDERS[0];
+
 function normalizeDomain(value) {
-  if (!value || typeof value !== "string") {
-    return null;
-  }
-
+  if (!value || typeof value !== "string") return null;
   const trimmed = value.trim().toLowerCase();
-  if (!trimmed) {
-    return null;
-  }
-
+  if (!trimmed) return null;
   try {
-    if (trimmed.includes("://")) {
-      return new URL(trimmed).hostname.toLowerCase();
-    }
+    if (trimmed.includes("://")) return new URL(trimmed).hostname.toLowerCase();
     return new URL(`https://${trimmed}`).hostname.toLowerCase();
   } catch (_error) {
     return trimmed.split("/")[0];
@@ -76,42 +69,25 @@ function normalizeDomain(value) {
 }
 
 function domainMatches(domain, candidate) {
-  if (!domain || !candidate) {
-    return false;
-  }
-
-  if (domain === candidate) {
-    return true;
-  }
-
+  if (!domain || !candidate) return false;
+  if (domain === candidate) return true;
   return domain.endsWith(`.${candidate}`);
 }
 
 function findProviderByDomain(domainCandidate) {
   const domain = normalizeDomain(domainCandidate);
-  if (!domain) {
-    return null;
-  }
-
-  return (
-    PROVIDERS.find((provider) => provider.domains.some((candidate) => domainMatches(domain, candidate))) || null
-  );
+  if (!domain) return null;
+  return PROVIDERS.find((p) => p.domains.some((c) => domainMatches(domain, c))) || null;
 }
 
 function findProviderById(providerId) {
-  if (!providerId || typeof providerId !== "string") {
-    return null;
-  }
-
+  if (!providerId || typeof providerId !== "string") return null;
   const normalized = providerId.trim().toLowerCase();
-  return PROVIDERS.find((provider) => provider.id === normalized) || null;
+  return PROVIDERS.find((p) => p.id === normalized) || null;
 }
 
 function findProviderForUrl(urlCandidate) {
-  if (!urlCandidate || typeof urlCandidate !== "string") {
-    return null;
-  }
-
+  if (!urlCandidate || typeof urlCandidate !== "string") return null;
   try {
     const host = new URL(urlCandidate).hostname;
     return findProviderByDomain(host);
@@ -120,6 +96,9 @@ function findProviderForUrl(urlCandidate) {
   }
 }
 
+// ============================================================
+// SEARCH  — tries consumet first, then multi-provider fallback
+// ============================================================
 async function searchAnime(query, domainCandidate) {
   const forcedProvider = findProviderByDomain(domainCandidate) || findProviderById(domainCandidate);
 
@@ -131,14 +110,21 @@ async function searchAnime(query, domainCandidate) {
         if (item.url) item.slug = item.url;
       });
     }
-    return {
-      ...result,
-      source: result?.source || forcedProvider.id,
-    };
+    return { ...result, source: result?.source || forcedProvider.id };
   }
 
-  // Búsqueda unificada en paralelo en todos los proveedores
-  const searchPromises = PROVIDERS.map(async (provider) => {
+  // Always try Consumet first (fastest, returns direct HLS)
+  try {
+    const consumetResult = await consumetService.searchAnime(query);
+    if (consumetResult.success && consumetResult.data.results.length > 0) {
+      return { ...consumetResult, source: "consumet" };
+    }
+  } catch (e) {
+    console.warn("[SEARCH] Consumet falló:", e.message);
+  }
+
+  // Fallback: multi-provider parallel search
+  const searchPromises = PROVIDERS.slice(1).map(async (provider) => {
     try {
       const result = await provider.service.searchAnime(query, provider.domains[0]);
       const results = result?.data?.results || [];
@@ -146,25 +132,14 @@ async function searchAnime(query, domainCandidate) {
         item.provider = provider.label;
         if (item.url) item.slug = item.url;
       });
-      return {
-        success: true,
-        providerId: provider.id,
-        providerLabel: provider.label,
-        results,
-        originalResult: result
-      };
+      return { success: true, providerId: provider.id, providerLabel: provider.label, results, originalResult: result };
     } catch (error) {
       console.warn(`[SEARCH] Error en proveedor ${provider.id}:`, error.message);
-      return {
-        success: false,
-        providerId: provider.id,
-        error
-      };
+      return { success: false, providerId: provider.id, error };
     }
   });
 
   const searchResults = await Promise.all(searchPromises);
-
   const allResults = [];
   const errors = [];
   let firstEmptyResult = null;
@@ -182,58 +157,80 @@ async function searchAnime(query, domainCandidate) {
   }
 
   if (allResults.length > 0) {
-    return {
-      success: true,
-      source: "Multi",
-      data: {
-        results: allResults,
-        count: allResults.length
-      }
-    };
+    return { success: true, source: "Multi", data: { results: allResults, count: allResults.length } };
   }
+  if (firstEmptyResult) return { ...firstEmptyResult, source: "Multi" };
+  if (errors.length === PROVIDERS.length - 1 && errors[0]) throw errors[0];
 
-  if (firstEmptyResult) {
-    return {
-      ...firstEmptyResult,
-      source: "Multi"
-    };
-  }
-
-  if (errors.length === PROVIDERS.length && errors[0]) {
-    throw errors[0];
-  }
-
-  throw new ApiError(502, "No se pudo completar la busqueda en proveedores");
+  throw new ApiError(502, "No se pudo completar la búsqueda en ningún proveedor");
 }
 
+// ============================================================
+// ANIME INFO
+// Consumet is the primary provider. Other providers are
+// matched only if the URL belongs to their known domain.
+// ============================================================
 async function getAnimeInfo(urlCandidate) {
-  const provider = findProviderForUrl(urlCandidate) || PROVIDERS[0];
-  if (!provider) {
-    throw new ApiError(400, "Proveedor no soportado");
+  // If we can detect a specific legacy provider by domain, use it
+  const urlProvider = findProviderForUrl(urlCandidate);
+  if (urlProvider && !urlProvider.isPrimary) {
+    try {
+      const result = await urlProvider.service.getAnimeInfo(urlCandidate);
+      if (result && result.data) {
+        result.data.slug = urlCandidate;
+        result.data.url = urlCandidate;
+      }
+      return { ...result, source: result?.source || urlProvider.id };
+    } catch (e) {
+      console.warn(`[INFO] Error en provider detectado ${urlProvider.id}:`, e.message);
+    }
   }
 
-  const result = await provider.service.getAnimeInfo(urlCandidate);
-  if (result && result.data) {
-    result.data.slug = urlCandidate;
-    result.data.url = urlCandidate;
+  // Default: use Consumet
+  try {
+    const result = await consumetService.getAnimeInfo(urlCandidate);
+    return result;
+  } catch (e) {
+    console.warn("[INFO] Consumet falló, intentando providers de respaldo:", e.message);
   }
-  return {
-    ...result,
-    source: result?.source || provider.id,
-  };
+
+  throw new ApiError(404, "No se pudo obtener información del anime en ningún proveedor");
 }
 
+// ============================================================
+// EPISODE LINKS
+// Consumet is the primary streaming source.
+// ============================================================
 async function getEpisodeLinks(urlCandidate, includeMega, excludeServers) {
-  const provider = findProviderForUrl(urlCandidate) || PROVIDERS[0];
-  if (!provider) {
-    throw new ApiError(400, "Proveedor no soportado");
+  // If URL belongs to a specific legacy provider, use it
+  const urlProvider = findProviderForUrl(urlCandidate);
+  if (urlProvider && !urlProvider.isPrimary) {
+    try {
+      const result = await urlProvider.service.getEpisodeLinks(urlCandidate, includeMega, excludeServers);
+      // Normalise legacy response to { servers: { sub, dub } }
+      if (result && result.data) {
+        if (!result.data.servers || !result.data.servers.sub) {
+          // Wrap flat server array
+          const flat = Array.isArray(result.data.servers)
+            ? result.data.servers
+            : Array.isArray(result.data)
+            ? result.data
+            : [];
+          result.data = {
+            ...result.data,
+            servers: { sub: flat, dub: [] }
+          };
+        }
+      }
+      return { ...result, source: result?.source || urlProvider.id };
+    } catch (e) {
+      console.warn(`[EPISODE] Error en provider detectado ${urlProvider.id}:`, e.message);
+    }
   }
 
-  const result = await provider.service.getEpisodeLinks(urlCandidate, includeMega, excludeServers);
-  return {
-    ...result,
-    source: result?.source || provider.id,
-  };
+  // Default: use Consumet (returns proper sub/dub structure)
+  const consumetResult = await consumetService.getEpisodeLinks(urlCandidate);
+  return consumetResult;
 }
 
 module.exports = {
