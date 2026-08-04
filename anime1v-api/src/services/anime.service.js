@@ -113,18 +113,8 @@ async function searchAnime(query, domainCandidate) {
     return { ...result, source: result?.source || forcedProvider.id };
   }
 
-  // Always try Consumet first (fastest, returns direct HLS)
-  try {
-    const consumetResult = await consumetService.searchAnime(query);
-    if (consumetResult.success && consumetResult.data.results.length > 0) {
-      return { ...consumetResult, source: "consumet" };
-    }
-  } catch (e) {
-    console.warn("[SEARCH] Consumet falló:", e.message);
-  }
-
-  // Fallback: multi-provider parallel search
-  const searchPromises = PROVIDERS.slice(1).map(async (provider) => {
+  // Parallel search across ALL providers for instant response
+  const searchPromises = PROVIDERS.map(async (provider) => {
     try {
       const result = await provider.service.searchAnime(query, provider.domains[0]);
       const results = result?.data?.results || [];
@@ -160,7 +150,7 @@ async function searchAnime(query, domainCandidate) {
     return { success: true, source: "Multi", data: { results: allResults, count: allResults.length } };
   }
   if (firstEmptyResult) return { ...firstEmptyResult, source: "Multi" };
-  if (errors.length === PROVIDERS.length - 1 && errors[0]) throw errors[0];
+  if (errors.length === PROVIDERS.length && errors[0]) throw errors[0];
 
   throw new ApiError(502, "No se pudo completar la búsqueda en ningún proveedor");
 }

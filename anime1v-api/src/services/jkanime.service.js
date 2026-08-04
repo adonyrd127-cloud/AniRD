@@ -14,15 +14,22 @@ const HTTP_HEADERS = {
 };
 
 async function fetchHtml(url) {
+  const page = await fetchPage(url);
+  return page.html;
+}
+
+async function fetchPage(url) {
   try {
-    const timeout = Number(process.env.REQUEST_TIMEOUT_MS || 15000);
+    const timeout = Number(process.env.REQUEST_TIMEOUT_MS || 4000);
     const response = await axios.get(url, {
       timeout,
       headers: HTTP_HEADERS,
       maxRedirects: 5,
       validateStatus: (status) => status >= 200 && status < 400,
     });
-    return response.data;
+    const rawCookies = response.headers["set-cookie"];
+    const cookies = rawCookies ? rawCookies.map(c => c.split(";")[0]).join("; ") : "";
+    return { html: response.data, cookies };
   } catch (error) {
     throw new ApiError(500, "No se pudo obtener contenido desde JKAnime", error.message);
   }
@@ -290,6 +297,12 @@ function decodeBase64(value) {
 }
 
 function normalizeVariantKey(value) {
+  if (value === 1 || value === "1") {
+    return "SUB";
+  }
+  if (value === 2 || value === "2") {
+    return "DUB";
+  }
   const normalized = normalizeToken(value);
   if (!normalized) {
     return "SUB";
@@ -411,7 +424,13 @@ function parseAnimeInfoFromHtml(html, domain) {
     }
   });
 
-  const animeId = $("#guardar-anime").attr("data-anime") || null;
+  let animeId = $("#guardar-anime").attr("data-anime") || null;
+  if (!animeId && html) {
+    const match = html.match(/ajax\/episodes\/(\d+)/i) || html.match(/ajax\/search_episode\/(\d+)/i) || html.match(/votar\/(\d+)/i);
+    if (match) {
+      animeId = match[1];
+    }
+  }
 
   return {
     title,
@@ -494,25 +513,33 @@ function parseToken(html) {
   return match ? match[1] : null;
 }
 
-async function fetchEpisodesFromApi(animeId, slug, referer, token) {
+async function fetchEpisodesFromApi(animeId, slug, referer, token, cookies) {
   if (!animeId) {
     return [];
   }
 
   const apiUrl = `https://${DEFAULT_DOMAIN}/ajax/episodes/${animeId}/1`;
   const headers = {
+    "User-Agent": HTTP_HEADERS["User-Agent"],
     "X-Requested-With": "XMLHttpRequest",
     Referer: referer,
+    "Content-Type": "application/x-www-form-urlencoded",
   };
+  if (cookies) {
+    headers["Cookie"] = cookies;
+  }
 
-  let data = await fetchJson(apiUrl, { headers, method: "GET" });
+  const formData = new URLSearchParams();
+  if (token) formData.append("_token", token);
 
-  if (!data && token) {
-    data = await fetchJson(apiUrl, {
-      headers,
-      method: "POST",
-      data: { _token: token },
-    });
+  let data = await fetchJson(apiUrl, {
+    headers,
+    method: "POST",
+    data: formData.toString(),
+  });
+
+  if (!data) {
+    data = await fetchJson(apiUrl, { headers, method: "GET" });
   }
 
   const items = Array.isArray(data?.data) ? data.data : [];
@@ -596,14 +623,14 @@ async function getAnimeInfo(urlCandidate) {
   }
 
   const baseUrl = `https://${DEFAULT_DOMAIN}/${slug}/`;
-  const html = await fetchHtml(baseUrl);
+  const { html, cookies } = await fetchPage(baseUrl);
   const info = parseAnimeInfoFromHtml(html, DEFAULT_DOMAIN);
 
   let episodes = parseEpisodesFromHtml(html, DEFAULT_DOMAIN, slug);
 
   if (episodes.length === 0) {
     const token = parseToken(html);
-    const apiEpisodes = await fetchEpisodesFromApi(info.animeId, slug, baseUrl, token);
+    const apiEpisodes = await fetchEpisodesFromApi(info.animeId, slug, baseUrl, token, cookies);
     if (apiEpisodes.length > 0) {
       episodes = apiEpisodes;
     }

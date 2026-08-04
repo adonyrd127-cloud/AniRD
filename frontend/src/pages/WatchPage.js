@@ -67,49 +67,61 @@ export default class WatchPage {
           }
         }
 
-        if (searchRes) {
-          const localAnime = searchRes.data.results.find(a => 
-            titlesToSearch.some(t => a.title.toLowerCase().includes(t.toLowerCase()))
-          ) || searchRes.data.results[0];
+        if (searchRes && searchRes.data && Array.isArray(searchRes.data.results)) {
+          // Sort results to prioritize exact title matches
+          const sortedResults = [...searchRes.data.results].sort((a, b) => {
+            const aMatch = titlesToSearch.some(t => a.title.toLowerCase().includes(t.toLowerCase()));
+            const bMatch = titlesToSearch.some(t => b.title.toLowerCase().includes(t.toLowerCase()));
+            return (bMatch ? 1 : 0) - (aMatch ? 1 : 0);
+          });
 
-          // Si Jikan falla en cargar, creamos objeto base para que no se rompa la UI
-          if (!this.anime) {
-            this.anime = { 
-              title: localAnime.title, 
-              images: { jpg: { large_image_url: localAnime.thumbnail } },
-              genres: [], synopsis: "Cargado desde el servidor local de AniRD."
-            };
-          }
+          for (const localAnime of sortedResults) {
+            // Si Jikan falla en cargar, creamos objeto base para que no se rompa la UI
+            if (!this.anime) {
+              this.anime = { 
+                title: localAnime.title, 
+                images: { jpg: { large_image_url: localAnime.image || localAnime.thumbnail } },
+                genres: [], synopsis: "Cargado desde el servidor local de AniRD."
+              };
+            }
 
-          // 3. Cargar episodios locales
-          const localDetails = await apiService.getAnimeInfo(localAnime.url);
-          if (localDetails.success) {
-            this.localInfo = localDetails.data;
-            
-            // 4. Buscar y cargar servidores del episodio actual
-            const targetEpisode = this.localInfo.episodes.find(ep => ep.number === this.episodeNum);
-            
-            if (targetEpisode && targetEpisode.url) {
-              const epRes = await apiService.getEpisode(targetEpisode.url);
-              if (epRes.success && epRes.data) {
-                this.episodeData = epRes.data;
-                
-                let serverList = this.episodeData.servers[this.lang];
-                if (!serverList || serverList.length === 0) {
-                  if (this.lang === 'dub' && this.episodeData.servers.sub && this.episodeData.servers.sub.length > 0) {
-                    this.lang = 'sub';
-                    serverList = this.episodeData.servers.sub;
-                    Toast.show('El episodio no tiene doblaje disponible. Reproduciendo subtitulado.', 'info');
-                    
-                    // Actualizar URL sin recargar
-                    const newUrl = window.location.href.replace('/dub', '/sub');
-                    window.history.replaceState({}, '', newUrl);
-                  } else {
-                    serverList = this.episodeData.servers.sub || [];
+            // 3. Cargar episodios locales del proveedor
+            const localDetails = await apiService.getAnimeInfo(localAnime.url);
+            if (localDetails && localDetails.success && localDetails.data && Array.isArray(localDetails.data.episodes) && localDetails.data.episodes.length > 0) {
+              this.localInfo = localDetails.data;
+              
+              // 4. Buscar y cargar servidores del episodio actual
+              const targetEpisode = this.localInfo.episodes.find(ep => ep.number === this.episodeNum);
+              
+              if (targetEpisode && targetEpisode.url) {
+                const epRes = await apiService.getEpisode(targetEpisode.url);
+                if (epRes && epRes.success && epRes.data) {
+                  this.episodeData = epRes.data;
+                  const serversObj = this.episodeData.servers || {};
+                  let serverList = serversObj[this.lang] || [];
+                  
+                  if (!serverList || serverList.length === 0) {
+                    if (this.lang === 'dub' && serversObj.sub && serversObj.sub.length > 0) {
+                      this.lang = 'sub';
+                      serverList = serversObj.sub;
+                      Toast.show('El episodio no tiene doblaje disponible. Reproduciendo subtitulado.', 'info');
+                      const newUrl = window.location.href.replace('/dub', '/sub');
+                      window.history.replaceState({}, '', newUrl);
+                    } else if (serversObj.sub && serversObj.sub.length > 0) {
+                      serverList = serversObj.sub;
+                    } else if (serversObj.dub && serversObj.dub.length > 0) {
+                      serverList = serversObj.dub;
+                    } else if (Array.isArray(serversObj)) {
+                      serverList = serversObj;
+                    }
+                  }
+                  
+                  this.episodeData.activeServers = serverList || [];
+                  if (this.episodeData.activeServers.length > 0) {
+                    console.log(`[WatchPage] Servidores encontrados con éxito (${this.episodeData.activeServers.length}) desde ${localAnime.url}`);
+                    break; // Servidores cargados con éxito!
                   }
                 }
-                
-                this.episodeData.activeServers = serverList;
               }
             }
           }

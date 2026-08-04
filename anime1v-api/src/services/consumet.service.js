@@ -13,6 +13,23 @@ async function getConsumet() {
   return consumetExtensions;
 }
 
+function withTimeout(promise, ms = 3000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`Timeout de ${ms}ms excedido`));
+    }, ms);
+    promise
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
+
 // ============================================================
 // SEARCH
 // ============================================================
@@ -25,34 +42,39 @@ async function searchAnime(query) {
     { name: "AnimePahe", instance: new ANIME.AnimePahe() },
   ];
 
-  for (const provider of providersToTry) {
-    try {
-      console.log(`[CONSUMET SEARCH] Buscando "${query}" en ${provider.name}...`);
-      const res = await provider.instance.search(query);
-      if (res && Array.isArray(res.results) && res.results.length > 0) {
-        const results = res.results.map(item => ({
-          title: item.title || item.name,
-          url: item.id,
-          slug: item.id,
-          image: item.image || item.poster,
-          type: item.type || "Anime",
-          provider: "Consumet (" + provider.name + ")",
-          source: "consumet",
-          providerName: provider.name
-        }));
-
-        return {
-          success: true,
-          source: "consumet",
-          data: {
-            results,
-            count: results.length
-          }
-        };
+  const searchResults = await Promise.all(
+    providersToTry.map(async (provider) => {
+      try {
+        const res = await withTimeout(provider.instance.search(query), 2000);
+        if (res && Array.isArray(res.results) && res.results.length > 0) {
+          return res.results.map(item => ({
+            title: item.title || item.name,
+            url: item.id,
+            slug: item.id,
+            image: item.image || item.poster,
+            type: item.type || "Anime",
+            provider: "Consumet (" + provider.name + ")",
+            source: "consumet",
+            providerName: provider.name
+          }));
+        }
+      } catch (err) {
+        console.warn(`[CONSUMET SEARCH] Error con ${provider.name}: ${err.message}`);
       }
-    } catch (err) {
-      console.warn(`[CONSUMET SEARCH] Error con ${provider.name}: ${err.message}`);
-    }
+      return [];
+    })
+  );
+
+  const flatResults = searchResults.flat();
+  if (flatResults.length > 0) {
+    return {
+      success: true,
+      source: "consumet",
+      data: {
+        results: flatResults,
+        count: flatResults.length
+      }
+    };
   }
 
   return { success: false, data: { results: [], count: 0 } };

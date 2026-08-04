@@ -15,7 +15,7 @@ const HTTP_HEADERS = {
 
 async function fetchHtml(url) {
   try {
-    const timeout = Number(process.env.REQUEST_TIMEOUT_MS || 15000);
+    const timeout = Number(process.env.REQUEST_TIMEOUT_MS || 4000);
     const response = await axios.get(url, {
       timeout,
       headers: HTTP_HEADERS,
